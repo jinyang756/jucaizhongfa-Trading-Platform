@@ -16,7 +16,7 @@ import { TradeDashboard } from './pages/TradeDashboard';
 import { MyDashboard } from './pages/MyDashboard';
 import MarketDashboard from './components/MarketDashboard';
 import { BottomNavigationBar } from './components/BottomNavigationBar';
-import ProfilePage from './pages/ProfilePage'; // 导入 ProfilePage
+import ProfilePage from './pages/ProfilePage';
 
 // ✅ 智能重定向组件必须在 Router 内部使用
 const RootRedirect = () => {
@@ -219,20 +219,9 @@ function App() {
 }
 
 const AuthDependentBottomNav = () => {
-  const { user, isLoading } = useAuth();
-  // 临时调试：加载状态提示
-  if (isLoading) {
-    return <div className="fixed bottom-0 left-0 right-0 text-center text-xs text-gray-500 pb-1">状态加载中...</div>;
-  }
-  // 临时调试：验证用户类型判断是否触发
-  if (user && user.userType === 'user') {
-    return (
-      <div>
-        <BottomNavigationBar />
-        {/* 临时调试标识：仅当底部导航栏应渲染时显示 */}
-        <div className="fixed bottom-16 left-0 right-0 text-center text-xs text-green-500 pb-1">底部导航栏渲染触发</div>
-      </div>
-    );
+  const { user } = useAuth();
+  if (user) {
+    return <BottomNavigationBar />;
   }
   return null;
 };

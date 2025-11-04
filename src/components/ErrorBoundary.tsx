@@ -1,9 +1,9 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component } from 'react';
 import { useToast } from './Toast';
 
 interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 interface State {
@@ -26,7 +26,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     // 可以在这里记录错误信息
     console.error('ErrorBoundary捕获到错误:', error, errorInfo);
     // 在这里调用Toast显示错误信息
@@ -34,7 +34,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
     // 暂时不在这里直接调用showToast，而是通过外部包装组件传递
   }
 
-  render(): ReactNode {
+  render(): React.ReactNode {
     if (this.state.hasError) {
       // 如果提供了自定义的fallback，则使用它
       if (this.props.fallback) {
@@ -84,7 +84,7 @@ export const ErrorBoundary: React.FC<Props> = ({ children, fallback }) => {
 
   // 使用一个内部组件来捕获错误并触发Toast
   class InnerErrorBoundary extends ErrorBoundaryClass {
-    componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
       super.componentDidCatch(error, errorInfo);
       showToast(error.message || '发生未知错误', 'error'); // 通过Toast显示错误
     }

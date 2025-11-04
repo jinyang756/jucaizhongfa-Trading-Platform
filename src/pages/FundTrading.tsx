@@ -18,6 +18,7 @@ interface FundRow {
 
 export const FundTrading: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [funds, setFunds] = useState<FundRow[]>([]);
   const [selected, setSelected] = useState<string>('');
   const [amount, setAmount] = useState<number>(0);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { supabase } from '../utils/supabase';
 import { format, addMonths, subMonths } from 'date-fns';
 

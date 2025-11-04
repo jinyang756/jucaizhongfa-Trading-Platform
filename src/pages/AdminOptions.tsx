@@ -109,46 +109,6 @@ export const AdminOptions: React.FC = () => {
     }
   };
 
-  const update = async (id: number, updatedData: Partial<OptionRow>) => {
-    // 局部字段校验
-    if (updatedData.option_code || updatedData.option_name) {
-      const dataToValidate = {
-        option_code: updatedData.option_code ?? '',
-        option_name: updatedData.option_name ?? ''
-      };
-      const rules: any = {};
-      if (updatedData.option_code !== undefined) {
-        rules.option_code = { rules: [required, maxLength(10)], label: '期权代码' };
-      }
-      if (updatedData.option_name !== undefined) {
-        rules.option_name = { rules: [required, maxLength(50)], label: '期权名称' };
-      }
-      const { isValid, errors } = validateForm(dataToValidate, rules);
-      if (!isValid) {
-        showToast(Object.values(errors)[0], 'error');
-        return;
-      }
-    }
-    setLoading(true);
-    try {
-      if (!supabaseEnabled) {
-        setOptions(prev => prev.map(o => o.id === id ? { ...o, ...updatedData } : o));
-        showToast('更新成功（本地演示）', 'success');
-      } else {
-        const { error } = await supabase.from('options').update(updatedData).eq('id', id);
-        if (error) throw error;
-        showToast('更新成功', 'success');
-        await load();
-      }
-      setEditingId(null);
-    } catch (e) {
-      console.error(e);
-      showToast('更新失败', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const deleteOption = async (id: number) => {
     setLoading(true);
     try {

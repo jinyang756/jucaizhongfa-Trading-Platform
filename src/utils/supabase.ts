@@ -80,10 +80,14 @@ export interface FundOrder {
   order_no: string;
   user_id: number;
   fund_id: number;
-  invest_amount: number;
-  yield_amount: number;
+  fund_code: string;
+  order_type: string;
+  amount: number;
+  shares: number;
+  nav: number;
+  profit_amount: number;
   order_status: string;
-  invest_time: string;
+  created_at: string;
   settle_time?: string;
 }
 

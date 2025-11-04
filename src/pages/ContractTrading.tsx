@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import type { ContractOrder } from '../utils/supabase';
 import { validateUserPermissions, validateTradeLimits, validateContractSpecifics } from '../utils/tradeValidation';
+import type { ValidationResult } from '../utils/tradeValidation';
 import { useToast } from '../components/Toast';
 
 interface ContractRow { 
@@ -330,7 +331,7 @@ export const ContractTrading: React.FC = () => {
                 </span>
               </div>
               <div>
-                <span>港股权限：</span>
+                <span>港股权权：</span>
                 <span className={user.permissions.hkContractPermission ? 'text-green-600' : 'text-red-600'}>
                   {user.permissions.hkContractPermission ? '已开通' : '未开通'}
                 </span>

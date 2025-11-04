@@ -11,6 +11,7 @@ export interface AuthUser {
   userType: 'admin' | 'user';
   relatedAdmin?: string;
   currentBalance?: number;
+  email?: string;
   permissions?: UserPermissions;
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import React, { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
 
 // Toast类型定义
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -33,7 +33,7 @@ interface ToastProps {
 }
 
 // 单个Toast组件
-const Toast: React.FC<ToastProps> = ({ id, message, type, onClose }) => {
+const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();

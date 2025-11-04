@@ -7,8 +7,7 @@ import { showToast } from '../utils/showToast';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, login } = useAuth();
-  const [email, setEmail] = useState('');
+  const { login } = useAuth();
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState<'admin' | 'user'>('user');
