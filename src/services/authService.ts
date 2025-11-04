@@ -66,13 +66,17 @@ export class AuthService {
             relatedAdmin: 'admin001',
             currentBalance: 10000,
             permissions: {
-              fundPermission: true,
-              optionPermission: true,
-              shContractPermission: true,
-              hkContractPermission: true,
+              fund: true,
+              option: true,
+              contract: true,
+              shContract: true,
+              hkContract: true,
+            },
+            limits: {
               singleTradeMax: 10000,
-              dailyTradeMax: 50000
-            }
+              dailyTradeMax: 50000,
+              minTradeAmount: 100,
+            },
           };
           localStorage.setItem('auth_user', JSON.stringify(authUser));
           localStorage.setItem('auth_token', `user_${authUser.id}_${Date.now()}`);
@@ -108,13 +112,17 @@ export class AuthService {
         relatedAdmin: user.related_admin,
         currentBalance: parseFloat(user.current_balance),
         permissions: {
-          fundPermission: user.fund_permission,
-          optionPermission: user.option_permission,
-          shContractPermission: user.sh_contract_permission,
-          hkContractPermission: user.hk_contract_permission,
+          fund: user.fund_permission,
+          option: user.option_permission,
+          contract: user.sh_contract_permission || user.hk_contract_permission,
+          shContract: user.sh_contract_permission,
+          hkContract: user.hk_contract_permission,
+        },
+        limits: {
           singleTradeMax: parseFloat(user.single_trade_max),
-          dailyTradeMax: parseFloat(user.daily_trade_max)
-        }
+          dailyTradeMax: parseFloat(user.daily_trade_max),
+          minTradeAmount: parseFloat(user.min_trade_amount),
+        },
       };
 
       // 保存登录状态到localStorage
@@ -209,13 +217,17 @@ export class AuthService {
             relatedAdmin: user.related_admin,
             currentBalance: parseFloat(user.current_balance),
             permissions: {
-              fundPermission: user.fund_permission,
-              optionPermission: user.option_permission,
-              shContractPermission: user.sh_contract_permission,
-              hkContractPermission: user.hk_contract_permission,
+              fund: user.fund_permission,
+              option: user.option_permission,
+              contract: user.sh_contract_permission || user.hk_contract_permission,
+              shContract: user.sh_contract_permission,
+              hkContract: user.hk_contract_permission,
+            },
+            limits: {
               singleTradeMax: parseFloat(user.single_trade_max),
-              dailyTradeMax: parseFloat(user.daily_trade_max)
-            }
+              dailyTradeMax: parseFloat(user.daily_trade_max),
+              minTradeAmount: parseFloat(user.min_trade_amount),
+            },
           };
           localStorage.setItem('auth_user', JSON.stringify(updatedUser));
           return updatedUser;
@@ -228,3 +240,4 @@ export class AuthService {
     return null;
   }
 }
+

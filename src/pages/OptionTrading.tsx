@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import type { OptionOrder } from '../utils/supabase';
-import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
+import { useToast } from '../components/Toast';
 
 interface OptionRow { 
   id?: number; 
@@ -15,6 +15,7 @@ interface OptionRow {
 
 export const OptionTrading: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [options, setOptions] = useState<OptionRow[]>([]);
   const [selected, setSelected] = useState<string>('');
   const [amount, setAmount] = useState<number>(0);
@@ -107,11 +108,11 @@ export const OptionTrading: React.FC = () => {
 
   // 验证交易限额
   const validateTradeLimit = (tradeAmount: number): boolean => {
-    if (!user?.permissions) return false;
+    if (!user?.limits) return false;
 
     // 检查单笔交易限额
-    if (tradeAmount > user.permissions.singleTradeMax) {
-      setMsg(`交易金额超过单笔限额 ¥${user.permissions.singleTradeMax.toLocaleString()}`);
+    if (tradeAmount > user.limits.singleTradeMax) {
+      setMsg(`交易金额超过单笔限额 ¥${user.limits.singleTradeMax.toLocaleString()}`);
       return false;
     }
 
@@ -124,8 +125,8 @@ export const OptionTrading: React.FC = () => {
       })
       .reduce((sum, order) => sum + order.invest_amount, 0);
 
-    if (todayTotal + tradeAmount > user.permissions.dailyTradeMax) {
-      setMsg(`今日交易总额将超过限额 ¥${user.permissions.dailyTradeMax.toLocaleString()}`);
+    if (todayTotal + tradeAmount > user.limits.dailyTradeMax) {
+      setMsg(`今日交易总额将超过限额 ¥${user.limits.dailyTradeMax.toLocaleString()}`);
       return false;
     }
 
@@ -138,7 +139,7 @@ export const OptionTrading: React.FC = () => {
       setMsg('仅用户可下单');
       return;
     }
-    if (!user.permissions?.optionPermission) {
+    if (!user.permissions?.option) {
       setMsg('您还未开通二元期权权限');
       return;
     }
@@ -250,17 +251,17 @@ export const OptionTrading: React.FC = () => {
       {msg && <div className="mb-3 text-sm text-gray-700">{msg}</div>}
 
       {/* 交易限额信息 */}
-      {user?.permissions && (
+      {user?.limits && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
           <h3 className="text-sm font-medium text-blue-800 mb-2">交易限额</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-blue-600">单笔限额：</span>
-              <span className="font-medium">{formatCurrency(user.permissions.singleTradeMax)}</span>
+              <span className="font-medium">{formatCurrency(user.limits.singleTradeMax)}</span>
             </div>
             <div>
               <span className="text-blue-600">日交易限额：</span>
-              <span className="font-medium">{formatCurrency(user.permissions.dailyTradeMax)}</span>
+              <span className="font-medium">{formatCurrency(user.limits.dailyTradeMax)}</span>
             </div>
           </div>
         </div>
@@ -421,4 +422,3 @@ export const OptionTrading: React.FC = () => {
 };
 
 export default OptionTrading;
-

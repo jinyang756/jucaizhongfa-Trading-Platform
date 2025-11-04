@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { config } from '../config/env';
 
 // 从环境变量获取Supabase配置
-const supabaseUrl = config.supabaseUrl;
-const supabaseAnonKey = config.supabaseAnonKey;
+const supabaseUrl = config.supabase.url;
+const supabaseAnonKey = config.supabase.anonKey;
 
 const isValidHttpUrl = (url?: string) => {
   return !!url && /^https?:\/\//i.test(url);

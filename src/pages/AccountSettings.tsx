@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../components/Toast'; // Import useToast
 
 interface Preferences {
   notifications: boolean;
@@ -11,6 +12,39 @@ const PREF_KEY = 'user_preferences';
 export default function AccountSettings() {
   const { user, permissions, limits } = useAuth();
   const [prefs, setPrefs] = useState<Preferences>({ notifications: true, riskWarnings: true });
+  const { showToast } = useToast(); // Destructure showToast
+
+  // Define profile based on user and limits
+  const profile = {
+    username: user?.username || 'N/A',
+    current_balance: user?.currentBalance || 0,
+    fund_permission: permissions?.fund || false,
+    option_permission: permissions?.option || false,
+    sh_contract_permission: permissions?.contract || false, // Assuming contract covers both SH and HK
+    hk_contract_permission: permissions?.contract || false, // Assuming contract covers both SH and HK
+    single_trade_max: limits?.singleTradeMax || 0,
+    daily_trade_max: limits?.dailyTradeMax || 0,
+    min_trade_amount: limits?.minTradeAmount || 0,
+  };
+
+  const [editing, setEditing] = useState(false);
+  const [formData, setFormData] = useState(profile);
+
+  useEffect(() => {
+    setFormData(profile);
+  }, [user, limits]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: parseFloat(value) }));
+  };
+
+  const handleSave = () => {
+    // Here you would typically send formData to your backend to update user settings
+    console.log('Saving form data:', formData);
+    showToast('设置已保存', 'success');
+    setEditing(false);
+  };
 
   useEffect(() => {
     try {
@@ -187,5 +221,3 @@ export default function AccountSettings() {
     </div>
   );
 }
-
-

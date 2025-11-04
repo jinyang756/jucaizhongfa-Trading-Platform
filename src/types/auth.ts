@@ -5,6 +5,20 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface UserPermissions {
+  fund: boolean;
+  option: boolean;
+  contract: boolean;
+  shContract: boolean;
+  hkContract: boolean;
+}
+
+export interface UserLimits {
+  singleTradeMax: number;
+  dailyTradeMax: number;
+  minTradeAmount: number;
+}
+
 export interface AuthUser {
   id: number;
   username: string;
@@ -13,15 +27,7 @@ export interface AuthUser {
   currentBalance?: number;
   email?: string;
   permissions?: UserPermissions;
-}
-
-export interface UserPermissions {
-  fundPermission: boolean;
-  optionPermission: boolean;
-  shContractPermission: boolean;
-  hkContractPermission: boolean;
-  singleTradeMax: number;
-  dailyTradeMax: number;
+  limits?: UserLimits;
 }
 
 export interface AuthContextType {
@@ -30,6 +36,8 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials, userType: 'admin' | 'user') => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
+  permissions?: UserPermissions;
+  limits?: UserLimits;
 }
 
 export interface LoginResponse {
@@ -37,3 +45,4 @@ export interface LoginResponse {
   user?: AuthUser;
   message?: string;
 }
+

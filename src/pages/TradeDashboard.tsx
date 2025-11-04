@@ -18,11 +18,11 @@ export const TradeDashboard: React.FC = () => {
     
     switch (type) {
       case 'fund':
-        return user.permissions.fundPermission || false;
+        return user.permissions.fund || false;
       case 'option':
-        return user.permissions.optionPermission || false;
+        return user.permissions.option || false;
       case 'contract':
-        return user.permissions.shContractPermission || user.permissions.hkContractPermission || false;
+        return user.permissions.shContract || user.permissions.hkContract || false;
       default:
         return false;
     }
@@ -144,18 +144,18 @@ export const TradeDashboard: React.FC = () => {
                 />
                 <div className="mt-3 space-x-2">
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    user?.permissions?.shContractPermission 
+                    user?.permissions?.shContract 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    沪深 {user?.permissions?.shContractPermission ? '✓' : '✗'}
+                    沪深 {user?.permissions?.shContract ? '✓' : '✗'}
                   </span>
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    user?.permissions?.hkContractPermission 
+                    user?.permissions?.hkContract 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    港股 {user?.permissions?.hkContractPermission ? '✓' : '✗'}
+                    港股 {user?.permissions?.hkContract ? '✓' : '✗'}
                   </span>
                 </div>
               </Card>

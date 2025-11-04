@@ -68,6 +68,7 @@ export const FundTrading: React.FC = () => {
             id: 1,
             order_no: 'FND20241201001',
             user_id: user.id,
+            fund_id: 1,
             fund_code: 'F0001',
             amount: 10000,
             shares: 8547.01,
@@ -81,6 +82,7 @@ export const FundTrading: React.FC = () => {
             id: 2,
             order_no: 'FND20241201002',
             user_id: user.id,
+            fund_id: 2,
             fund_code: 'F0002',
             amount: 5000,
             shares: 4166.67,
@@ -167,6 +169,12 @@ export const FundTrading: React.FC = () => {
       return; 
     }
 
+    const selectedFund = funds.find(f => f.fund_code === selected);
+    if (!selectedFund) {
+      setMsg('未找到所选基金');
+      return;
+    }
+
     // 验证最低投资额
     if (!validateMinAmount()) return;
 
@@ -186,6 +194,7 @@ export const FundTrading: React.FC = () => {
           id: Date.now(),
           order_no: orderNo,
           user_id: user.id,
+          fund_id: selectedFund.id!,
           fund_code: selected,
           amount,
           shares: amount / 1.2, // 模拟净值1.2
@@ -274,23 +283,23 @@ export const FundTrading: React.FC = () => {
       {msg && <div className="mb-3 text-sm text-gray-700">{msg}</div>}
 
       {/* 交易限额信息 */}
-      {user?.permissions && (
+      {user?.permissions && user?.limits && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
           <h3 className="text-sm font-medium text-blue-800 mb-2">交易限额</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-blue-600">单笔限额：</span>
-              <span className="font-medium">{formatCurrency(user.permissions.singleTradeMax)}</span>
+              <span className="font-medium">{formatCurrency(user.limits.singleTradeMax)}</span>
             </div>
             <div>
               <span className="text-blue-600">日交易限额：</span>
-              <span className="font-medium">{formatCurrency(user.permissions.dailyTradeMax)}</span>
+              <span className="font-medium">{formatCurrency(user.limits.dailyTradeMax)}</span>
             </div>
           </div>
           <div className="mt-2 text-xs text-blue-600">
             <span>基金权限：</span>
-            <span className={user.permissions.fundPermission ? 'text-green-600' : 'text-red-600'}>
-              {user.permissions.fundPermission ? '已开通' : '未开通'}
+            <span className={user.permissions.fund ? 'text-green-600' : 'text-red-600'}>
+              {user.permissions.fund ? '已开通' : '未开通'}
             </span>
           </div>
         </div>

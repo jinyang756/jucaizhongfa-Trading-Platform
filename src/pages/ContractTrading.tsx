@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import type { ContractOrder } from '../utils/supabase';
-import { validateUserPermissions, validateTradeLimits, validateContractSpecifics } from '../utils/tradeValidation';
+import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
 import type { ValidationResult } from '../utils/tradeValidation';
 import { useToast } from '../components/Toast';
 
@@ -18,6 +18,7 @@ interface ContractRow {
 
 export const ContractTrading: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [contracts, setContracts] = useState<ContractRow[]>([]);
   const [selected, setSelected] = useState<string>('');
   const [orderType, setOrderType] = useState<'market' | 'limit'>('market');
@@ -309,31 +310,31 @@ export const ContractTrading: React.FC = () => {
       {msg && <div className="mb-3 text-sm text-gray-700">{msg}</div>}
 
       {/* 交易限额信息 */}
-      {user?.permissions && (
+      {user?.permissions && user?.limits && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
           <h3 className="text-sm font-medium text-blue-800 mb-2">交易限额</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-blue-600">单笔限额：</span>
-              <span className="font-medium">{formatCurrency(user.permissions.singleTradeMax)}</span>
+              <span className="font-medium">{formatCurrency(user.limits.singleTradeMax)}</span>
             </div>
             <div>
               <span className="text-blue-600">日交易限额：</span>
-              <span className="font-medium">{formatCurrency(user.permissions.dailyTradeMax)}</span>
+              <span className="font-medium">{formatCurrency(user.limits.dailyTradeMax)}</span>
             </div>
           </div>
           <div className="mt-2 text-xs text-blue-600">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <span>沪深权限：</span>
-                <span className={user.permissions.shContractPermission ? 'text-green-600' : 'text-red-600'}>
-                  {user.permissions.shContractPermission ? '已开通' : '未开通'}
+                <span className={user.permissions.shContract ? 'text-green-600' : 'text-red-600'}>
+                  {user.permissions.shContract ? '已开通' : '未开通'}
                 </span>
               </div>
               <div>
                 <span>港股权权：</span>
-                <span className={user.permissions.hkContractPermission ? 'text-green-600' : 'text-red-600'}>
-                  {user.permissions.hkContractPermission ? '已开通' : '未开通'}
+                <span className={user.permissions.hkContract ? 'text-green-600' : 'text-red-600'}>
+                  {user.permissions.hkContract ? '已开通' : '未开通'}
                 </span>
               </div>
             </div>

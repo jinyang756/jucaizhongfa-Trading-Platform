@@ -1,8 +1,5 @@
 import { supabase, supabaseEnabled } from '../utils/supabase';
-import type { 
-  User, Admin, Fund, Option, Contract, 
-  FundOrder, OptionOrder, ContractOrder, FundLog, Notification 
-} from '../utils/supabase';
+
 
 // 连接状态管理
 export const checkConnection = async (): Promise<boolean> => {

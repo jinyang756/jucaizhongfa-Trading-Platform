@@ -5,12 +5,10 @@ import { formatCurrency } from '../utils/helpers';
 import MarketDashboard from '../components/MarketDashboard';
 
 export const UserDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-  };
+
 
   const navigateToPage = (path: string) => {
     navigate(path);
@@ -123,7 +121,7 @@ export const UserDashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <div 
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => user?.permissions?.fundPermission ? navigateToPage('/trade/funds') : alert('您还未开通基金投资权限')}
+              onClick={() => user?.permissions?.fund ? navigateToPage('/trade/funds') : alert('您还未开通基金投资权限')}
             >
               <div className="p-6">
                 <div className="flex items-center">
@@ -139,13 +137,13 @@ export const UserDashboard: React.FC = () => {
                     <p className="text-sm text-gray-500">稳健收益，长期投资</p>
                     <div className="mt-2">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        user?.permissions?.fundPermission 
+                        user?.permissions?.fund 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {user?.permissions?.fundPermission ? '已开通' : '未开通'}
+                        {user?.permissions?.fund ? '已开通' : '未开通'}
                       </span>
-                      {user?.permissions?.fundPermission && (
+                      {user?.permissions?.fund && (
                         <span className="ml-3 text-primary-600 text-xs">点击进入交易</span>
                       )}
                     </div>
@@ -156,7 +154,7 @@ export const UserDashboard: React.FC = () => {
 
             <div 
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => user?.permissions?.optionPermission ? navigateToPage('/trade/options') : alert('您还未开通二元期权权限')}
+              onClick={() => user?.permissions?.option ? navigateToPage('/trade/options') : alert('您还未开通二元期权权限')}
             >
               <div className="p-6">
                 <div className="flex items-center">
@@ -172,13 +170,13 @@ export const UserDashboard: React.FC = () => {
                     <p className="text-sm text-gray-500">短期交易，快速收益</p>
                     <div className="mt-2">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        user?.permissions?.optionPermission 
+                        user?.permissions?.option 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {user?.permissions?.optionPermission ? '已开通' : '未开通'}
+                        {user?.permissions?.option ? '已开通' : '未开通'}
                       </span>
-                      {user?.permissions?.optionPermission && (
+                      {user?.permissions?.option && (
                         <span className="ml-3 text-primary-600 text-xs">点击进入交易</span>
                       )}
                     </div>
@@ -190,7 +188,7 @@ export const UserDashboard: React.FC = () => {
             <div 
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => {
-                const hasAnyContractPermission = user?.permissions?.shContractPermission || user?.permissions?.hkContractPermission;
+                const hasAnyContractPermission = user?.permissions?.shContract || user?.permissions?.hkContract;
                 hasAnyContractPermission ? navigateToPage('/trade/contracts') : alert('您还未开通合约交易权限');
               }}
             >
@@ -208,20 +206,20 @@ export const UserDashboard: React.FC = () => {
                     <p className="text-sm text-gray-500">杠杆交易，高收益高风险</p>
                     <div className="mt-2 space-x-2">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        user?.permissions?.shContractPermission 
+                        user?.permissions?.shContract 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        沪深 {user?.permissions?.shContractPermission ? '已开通' : '未开通'}
+                        沪深 {user?.permissions?.shContract ? '已开通' : '未开通'}
                       </span>
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        user?.permissions?.hkContractPermission 
+                        user?.permissions?.hkContract 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        港股 {user?.permissions?.hkContractPermission ? '已开通' : '未开通'}
+                        港股 {user?.permissions?.hkContract ? '已开通' : '未开通'}
                       </span>
-                      {(user?.permissions?.shContractPermission || user?.permissions?.hkContractPermission) && (
+                      {user?.permissions?.shContract || user?.permissions?.hkContract && (
                         <span className="block mt-1 text-primary-600 text-xs">点击进入交易</span>
                       )}
                     </div>
@@ -238,13 +236,13 @@ export const UserDashboard: React.FC = () => {
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <span className="text-sm font-medium text-gray-700">单笔交易限额</span>
                 <span className="text-sm font-semibold text-gray-900">
-                  {formatCurrency(user?.permissions?.singleTradeMax || 0)}
+                  {formatCurrency(user?.limits?.singleTradeMax || 0)}
                 </span>
               </div>
               <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <span className="text-sm font-medium text-gray-700">日交易限额</span>
                 <span className="text-sm font-semibold text-gray-900">
-                  {formatCurrency(user?.permissions?.dailyTradeMax || 0)}
+                  {formatCurrency(user?.limits?.dailyTradeMax || 0)}
                 </span>
               </div>
             </div>
@@ -297,7 +295,7 @@ export const UserDashboard: React.FC = () => {
               >
                 <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mb-2">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37-2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>

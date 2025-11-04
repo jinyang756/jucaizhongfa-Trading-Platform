@@ -74,12 +74,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
  
    const isAuthenticated = !!user && AuthService.isAuthenticated(); 
  
-   const value: AuthContextType = { 
-     user, 
-     isLoading, 
-     login, 
-     logout, 
-     isAuthenticated, 
+   const value: AuthContextType = {
+     user,
+     isLoading,
+     login,
+     logout,
+     isAuthenticated,
+     permissions: user?.permissions,
+     limits: user?.limits,
    }; 
  
    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>; 

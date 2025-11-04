@@ -47,7 +47,7 @@ export const isNumber = (value: any, label: string = '该字段'): ValidationRes
 };
 
 // 最小值校验
-export const min = (minValue: number) => (value: number, label: string = '该字段'): ValidationResult => {
+export const min = (minValue: number) => (value: any, label: string = '该字段'): ValidationResult => {
   if (value === undefined || value === null || value === '') {
     return createResult(true);
   }
@@ -56,7 +56,7 @@ export const min = (minValue: number) => (value: number, label: string = '该字
 };
 
 // 最大值校验
-export const max = (maxValue: number) => (value: number, label: string = '该字段'): ValidationResult => {
+export const max = (maxValue: number) => (value: any, label: string = '该字段'): ValidationResult => {
   if (value === undefined || value === null || value === '') {
     return createResult(true);
   }
