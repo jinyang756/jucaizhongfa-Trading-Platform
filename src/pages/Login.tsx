@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import type { LoginCredentials } from '../types/auth';
@@ -170,7 +171,7 @@ export const Login: React.FC = () => {
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-xs text-blue-600 font-medium mb-1">🔧 开发环境测试账号：</p>
               <p className="text-xs text-blue-600 font-mono">
-                {userType === 'admin' ? 'admin / admin123' : 'user1 / user123'}
+                {userType === 'admin' ? 'admin001 / jczf@2025' : 'testuser01 / 8a3k7z9x'}
               </p>
             </div>
           )}

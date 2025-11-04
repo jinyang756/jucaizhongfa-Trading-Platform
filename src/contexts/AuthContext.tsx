@@ -34,8 +34,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
        } 
      }; 
  
-     initAuth(); 
-   }, []); 
+     initAuth();
+   }, []);
+
+   
  
    const login = async (credentials: LoginCredentials, userType: 'admin' | 'user'): Promise<{ success: boolean; message?: string }> => { 
      setIsLoading(true); 
