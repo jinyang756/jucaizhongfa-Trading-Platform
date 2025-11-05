@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS admins (
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  email TEXT,
+  is_email_verified BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -132,6 +134,26 @@ CREATE TABLE IF NOT EXISTS notifications (
   create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 基金管理人会员管理表（用于跟踪基金管理人创建的会员）
+CREATE TABLE IF NOT EXISTS admin_managed_users (
+  id SERIAL PRIMARY KEY,
+  admin_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE(admin_id, user_id)
+);
+
+-- 邮箱验证码表（用于生产环境）
+CREATE TABLE IF NOT EXISTS email_verification_codes (
+  id SERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  code TEXT NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 创建索引以提高查询性能
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_related_admin ON users(related_admin);
@@ -145,6 +167,18 @@ CREATE INDEX IF NOT EXISTS idx_contract_orders_user_id ON contract_orders(user_i
 CREATE INDEX IF NOT EXISTS idx_contract_orders_contract_id ON contract_orders(contract_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_create_time ON notifications(create_time);
+CREATE INDEX IF NOT EXISTS idx_admins_username ON admins(username);
+CREATE INDEX IF NOT EXISTS idx_admin_managed_users_admin_id ON admin_managed_users(admin_id);
+CREATE INDEX IF NOT EXISTS idx_admin_managed_users_user_id ON admin_managed_users(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_verification_codes_email ON email_verification_codes(email);
+CREATE INDEX IF NOT EXISTS idx_email_verification_codes_expires ON email_verification_codes(expires_at);
+
+-- 插入基金管理人账号数据
+INSERT INTO admins (username, password_hash) VALUES 
+  ('admin001', '$2a$10$example_hash_001'),
+  ('admin002', '$2a$10$example_hash_002'),
+  ('admin003', '$2a$10$example_hash_003')
+ON CONFLICT (username) DO NOTHING;
 
 -- 插入一些示例数据（可选）
 -- 注意：实际使用时建议通过数据生成脚本来创建数据
@@ -159,3 +193,5 @@ COMMENT ON TABLE fund_orders IS '基金交易订单表';
 COMMENT ON TABLE option_orders IS '期权交易订单表';
 COMMENT ON TABLE contract_orders IS '合约交易订单表';
 COMMENT ON TABLE notifications IS '系统通知表';
+COMMENT ON TABLE admin_managed_users IS '基金管理人会员管理表';
+COMMENT ON TABLE email_verification_codes IS '邮箱验证码表';

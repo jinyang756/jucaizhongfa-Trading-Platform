@@ -29,7 +29,9 @@ export const OptionTrading = () => {
       } else {
         const { data, error } = await supabase
           .from('options')
-          .select('id, option_code, option_name, underlying_asset, option_type, strike_price, expiry_date, min_amount')
+          .select(
+            'id, option_code, option_name, underlying_asset, option_type, strike_price, expiry_date, min_amount',
+          )
           .order('id');
         if (error) throw error;
         setOptions(data || []);
@@ -344,12 +346,18 @@ export const OptionTrading = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {orders.map((order) => (
                   <tr key={order.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.order_no}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.option_code}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {order.order_no}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {order.option_code}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(order.order_price)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.order_amount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {order.order_amount}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(order.premium)}
                     </td>
@@ -359,15 +367,21 @@ export const OptionTrading = () => {
                           order.order_status === 'holding'
                             ? 'bg-yellow-100 text-yellow-800'
                             : order.order_status === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
                         }`}
                       >
-                        {order.order_status === 'holding' ? '持仓' : order.order_status === 'completed' ? '已完成' : '已过期'}
+                        {order.order_status === 'holding'
+                          ? '持仓'
+                          : order.order_status === 'completed'
+                            ? '已完成'
+                            : '已过期'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className={order.profit_amount >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      <span
+                        className={order.profit_amount >= 0 ? 'text-green-600' : 'text-red-600'}
+                      >
                         {order.profit_amount >= 0 ? '+' : ''}
                         {formatCurrency(order.profit_amount)}
                       </span>
@@ -380,9 +394,7 @@ export const OptionTrading = () => {
         )}
 
         {!showHistory && (
-          <div className="text-center py-4 text-gray-500">
-            点击"显示"查看订单历史
-          </div>
+          <div className="text-center py-4 text-gray-500">点击"显示"查看订单历史</div>
         )}
       </div>
 

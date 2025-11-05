@@ -16,13 +16,16 @@ import LoginFooter from '../components/LoginFooter';
  */
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, sendVerificationCode } = useAuth();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState('user');
+  const [requiresEmailVerification, setRequiresEmailVerification] = useState(false);
   const [credentials, setCredentials] = useState({
     username: '',
     password: '',
+    verificationCode: '',
+    email: '',
   });
 
   const handleInputChange = (e) => {
@@ -33,6 +36,35 @@ const Login = () => {
     }));
   };
 
+  const handleSendVerificationCode = async () => {
+    if (!credentials.email) {
+      showToast('请输入邮箱地址', 'error');
+      return;
+    }
+
+    // 简单的邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(credentials.email)) {
+      showToast('请输入有效的邮箱地址', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await sendVerificationCode(credentials.email);
+      if (result.success) {
+        showToast(result.message || '验证码已发送', 'success');
+      } else {
+        showToast(result.message || '发送验证码失败', 'error');
+      }
+    } catch (error) {
+      console.error('Send verification code error:', error);
+      showToast(`发送验证码失败: ${error.message}`, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -41,12 +73,27 @@ const Login = () => {
       return;
     }
 
+    // 如果需要邮箱验证但未输入验证码
+    if (requiresEmailVerification && !credentials.verificationCode.trim()) {
+      showToast('请输入邮箱验证码', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const result = await login(credentials, userType);
+      const loginCredentials = {
+        username: credentials.username,
+        password: credentials.password,
+        verificationCode: credentials.verificationCode,
+      };
+
+      const result = await login(loginCredentials, userType);
       if (result.success) {
         navigate('/');
+      } else if (result.requiresEmailVerification) {
+        setRequiresEmailVerification(true);
+        showToast(result.message || '需要邮箱验证', 'info');
       } else {
         showToast(result.message || '登录失败，请检查用户名和密码', 'error');
       }
@@ -61,6 +108,12 @@ const Login = () => {
   const handleUserTypeChange = (type) => {
     setUserType(type);
     setCredentials((prev) => ({ ...prev, password: '' }));
+  };
+
+  const handleBindEmail = () => {
+    // 在实际应用中，这里应该调用API绑定邮箱
+    // 目前我们只是在前端模拟
+    showToast('邮箱绑定功能将在生产环境中实现', 'info');
   };
 
   useEffect(() => {
@@ -98,7 +151,10 @@ const Login = () => {
           <div className="flex mb-6 bg-slate-800 rounded-lg p-1">
             <button
               type="button"
-              onClick={() => handleUserTypeChange('user')}
+              onClick={() => {
+                handleUserTypeChange('user');
+                setRequiresEmailVerification(false);
+              }}
               disabled={isSubmitting}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 userType === 'user'
@@ -110,7 +166,10 @@ const Login = () => {
             </button>
             <button
               type="button"
-              onClick={() => handleUserTypeChange('admin')}
+              onClick={() => {
+                handleUserTypeChange('admin');
+                setRequiresEmailVerification(false);
+              }}
               disabled={isSubmitting}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 userType === 'admin'
@@ -148,6 +207,51 @@ const Login = () => {
               />
             </div>
 
+            {/* 邮箱绑定输入框 */}
+            {userType === 'admin' && (
+              <div className="relative">
+                <i className="far fa-envelope absolute left-3 top-3 text-slate-400"></i>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="绑定邮箱（可选）"
+                  value={credentials.email}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-md bg-[rgba(15,23,42,0.6)] border border-indigo-500/30 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={handleBindEmail}
+                  className="absolute right-2 top-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-2 rounded"
+                >
+                  绑定
+                </button>
+              </div>
+            )}
+
+            {/* 邮箱验证码输入框 */}
+            {requiresEmailVerification && (
+              <div className="relative">
+                <i className="far fa-key absolute left-3 top-3 text-slate-400"></i>
+                <input
+                  type="text"
+                  name="verificationCode"
+                  placeholder="请输入邮箱验证码"
+                  value={credentials.verificationCode}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-24 py-2.5 rounded-md bg-[rgba(15,23,42,0.6)] border border-indigo-500/30 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={handleSendVerificationCode}
+                  disabled={isSubmitting}
+                  className="absolute right-2 top-2 text-xs bg-amber-600 hover:bg-amber-700 text-white py-1 px-2 rounded disabled:opacity-50"
+                >
+                  获取验证码
+                </button>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -156,8 +260,10 @@ const Login = () => {
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  登录中...
+                  {requiresEmailVerification ? '验证中...' : '登录中...'}
                 </div>
+              ) : requiresEmailVerification ? (
+                '验证并登录'
               ) : (
                 '立即登录'
               )}
@@ -187,7 +293,7 @@ const Login = () => {
             <div className="mt-4 p-3 bg-slate-800 border border-indigo-500/30 rounded-lg">
               <p className="text-xs text-slate-300 font-medium mb-1">🔧 开发环境测试账号：</p>
               <p className="text-xs text-slate-400 font-mono">
-                {userType === 'admin' ? 'admin001 / jczf@2025' : 'testuser01 / 8a3k7z9x'}
+                {userType === 'admin' ? 'admin001-003 / 123456' : 'testuser01 / 8a3k7z9x'}
               </p>
             </div>
           )}
