@@ -1,5 +1,6 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
+import React, { lazy } from 'react';
+import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary'; // 导入 ErrorBoundary
 import LoginPage from './pages/Login.jsx';
 import TradeDashboard from './pages/TradeDashboard.jsx';
 import FundTrading from './pages/FundTrading.jsx';
@@ -15,19 +16,12 @@ import FundLogs from './pages/FundLogs.jsx';
 import OptionTrading from './pages/OptionTrading.jsx';
 import Positions from './pages/Positions.tsx';
 import TransactionHistory from './pages/TransactionHistory.tsx';
-import { UserDashboard } from './pages/UserDashboard.jsx';
+// import { UserDashboard } from './pages/UserDashboard.jsx'; // 移除未使用的导入
+import MyDashboard from './pages/MyDashboard.tsx'; // 导入 MyDashboard
 import { useAuth } from './store/useAuth.js';
+import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // 导入 ProtectedRoute
 
 const LazyAdminDashboard = lazy(() => import('./pages/AdminDashboard.tsx').then(module => ({ default: module.AdminDashboard })));
-
-// 保护路由组件
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isLoggedIn: boolean = useAuth((state) => state.isLoggedIn);
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-};
 
 // 包装主布局和导航的组件
 const MainLayout: React.FC = () => {
@@ -65,38 +59,52 @@ const MainLayout: React.FC = () => {
     );
 };
 
-const App: React.FC = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<TradeDashboard />} />
-          <Route path="trade" element={<FundTrading />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="account-settings" element={<AccountSettings />} />
-          <Route path="admin-contracts" element={<AdminContracts />} />
-          <Route path="admin-dashboard" element={<Suspense fallback={<div>加载管理面板中...</div>}><LazyAdminDashboard /></Suspense>} />
-          <Route path="admin-funds" element={<AdminFunds />} />
-          <Route path="admin-options" element={<AdminOptions />} />
-          <Route path="admin-users" element={<AdminUsers />} />
-          <Route path="contract-trading" element={<ContractTrading />} />
-          <Route path="error-test" element={<ErrorTest />} />
-          <Route path="fund-logs" element={<FundLogs />} />
-          <Route path="fund-trading" element={<FundTrading />} />
-          <Route path="option-trading" element={<OptionTrading />} />
-          <Route path="positions" element={<Positions />} />
-          <Route path="transaction-history" element={<TransactionHistory />} />
-          <Route path="user-dashboard" element={<UserDashboard />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+function App() {
+    // const isLoggedIn = useAuth((state) => state.isLoggedIn); // 移除未使用的声明
+    const userType = useAuth((state) => state.user?.userType);
+
+    return (
+    <ErrorBoundary>
+      {/* <Router> */}
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<MyDashboard />} />
+            <Route path="/trade" element={<TradeDashboard />} />
+            <Route path="/positions" element={<Positions />} />
+            <Route path="/history" element={<TransactionHistory />} />
+            <Route path="/funds" element={<FundTrading />} />
+            <Route path="/contracts" element={<ContractTrading />} />
+            <Route path="/options" element={<OptionTrading />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<AccountSettings />} />
+            <Route path="/fund-logs/:fundId" element={<FundLogs />} />
+            <Route path="/error-test" element={<ErrorTest />} />
+
+            {/* Admin Routes */}
+            {userType === 'admin' && (
+              <>
+                <Route path="/admin/dashboard" element={<LazyAdminDashboard />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/funds" element={<AdminFunds />} />
+                <Route path="/admin/contracts" element={<AdminContracts />} />
+                <Route path="/admin/options" element={<AdminOptions />} />
+              </>
+            )}
+          </Route>
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      {/* </Router> */}
+    </ErrorBoundary>
   );
-};
+}
 
 export default App;

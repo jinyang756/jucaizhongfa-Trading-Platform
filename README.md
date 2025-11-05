@@ -317,7 +317,7 @@ This project uses ESLint and Prettier to maintain consistent code style and form
 - **Prettier**: Used for code formatting to ensure a consistent code style.
 
 您可以使用以下命令在本地运行检查和自动修复：
-You can use the following commands to run checks and auto-fix locally:
+You can use the following commands在本地运行检查和自动修复：
 
 ```bash
 npm run lint
@@ -375,7 +375,7 @@ If you encounter any problems during the contribution process or have any questi
 -   **邮箱**：AthenDrakomin@proton.me / **Email**: AthenDrakomin@proton.me
 
 再次感谢您的贡献！
-Thank you again for your contributions!
+Thank you again for your contributions！
 
 ---
 
@@ -391,6 +391,24 @@ Thank you again for your contributions!
 ---
 
 ## 📝 更新日志 | Changelog
+
+## 1.0.1 (2025-11-05)
+
+### 🐛 Bug 修复 | Bug Fixes
+
+- 修复了 `src/pages/Positions.tsx` 中 `Position` 接口 `id` 类型不匹配的问题。
+- 修复了 `src/pages/Positions.tsx` 中 `allPositions` 隐式 `any` 类型的问题。
+- 修复了 `src/pages/Positions.tsx` 中 `formatCurrency`, `formatPercentage`, `getProfitLossColor`, `getPositionTypeColor` 函数参数类型未定义的问题。
+- 移除了 `src/pages/TransactionHistory.tsx` 中未使用的 `React` 导入。
+- 移除了 `src/App.tsx` 中未使用的 `AuthUser` 导入和 `scrolled` 状态变量。
+- 移除了 `src/pages/AdminDashboard.tsx` 中未使用的 `React` 导入。
+- 修复了 `src/pages/AdminDashboard.tsx` 中 `navigateToPage` 函数 `path` 参数隐式 `any` 类型的问题。
+- 移除了 `src/pages/Positions.tsx` 中未使用的 `React`, `RealTimeChart` 导入和 `showToast` 变量。
+- 修复了 `src/api/funds.ts` 中 `fetchData` 期望数组但接收到单个 `FundRow` 的 `TS2345` 错误。
+- 移除了 `src/api/useFetch.ts` 中未使用的导入和 `FetchOptions` 接口。
+- 移除了 `src/App.tsx` 中未使用的 `AdminDashboard` 导入。
+- 移除了 `src/pages/Positions.tsx` 中未使用的 `useToast` 导入。
+- 修复了 `src/api/contracts.ts` 中 `fetchData` 期望数组但接收到单个 `ContractRow` 的 `TS2345` 错误。
 
 ## 1.0.0 (2023-10-27)
 
@@ -419,7 +437,7 @@ Thank you again for your contributions!
 ## 📄 许可证 | License
 
 本项目基于 [MIT License](LICENSE) 开源。
-This project is open-sourced under the [MIT License](LICENSE).
+This project is open-sourced under the [MIT License](LICENSE)。
 
 ---
 

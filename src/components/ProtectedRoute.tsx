@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../store/useAuth.ts';
+import { useAuth } from '../store/useAuth.js';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,7 +13,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredUserType,
   redirectTo = '/login'
 }) => {
-  const { user, isLoggedIn } = useAuth();
+  const isLoggedIn = useAuth((state) => state.isLoggedIn);
+  const user = useAuth((state) => state.user);
   const location = useLocation();
 
 
@@ -43,7 +44,8 @@ interface PublicRouteProps {
 }
 
 export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const { user, isLoggedIn } = useAuth();
+  const isLoggedIn = useAuth((state) => state.isLoggedIn);
+  const user = useAuth((state) => state.user);
 
 
   // 已登录用户重定向到对应首页

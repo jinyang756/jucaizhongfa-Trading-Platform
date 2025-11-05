@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../store/useAuth';
 import { useNavigate } from 'react-router-dom';
-// import type { LoginCredentials } from '../types/auth';
+// import type { LoginCredentials from '../types/auth';
 import { config } from '../config/env';
 import { showToast } from '../utils/showToast';
+import backgroundImage from '../assets/jucai.jpg'; // 导入背景图片
 
 /**
  * 登录页组件（高对比度赛博金融风格）
@@ -68,7 +69,13 @@ const Login = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0e27] via-[#1b1f3b] to-[#0a0e27]">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* 背景图片层 */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      ></div>
+
       {/* 粒子渐变层 */}
       <div className="absolute inset-0 animate-pulse-slow bg-[radial-gradient(circle_at_20%_30%,rgba(99,102,241,0.15),transparent_60%),radial-gradient(circle_at_80%_70%,rgba(236,72,153,0.15),transparent_70%)]"></div>
   
