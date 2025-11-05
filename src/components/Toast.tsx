@@ -1,4 +1,6 @@
-import React, { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
+import React, { useState, useEffect, useCallback, createContext, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { useToastStore } from '../store/useToastStore';
 
 // Toast类型定义
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -108,41 +110,34 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
 };
 
 // Toast提供者组件
-export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { toasts, hideToast } = useToastStore();
 
-  const showToast = (message: string, type: ToastType = 'info') => {
-    const id = Date.now();
-    setToasts(prevToasts => [...prevToasts, { id, message, type }]);
-  };
+  useEffect(() => {
+    toasts.forEach(toast => {
+      const timer = setTimeout(() => {
+        hideToast(toast.id);
+      }, 3000); // 3 seconds
+      return () => clearTimeout(timer);
+    });
+  }, [toasts, hideToast]);
 
-  const hideToast = (id: number) => {
-    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
-  };
+  const toastContainer = document.getElementById('toast-root');
+  if (!toastContainer) return null;
 
-  return (
-    <ToastContext.Provider value={{ showToast, hideToast }}>
-      {children}
-      <div className="fixed top-4 right-4 z-50 flex flex-col items-end">
-        {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            id={toast.id}
-            message={toast.message}
-            type={toast.type}
-            onClose={() => hideToast(toast.id)}
-          />
-        ))}
-      </div>
-    </ToastContext.Provider>
+  return createPortal(
+    <div className="toast-container">
+      {toasts.map((toast) => (
+        <div key={toast.id} className={`toast toast-${toast.type}`}>
+          {toast.message}
+        </div>
+      ))}
+    </div>,
+    toastContainer
   );
 };
 
-// 自定义Hook，用于在组件中使用Toast
 export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (context === undefined) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-  return context;
+  const { showToast } = useToastStore();
+  return { showToast };
 };

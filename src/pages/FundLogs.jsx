@@ -1,24 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { format } from 'date-fns';
 
-interface FundLogRow {
-  id?: number;
-  admin_username: string;
-  amount: number;
-  operate_type: string;
-  remark?: string;
-  operate_time: string;
-}
+const currency = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const currency = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-export const FundLogs: React.FC = () => {
+export const FundLogs = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [logs, setLogs] = useState<FundLogRow[]>([]);
+  const [logs, setLogs] = useState([]);
 
   async function loadLogs() {
     if (!user) return;
@@ -32,7 +23,7 @@ export const FundLogs: React.FC = () => {
           .eq('user_id', user.id)
           .order('operate_time', { ascending: false });
         if (error) throw error;
-        const mapped = (data || []).map((l: any) => ({
+        const mapped = (data || []).map((l) => ({
           id: l.id,
           admin_username: String(l.admin_username || '-'),
           amount: Number(l.amount || 0),
@@ -42,13 +33,13 @@ export const FundLogs: React.FC = () => {
         }));
         setLogs(mapped);
       } else {
-        const demo: FundLogRow[] = [
+        const demo = [
           { admin_username: 'admin001', amount: 5000, operate_type: 'deposit', remark: '演示数据', operate_time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
           { admin_username: 'admin001', amount: -800, operate_type: 'withdraw', remark: '演示数据', operate_time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
         ];
         setLogs(demo);
       }
-    } catch (e: any) {
+    } catch (e) {
       setError(e?.message || '加载资金明细失败');
     } finally {
       setLoading(false);
@@ -78,8 +69,8 @@ export const FundLogs: React.FC = () => {
               <th className="p-3">操作时间</th>
               <th className="p-3">类型</th>
               <th className="p-3">金额</th>
-              <th className="p-3">管理员</th>
-              <th className="p-3">备注</th>
+              <th className="p-3 hidden md:table-cell">管理员</th>
+              <th className="p-3 hidden md:table-cell">备注</th>
             </tr>
           </thead>
           <tbody>
@@ -88,8 +79,8 @@ export const FundLogs: React.FC = () => {
                 <td className="p-3">{l.operate_time}</td>
                 <td className="p-3">{l.operate_type}</td>
                 <td className="p-3">{currency(l.amount)}</td>
-                <td className="p-3">{l.admin_username}</td>
-                <td className="p-3">{l.remark || '-'}</td>
+                <td className="p-3 hidden md:table-cell">{l.admin_username}</td>
+                <td className="p-3 hidden md:table-cell">{l.remark || '-'}</td>
               </tr>
             ))}
             {logs.length === 0 && (
@@ -105,4 +96,3 @@ export const FundLogs: React.FC = () => {
 };
 
 export default FundLogs;
-

@@ -1,28 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
-import type { OptionOrder } from '../utils/supabase';
 import { useToast } from '../components/Toast';
 
-interface OptionRow { 
-  id?: number; 
-  option_code: string; 
-  option_name: string;
-  cycle?: number;
-  yield_rate?: number;
-  min_invest?: number;
-}
-
-export const OptionTrading: React.FC = () => {
+export const OptionTrading = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [options, setOptions] = useState<OptionRow[]>([]);
-  const [selected, setSelected] = useState<string>('');
-  const [amount, setAmount] = useState<number>(0);
-  const [predict, setPredict] = useState<'up' | 'down'>('up');
+  const [options, setOptions] = useState([]);
+  const [selected, setSelected] = useState('');
+  const [amount, setAmount] = useState(0);
+  const [predict, setPredict] = useState('up');
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<OptionOrder[]>([]);
+  const [orders, setOrders] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
 
   // 加载期权产品
@@ -107,7 +97,7 @@ export const OptionTrading: React.FC = () => {
   }, [user]);
 
   // 验证交易限额
-  const validateTradeLimit = (tradeAmount: number): boolean => {
+  const validateTradeLimit = (tradeAmount) => {
     if (!user?.limits) return false;
 
     // 检查单笔交易限额
@@ -173,7 +163,7 @@ export const OptionTrading: React.FC = () => {
       if (!supabaseEnabled) {
         setMsg('下单成功（本地演示）');
         // 添加到本地订单列表
-        const newOrder: OptionOrder = {
+        const newOrder = {
           id: Date.now(),
           order_no: orderNo,
           user_id: user.id,
@@ -210,15 +200,15 @@ export const OptionTrading: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount) => {
     return `¥${amount.toLocaleString()}`;
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString) => {
     return new Date(dateString).toLocaleString('zh-CN');
   };
 
-  const getProfitStatusText = (status: string) => {
+  const getProfitStatusText = (status) => {
     switch (status) {
       case 'win': return '盈利';
       case 'lose': return '亏损';
@@ -227,7 +217,7 @@ export const OptionTrading: React.FC = () => {
     }
   };
 
-  const getProfitStatusColor = (status: string) => {
+  const getProfitStatusColor = (status) => {
     switch (status) {
       case 'win': return 'text-green-600';
       case 'lose': return 'text-red-600';
@@ -303,7 +293,7 @@ export const OptionTrading: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">预测方向</label>
             <select 
               value={predict} 
-              onChange={e => setPredict(e.target.value as 'up' | 'down')} 
+              onChange={e => setPredict(e.target.value)} 
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="up">看涨 ↗</option>
@@ -358,13 +348,13 @@ export const OptionTrading: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">订单号</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">预测</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">投资金额</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">盈亏</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开始时间</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">结束时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">订单号</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">预测</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">投资金额</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">状态</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/5">盈亏</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">开始时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">结束时间</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -375,33 +365,33 @@ export const OptionTrading: React.FC = () => {
                 ) : (
                   orders.map(order => (
                     <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 hidden md:table-cell">
                         {order.order_no}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                           order.predict === 'up' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {order.predict === 'up' ? '看涨 ↗' : '看跌 ↘'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
                         {formatCurrency(order.invest_amount)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm w-1/8">
                         <span className={getProfitStatusColor(order.profit_status)}>
                           {getProfitStatusText(order.profit_status)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm w-3/5">
                         <span className={order.profit_amount > 0 ? 'text-green-600' : order.profit_amount < 0 ? 'text-red-600' : 'text-gray-600'}>
                           {order.profit_amount !== 0 ? formatCurrency(order.profit_amount) : '--'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
                         {formatDateTime(order.start_time)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
                         {order.end_time ? formatDateTime(order.end_time) : '--'}
                       </td>
                     </tr>

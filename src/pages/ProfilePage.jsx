@@ -1,26 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-interface UserProfile {
-  username: string;
-  current_balance: number;
-  fund_permission: boolean;
-  option_permission: boolean;
-  sh_contract_permission: boolean;
-  hk_contract_permission: boolean;
-  single_trade_max: number;
-  daily_trade_max: number;
-}
+// 徽章组件
+const Badge = ({ iconClass, title, isUnlocked, colorClass = 'text-gray-500', bgColorClass = 'bg-gray-700', borderColorClass = 'border-gray-600' }) => (
+  <div className="text-center">
+    <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center border-2 ${borderColorClass} ${bgColorClass} ${isUnlocked ? '' : 'grayscale opacity-50'}`}>
+      <i className={`${iconClass} text-2xl ${colorClass}`}></i>
+    </div>
+    <p className={`text-xs mt-2 ${isUnlocked ? 'text-gray-300' : 'text-gray-500'}`}>{title}</p>
+  </div>
+);
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState<UserProfile | null>(null);
+  const [formData, setFormData] = useState(null);
+
+  // 模拟成就数据
+  const achievements = [
+    { id: 1, icon: 'fas fa-coins', title: '首次充值', unlocked: true, color: 'text-yellow-400', bg: 'bg-yellow-900/50', border: 'border-yellow-600' },
+    { id: 2, icon: 'fas fa-chart-line', title: '单日收益 5%', unlocked: true, color: 'text-green-400', bg: 'bg-green-900/50', border: 'border-green-600' },
+    { id: 3, icon: 'fas fa-trophy', title: '交易大师', unlocked: false, color: 'text-blue-400', bg: 'bg-blue-900/50', border: 'border-blue-600' },
+    { id: 4, icon: 'fas fa-star', title: '百次交易', unlocked: true, color: 'text-purple-400', bg: 'bg-purple-900/50', border: 'border-purple-600' },
+    { id: 5, icon: 'fas fa-handshake', title: '社区贡献者', unlocked: false, color: 'text-indigo-400', bg: 'bg-indigo-900/50', border: 'border-indigo-600' },
+    { id: 6, icon: 'fas fa-shield-alt', title: '风控达人', unlocked: true, color: 'text-red-400', bg: 'bg-red-900/50', border: 'border-red-600' },
+    { id: 7, icon: 'fas fa-rocket', title: '极速交易', unlocked: false, color: 'text-teal-400', bg: 'bg-teal-900/50', border: 'border-teal-600' },
+    { id: 8, icon: 'fas fa-gem', title: '财富之星', unlocked: true, color: 'text-pink-400', bg: 'bg-pink-900/50', border: 'border-pink-600' },
+  ];
 
   useEffect(() => {
     if (user) {
@@ -60,7 +71,7 @@ export default function ProfilePage() {
       }
       setProfile(data);
       setFormData(data);
-    } catch (error: any) {
+    } catch (error) {
       toast.error('加载用户资料失败: ' + error.message);
       console.error('Error fetching profile:', error.message);
     } finally {
@@ -68,7 +79,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => {
       if (!prev) return null;
@@ -110,7 +121,7 @@ export default function ProfilePage() {
       setProfile(formData);
       setEditing(false);
       toast.success('用户资料更新成功！');
-    } catch (error: any) {
+    } catch (error) {
       toast.error('更新用户资料失败: ' + error.message);
       console.error('Error updating profile:', error.message);
     } finally {
@@ -222,6 +233,26 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* 成就徽章墙 */}
+      <div className="glass-card p-6 mt-6 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
+          <h4 className="text-xl font-semibold mb-6 text-purple-400 flex items-center justify-center">
+              <i className="fas fa-trophy mr-3 text-yellow-400"></i> 我的交易徽章
+          </h4>
+          <div className="flex flex-wrap gap-6 justify-center">
+              {achievements.map(badge => (
+                <Badge 
+                  key={badge.id}
+                  iconClass={badge.icon}
+                  title={badge.title}
+                  isUnlocked={badge.unlocked}
+                  colorClass={badge.color}
+                  bgColorClass={badge.bg}
+                  borderColorClass={badge.border}
+                />
+              ))}
+          </div>
       </div>
     </div>
   );

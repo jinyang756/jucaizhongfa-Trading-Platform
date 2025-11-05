@@ -2,10 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Col, Row, Spin } from 'antd';
 import { FundOutlined, StockOutlined, FileTextOutlined } from '@ant-design/icons';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { useToast } from '../hooks/useToast';
 
-export const TradeDashboard: React.FC = () => {
+export const TradeDashboard = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const { showToast } = useToast();
@@ -13,7 +13,7 @@ export const TradeDashboard: React.FC = () => {
 
 
   // 权限检查函数
-  const checkPermission = (type: 'fund' | 'option' | 'contract'): boolean => {
+  const checkPermission = (type) => {
     if (!user?.permissions) return false;
     
     switch (type) {
@@ -29,7 +29,7 @@ export const TradeDashboard: React.FC = () => {
   };
 
   // 处理交易卡片点击
-  const handleTradeClick = (path: string, type: 'fund' | 'option' | 'contract') => {
+  const handleTradeClick = (path, type) => {
     if (isLoading) return;
     
     if (checkPermission(type)) {

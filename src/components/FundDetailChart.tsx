@@ -13,6 +13,22 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
   const [performanceData, setPerformanceData] = useState<FundPerformanceData[]>([]);
   const [timeRange, setTimeRange] = useState<'1M' | '3M' | '6M' | '1Y'>('1Y');
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false); // New state for mobile detection
+
+  // State for controlling custom Tooltip
+  const [activeTooltip, setActiveTooltip] = useState(false);
+  const [tooltipPayload, setTooltipPayload] = useState<any[]>([]);
+  const [tooltipCoordinate, setTooltipCoordinate] = useState<{ x: number; y: number } | undefined>(undefined);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // Adjust breakpoint as needed
+    };
+
+    handleResize(); // Set initial value
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchFundPerformance();
@@ -90,6 +106,23 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
     }
   }
 
+  // Custom Tooltip event handlers
+  const handleChartClick = (data: any) => {
+    if (isMobile && data && data.activePayload) {
+      setActiveTooltip(true);
+      setTooltipPayload(data.activePayload);
+      setTooltipCoordinate(data.activeCoordinate);
+    } else if (isMobile) {
+      setActiveTooltip(false);
+    }
+  };
+
+  const handleChartMouseLeave = () => {
+    if (!isMobile) {
+      setActiveTooltip(false);
+    }
+  };
+
   return (
     <div className="border rounded-lg p-4 bg-white">
       <div className="flex justify-between items-center mb-4">
@@ -114,8 +147,12 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
       {loading ? (
         <div className="text-center py-8">加载中...</div>
       ) : (
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={performanceData}>
+        <ResponsiveContainer width="100%" aspect={2}>
+          <AreaChart
+            data={performanceData}
+            onClick={handleChartClick}
+            onMouseLeave={handleChartMouseLeave}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
             <XAxis dataKey="date" axisLine={{ stroke: '#e5e7eb' }} />
             <YAxis
@@ -123,6 +160,10 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
               tickFormatter={(value) => `${value}%`}
             />
             <Tooltip
+              cursor={isMobile ? false : true}
+              active={isMobile ? activeTooltip : undefined}
+              payload={isMobile ? tooltipPayload : undefined}
+              coordinate={isMobile ? tooltipCoordinate : undefined}
               formatter={(value: number) => [`${value}%`, '收益率']}
               labelFormatter={(label) => `月份: ${label}`}
             />

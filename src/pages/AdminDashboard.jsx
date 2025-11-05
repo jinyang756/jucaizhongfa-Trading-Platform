@@ -1,8 +1,8 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { useNavigate } from 'react-router-dom';
 
-export const AdminDashboard: React.FC = () => {
+export const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -10,7 +10,7 @@ export const AdminDashboard: React.FC = () => {
     logout();
   };
 
-  const navigateToPage = (path: string) => {
+  const navigateToPage = (path) => {
     navigate(path);
   };
 

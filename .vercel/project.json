@@ -1,0 +1,6 @@
+{
+  "name": "jucaizhongfa-trading-platform-v1",
+  "framework": null,
+  "installCommand": "npm install",
+  "outputDirectory": "dist"
+}

@@ -1,30 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
-import type { FundOrder } from '../utils/supabase';
 import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
 import { useToast } from '../components/Toast';
 import { startDataSimulation, stopDataSimulation } from '../services/mockDataService';
 import RealTimeChart from '../components/RealTimeChart';
 
-interface FundRow { 
-  id?: number; 
-  fund_code: string; 
-  fund_name: string;
-  fund_type?: string;
-  risk_level?: string;
-  min_amount?: number;
-}
+const AICalloutCard = () => (
+    <div className="bg-gradient-to-r from-indigo-900/70 to-purple-900/70 p-3 rounded-lg border border-indigo-500/50 mb-4 shadow-xl">
+        <div className="flex items-center justify-between">
+            <h4 className="text-md font-bold text-yellow-300 flex items-center">
+                <i className="fas fa-robot mr-2 pulse"></i> AI 决策助理
+            </h4>
+            <span className="text-xs text-green-400">信号准确率: 78.5%</span>
+        </div>
+        <p className="mt-1 text-sm text-gray-200">
+            【中国平安 45.67】 → **技术形态强劲，建议买入**。请关注下方AI风控止盈线。
+        </p>
+    </div>
+);
 
-export const FundTrading: React.FC = () => {
+export const FundTrading = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [funds, setFunds] = useState<FundRow[]>([]);
-  const [selected, setSelected] = useState<string>('');
-  const [amount, setAmount] = useState<number>(0);
+  const [funds, setFunds] = useState([]);
+  const [selected, setSelected] = useState('');
+  const [amount, setAmount] = useState(0);
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<FundOrder[]>([]);
+  const [orders, setOrders] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
 
   const loadFunds = async () => {
@@ -119,7 +123,7 @@ export const FundTrading: React.FC = () => {
   }, [user]);
 
   // 验证交易权限
-  const validatePermissions = (): boolean => {
+  const validatePermissions = () => {
     const result = validateUserPermissions(user, 'fund');
     if (!result.isValid) {
       showToast(result.message, 'error');
@@ -128,7 +132,7 @@ export const FundTrading: React.FC = () => {
   };
 
   // 验证交易限额
-  const validateTradeLimit = (): boolean => {
+  const validateTradeLimit = () => {
     const todayFundOrders = orders
       .filter(order => {
         const orderDate = new Date(order.created_at).toDateString();
@@ -143,7 +147,7 @@ export const FundTrading: React.FC = () => {
   };
 
   // 验证基金最低投资额
-  const validateMinAmount = (): boolean => {
+  const validateMinAmount = () => {
     const selectedFund = funds.find(f => f.fund_code === selected);
     if (selectedFund?.min_amount && amount < selectedFund.min_amount) {
       setMsg(`投资金额不能低于最低投资额 ¥${selectedFund.min_amount.toLocaleString()}`);
@@ -190,11 +194,11 @@ export const FundTrading: React.FC = () => {
       if (!supabaseEnabled) {
         setMsg('下单成功（本地演示）');
         // 添加到本地订单列表
-        const newOrder: FundOrder = {
+        const newOrder = {
           id: Date.now(),
           order_no: orderNo,
           user_id: user.id,
-          fund_id: selectedFund.id!,
+          fund_id: selectedFund.id,
           fund_code: selected,
           amount,
           shares: amount / 1.2, // 模拟净值1.2
@@ -233,15 +237,15 @@ export const FundTrading: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount) => {
     return `¥${amount.toLocaleString()}`;
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString) => {
     return new Date(dateString).toLocaleString('zh-CN');
   };
 
-  const getOrderStatusText = (status: string) => {
+  const getOrderStatusText = (status) => {
     switch (status) {
       case 'holding': return '持仓中';
       case 'redeemed': return '已赎回';
@@ -250,7 +254,7 @@ export const FundTrading: React.FC = () => {
     }
   };
 
-  const getOrderStatusColor = (status: string) => {
+  const getOrderStatusColor = (status) => {
     switch (status) {
       case 'holding': return 'text-blue-600';
       case 'redeemed': return 'text-gray-600';
@@ -259,7 +263,7 @@ export const FundTrading: React.FC = () => {
     }
   };
 
-  const getRiskLevelColor = (level: string) => {
+  const getRiskLevelColor = (level) => {
     switch (level) {
       case '低': return 'text-green-600 bg-green-100';
       case '中等': return 'text-yellow-600 bg-yellow-100';
@@ -371,9 +375,15 @@ export const FundTrading: React.FC = () => {
           <button 
             disabled={loading || !amount || !selected} 
             onClick={placeOrder} 
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
+            className="w-full py-2.5 rounded-md text-white font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-indigo-900/40 transform transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '投资中...' : '立即投资'}
+            {loading ? '投资中...' : '确认买入（市价）'}
+          </button>
+          <button 
+            onClick={() => showToast('一键跟单功能开发中...', 'info')}
+            className="w-full mt-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+              <i className="fas fa-magic mr-1"></i> 一键跟单AI信号
           </button>
         </div>
       </div>
@@ -381,6 +391,16 @@ export const FundTrading: React.FC = () => {
       {/* 实时行情图表 */}
       {selected && (
         <div className="mb-6">
+          <AICalloutCard />
+          {/* AI 风控建议 */}
+          <div className="bg-gradient-to-r from-red-900/70 to-orange-900/70 p-3 rounded-lg border border-red-500/50 mt-4 shadow-xl">
+            <h4 className="text-md font-bold text-red-300 flex items-center">
+                <i className="fas fa-exclamation-triangle mr-2"></i> AI 风控建议
+            </h4>
+            <p className="mt-1 text-sm text-gray-200">
+                【中国平安 45.67】 → **当前波动较大，建议设置止损线在 44.50**，止盈线在 47.00。
+            </p>
+          </div>
           <RealTimeChart symbol={selected} />
         </div>
       )}
@@ -395,50 +415,57 @@ export const FundTrading: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">订单号</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">基金代码</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">投资金额</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">份额</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">净值</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">盈亏</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">投资时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">订单号</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">基金代码</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">金额</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">份额</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">净值</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">状态</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">类型</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/5">盈亏金额</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">暂无投资记录</td>
+                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">暂无交易记录</td>
                   </tr>
                 ) : (
                   orders.map(order => (
                     <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 hidden md:table-cell">
                         {order.order_no}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
                         {order.fund_code}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
                         {formatCurrency(order.amount)}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {order.shares?.toFixed(2) || '--'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                        {order.shares?.toFixed(2)}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {order.nav?.toFixed(4) || '--'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                        {order.nav?.toFixed(4)}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm w-1/8">
                         <span className={getOrderStatusColor(order.order_status)}>
                           {getOrderStatusText(order.order_status)}
                         </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
+                        {order.order_type === 'buy' ? '买入' : '赎回'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDateTime(order.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm w-3/5">
                         <span className={order.profit_amount > 0 ? 'text-green-600' : order.profit_amount < 0 ? 'text-red-600' : 'text-gray-600'}>
-                          {order.profit_amount !== 0 ? formatCurrency(order.profit_amount) : '--'}
+                          {order.profit_amount !== undefined ? formatCurrency(order.profit_amount) : '--'}
                         </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatDateTime(order.created_at)}
                       </td>
                     </tr>

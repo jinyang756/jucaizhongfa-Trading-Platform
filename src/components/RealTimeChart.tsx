@@ -10,8 +10,21 @@ interface PriceData {
 export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string }) {
   const [data, setData] = useState<PriceData[]>([]);
   const [currentPrice, setCurrentPrice] = useState<number>(100);
+  const [isMobile, setIsMobile] = useState(false); // New state for mobile detection
+
+  // State for controlling custom Tooltip
+  const [activeTooltip, setActiveTooltip] = useState(false);
+  const [tooltipPayload, setTooltipPayload] = useState<any[]>([]);
+  const [tooltipCoordinate, setTooltipCoordinate] = useState<{ x: number; y: number } | undefined>(undefined);
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Set initial value
+
     // 初始化历史数据
     const initialData: PriceData[] = [];
     const now = new Date();
@@ -53,6 +66,23 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
     };
   }, [symbol]); // Add symbol to dependency array
 
+  // Custom Tooltip event handlers
+  const handleChartClick = (data: any) => {
+    if (isMobile && data && data.activePayload) {
+      setActiveTooltip(true);
+      setTooltipPayload(data.activePayload);
+      setTooltipCoordinate(data.activeCoordinate);
+    } else if (isMobile) {
+      setActiveTooltip(false);
+    }
+  };
+
+  const handleChartMouseLeave = () => {
+    if (!isMobile) {
+      setActiveTooltip(false);
+    }
+  };
+
   // 计算涨跌状态
   const priceChange = data.length > 1
     ? ((currentPrice - data[0].price) / data[0].price * 100).toFixed(2)
@@ -73,8 +103,12 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
         </div>
       </div>
       
-      <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={data}>
+      <ResponsiveContainer width="100%" aspect={2}>
+        <LineChart
+          data={data}
+          onClick={handleChartClick}
+          onMouseLeave={handleChartMouseLeave}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
           <XAxis
             dataKey="time"
@@ -88,6 +122,10 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
             tickFormatter={(value) => `$${value.toLocaleString()}`}
           />
           <Tooltip
+            cursor={isMobile ? false : true}
+            active={isMobile ? activeTooltip : undefined}
+            payload={isMobile ? tooltipPayload : undefined}
+            coordinate={isMobile ? tooltipCoordinate : undefined}
             formatter={(value: number) => [`$${value.toLocaleString()}`, '价格']}
             labelFormatter={(label) => `时间: ${label}`}
           />

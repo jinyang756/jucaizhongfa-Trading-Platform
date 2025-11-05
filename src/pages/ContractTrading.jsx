@@ -1,39 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
-import type { ContractOrder } from '../utils/supabase';
 import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
-import type { ValidationResult } from '../utils/tradeValidation';
 import { useToast } from '../components/Toast';
+import { validateForm, required, isNumber, min } from '../utils/validation';
 
-interface ContractRow { 
-  id?: number; 
-  contract_code: string; 
-  contract_name: string;
-  market?: string;
-  lever_min?: number;
-  lever_max?: number;
-  margin_ratio?: number;
-}
+const RealTimeChart = React.lazy(() => import('../components/RealTimeChart'));
 
-export const ContractTrading: React.FC = () => {
+export const ContractTrading = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [contracts, setContracts] = useState<ContractRow[]>([]);
-  const [selected, setSelected] = useState<string>('');
-  const [orderType, setOrderType] = useState<'market' | 'limit'>('market');
-  const [direction, setDirection] = useState<'buy' | 'sell'>('buy');
-  const [lever, setLever] = useState<number>(1);
-  const [orderPrice, setOrderPrice] = useState<number>(0);
-  const [orderAmount, setOrderAmount] = useState<number>(0);
-  const [stopLoss, setStopLoss] = useState<number>(0);
-  const [takeProfit, setTakeProfit] = useState<number>(0);
+  const [contracts, setContracts] = useState([]);
+  const [selected, setSelected] = useState('');
   const [msg, setMsg] = useState('');
+  const [lever, setLever] = useState(1);
+  const [orderPrice, setOrderPrice] = useState(0);
+  const [orderAmount, setOrderAmount] = useState(0);
+  const [stopLoss, setStopLoss] = useState(0);
+  const [takeProfit, setTakeProfit] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<ContractOrder[]>([]);
+  const [orders, setOrders] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  // 加载合约产品
   const loadContracts = async () => {
     setLoading(true);
     setMsg('');
@@ -124,13 +112,13 @@ export const ContractTrading: React.FC = () => {
   }, [user]);
 
   // 验证交易权限
-  const validatePermissions = (): boolean => {
+  const validatePermissions = () => {
     if (!user?.permissions) return false;
 
     const selectedContract = contracts.find(c => c.contract_code === selected);
     if (!selectedContract) return false;
 
-    let result: ValidationResult;
+    let result;
     if (selectedContract.market === 'SH') {
       result = validateUserPermissions(user, 'shContract');
     } else if (selectedContract.market === 'HK') {
@@ -146,7 +134,7 @@ export const ContractTrading: React.FC = () => {
   };
 
   // 验证交易限额
-  const validateTradeLimit = (): boolean => {
+  const validateTradeLimit = () => {
     const marginAmount = calculateMarginAmount();
     const todayContractOrders = orders
       .filter(order => {
@@ -162,7 +150,7 @@ export const ContractTrading: React.FC = () => {
   };
 
   // 计算保证金
-  const calculateMarginAmount = (): number => {
+  const calculateMarginAmount = () => {
     if (!orderPrice || !orderAmount || !lever) return 0;
     return (orderPrice * orderAmount) / lever;
   };
@@ -215,7 +203,7 @@ export const ContractTrading: React.FC = () => {
       if (!supabaseEnabled) {
         setMsg('下单成功（本地演示）');
         // 添加到本地订单列表
-        const newOrder: ContractOrder = {
+        const newOrder = {
           id: Date.now(),
           order_no: orderNo,
           user_id: user.id,
@@ -269,15 +257,15 @@ export const ContractTrading: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount) => {
     return `¥${amount.toLocaleString()}`;
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString) => {
     return new Date(dateString).toLocaleString('zh-CN');
   };
 
-  const getOrderStatusText = (status: string) => {
+  const getOrderStatusText = (status) => {
     switch (status) {
       case 'holding': return '持仓中';
       case 'closed': return '已平仓';
@@ -286,7 +274,7 @@ export const ContractTrading: React.FC = () => {
     }
   };
 
-  const getOrderStatusColor = (status: string) => {
+  const getOrderStatusColor = (status) => {
     switch (status) {
       case 'holding': return 'text-blue-600';
       case 'closed': return 'text-gray-600';
@@ -368,7 +356,7 @@ export const ContractTrading: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">订单类型</label>
             <select 
               value={orderType} 
-              onChange={e => setOrderType(e.target.value as 'market' | 'limit')} 
+              onChange={e => setOrderType(e.target.value)} 
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="market">市价单</option>
@@ -380,7 +368,7 @@ export const ContractTrading: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">交易方向</label>
             <select 
               value={direction} 
-              onChange={e => setDirection(e.target.value as 'buy' | 'sell')} 
+              onChange={e => setDirection(e.target.value)} 
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="buy">买入 (做多)</option>
@@ -508,59 +496,91 @@ export const ContractTrading: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">订单号</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">方向</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">杠杆</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">价格</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">数量</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">保证金</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">盈亏</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开仓时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">订单号</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">合约</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">方向</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开仓价</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">数量</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">杠杆</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">保证金</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">当前价</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">浮动盈亏</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">止损</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">止盈</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开仓时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">平仓时间</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">暂无交易记录</td>
+                    <td colSpan={15} className="px-6 py-4 text-center text-gray-500">暂无交易记录</td>
                   </tr>
                 ) : (
                   orders.map(order => (
                     <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 hidden md:table-cell">
                         {order.order_no}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {order.contract_code}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                           order.direction === 'buy' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
-                          {order.direction === 'buy' ? '买入' : '卖出'}
+                          {order.direction === 'buy' ? '买涨' : '卖跌'}
                         </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {order.lever}x
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {order.open_price?.toFixed(2)}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(order.order_price)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {order.volume}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {order.order_amount}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                        {order.leverage}x
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(order.margin_amount)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatCurrency(order.margin)}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {order.current_price?.toFixed(2) || '--'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={order.pnl > 0 ? 'text-green-600' : order.pnl < 0 ? 'text-red-600' : 'text-gray-600'}>
+                          {order.pnl !== undefined ? formatCurrency(order.pnl) : '--'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                        {order.stop_loss_price?.toFixed(2) || '--'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                        {order.take_profit_price?.toFixed(2) || '--'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className={getOrderStatusColor(order.order_status)}>
                           {getOrderStatusText(order.order_status)}
                         </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm">
-                        <span className={order.profit_amount > 0 ? 'text-green-600' : order.profit_amount < 0 ? 'text-red-600' : 'text-gray-600'}>
-                          {order.profit_amount !== 0 ? formatCurrency(order.profit_amount) : '--'}
-                        </span>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDateTime(order.created_at)}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDateTime(order.open_time)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                        {order.close_time ? formatDateTime(order.close_time) : '--'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        {order.order_status === 'open' && (
+                          <button
+                            onClick={() => closeOrder(order.id)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            disabled={loading}
+                          >
+                            平仓
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

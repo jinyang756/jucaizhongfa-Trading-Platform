@@ -1,42 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { exportToExcel } from '../utils/exportExcel';
 import { useToast } from '../components/Toast';
 import { isNumber, min, validateForm, required } from '../utils/validation';
 import UserBalanceModal from '../components/UserBalanceModal'; // 导入新的模态框组件
 
-interface AdminUserRow {
-  id: number;
-  username: string;
-  related_admin?: string;
-  current_balance?: number;
-  status?: string;
-  // 添加权限相关字段，以便后续管理
-  permissions?: {
-    fundPermission: boolean;
-    optionPermission: boolean;
-    shContractPermission: boolean;
-    hkContractPermission: boolean;
-    singleTradeMax: number;
-    dailyTradeMax: number;
-  };
-}
-
-export const AdminUsers: React.FC = () => {
+export const AdminUsers = () => {
   const { user } = useAuth();
-  const [users, setUsers] = useState<AdminUserRow[]>([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const { showToast } = useToast();
 
   // 新增状态用于控制模态框
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<AdminUserRow | null>(null);
-  const [modalType, setModalType] = useState<'deposit' | 'withdraw' | null>(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [modalType, setModalType] = useState(null);
 
   // 处理打开模态框
-  const handleOpenModal = (user: AdminUserRow, type: 'deposit' | 'withdraw') => {
+  const handleOpenModal = (user, type) => {
     setSelectedUser(user);
     setModalType(type);
     setIsModalOpen(true);
@@ -87,7 +70,7 @@ export const AdminUsers: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const applyChange = async (target: AdminUserRow, type: 'deposit' | 'withdraw', amount: number) => {
+  const applyChange = async (target, type, amount) => {
     const { isValid, errors } = validateForm({ amount }, {
       amount: { rules: [required, isNumber, min(0.01)], label: '金额' }
     });
@@ -145,7 +128,7 @@ export const AdminUsers: React.FC = () => {
   );
 
   const handleExport = async () => {
-    await exportToExcel<AdminUserRow>(filtered, [
+    await exportToExcel(filtered, [
       { key: 'id', header: '用户ID' },
       { key: 'username', header: '用户名' },
       { key: 'related_admin', header: '关联管理员' },
@@ -177,9 +160,9 @@ export const AdminUsers: React.FC = () => {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-100 text-left">
-              <th className="p-3">ID</th>
+              <th className="p-3 hidden md:table-cell">ID</th>
               <th className="p-3">用户名</th>
-              <th className="p-3">管理员</th>
+              <th className="p-3 hidden md:table-cell">管理员</th>
               <th className="p-3">余额</th>
               <th className="p-3">状态</th>
               <th className="p-3">操作</th>
@@ -188,9 +171,9 @@ export const AdminUsers: React.FC = () => {
           <tbody>
             {filtered.map(u => (
               <tr key={u.id} className="border-t">
-                <td className="p-3">{u.id}</td>
+                <td className="p-3 hidden md:table-cell">{u.id}</td>
                 <td className="p-3">{u.username}</td>
-                <td className="p-3">{u.related_admin || '-'}</td>
+                <td className="p-3 hidden md:table-cell">{u.related_admin || '-'}</td>
                 <td className="p-3">{(u.current_balance || 0).toFixed(2)}</td>
                 <td className="p-3">{u.status || '-'}</td>
                 <td className="p-3">

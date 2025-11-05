@@ -1,27 +1,27 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { format } from 'date-fns';
 
-type OrderType = 'fund' | 'option' | 'contract';
+// type OrderType = 'fund' | 'option' | 'contract';
 
-interface UnifiedOrder {
-  id?: number;
-  order_no: string;
-  type: OrderType;
-  amount: number;
-  status: string;
-  time: string;
-}
+// interface UnifiedOrder {
+//   id?: number;
+//   order_no: string;
+//   type: OrderType;
+//   amount: number;
+//   status: string;
+//   time: string;
+// }
 
-const currency = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const currency = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export const TransactionHistory: React.FC = () => {
+export const TransactionHistory = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [orders, setOrders] = useState<UnifiedOrder[]>([]);
-  const [filter, setFilter] = useState<OrderType | 'all'>('all');
+  const [orders, setOrders] = useState([]);
+  const [filter, setFilter] = useState('all');
 
   const filteredOrders = useMemo(() => {
     return orders.filter(o => (filter === 'all' ? true : o.type === filter));
@@ -39,7 +39,7 @@ export const TransactionHistory: React.FC = () => {
           supabase.from('contract_orders').select('*').eq('user_id', user.id).order('open_time', { ascending: false }),
         ]);
 
-        const fundOrders: UnifiedOrder[] = (fundRes.data || []).map((o: any) => ({
+        const fundOrders = (fundRes.data || []).map((o) => ({
           id: o.id,
           order_no: o.order_no,
           type: 'fund',
@@ -48,7 +48,7 @@ export const TransactionHistory: React.FC = () => {
           time: format(new Date(o.invest_time), 'yyyy-MM-dd HH:mm:ss'),
         }));
 
-        const optionOrders: UnifiedOrder[] = (optRes.data || []).map((o: any) => ({
+        const optionOrders = (optRes.data || []).map((o) => ({
           id: o.id,
           order_no: o.order_no,
           type: 'option',
@@ -57,7 +57,7 @@ export const TransactionHistory: React.FC = () => {
           time: format(new Date(o.start_time), 'yyyy-MM-dd HH:mm:ss'),
         }));
 
-        const contractOrders: UnifiedOrder[] = (ctrRes.data || []).map((o: any) => ({
+        const contractOrders = (ctrRes.data || []).map((o) => ({
           id: o.id,
           order_no: o.order_no,
           type: 'contract',
@@ -68,14 +68,14 @@ export const TransactionHistory: React.FC = () => {
 
         setOrders([...fundOrders, ...optionOrders, ...contractOrders]);
       } else {
-        const demo: UnifiedOrder[] = [
+        const demo = [
           { order_no: `F${Date.now() - 100000}`, type: 'fund', amount: 2000, status: 'holding', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
           { order_no: `O${Date.now() - 80000}`, type: 'option', amount: 300, status: 'win', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
           { order_no: `C${Date.now() - 60000}`, type: 'contract', amount: 1200, status: 'closed', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
         ];
         setOrders(demo);
       }
-    } catch (e: any) {
+    } catch (e) {
       setError(e?.message || '加载交易记录失败');
     } finally {
       setLoading(false);
@@ -106,21 +106,21 @@ export const TransactionHistory: React.FC = () => {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 text-left">
-              <th className="p-3">订单号</th>
+              <th className="p-3 hidden md:table-cell">订单号</th>
               <th className="p-3">类型</th>
               <th className="p-3">金额</th>
               <th className="p-3">状态</th>
-              <th className="p-3">时间</th>
+              <th className="p-3 hidden md:table-cell">时间</th>
             </tr>
           </thead>
           <tbody>
             {filteredOrders.map((o, idx) => (
               <tr key={`${o.order_no}-${idx}`} className="border-t">
-                <td className="p-3 font-mono">{o.order_no}</td>
+                <td className="p-3 font-mono hidden md:table-cell">{o.order_no}</td>
                 <td className="p-3">{o.type === 'fund' ? '基金' : o.type === 'option' ? '期权' : '合约'}</td>
                 <td className="p-3">{currency(o.amount)}</td>
                 <td className="p-3">{o.status}</td>
-                <td className="p-3">{o.time}</td>
+                <td className="p-3 hide-on-sm">{o.time}</td>
               </tr>
             ))}
             {filteredOrders.length === 0 && (
@@ -136,4 +136,3 @@ export const TransactionHistory: React.FC = () => {
 };
 
 export default TransactionHistory;
-

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { formatCurrency } from '../utils/helpers';
 import MarketDashboard from '../components/MarketDashboard';
 
-export const UserDashboard: React.FC = () => {
+const FundDetailChart = lazy(() => import('../components/FundDetailChart'));
+
+export const UserDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -302,6 +304,14 @@ export const UserDashboard: React.FC = () => {
                 <span className="text-sm font-medium text-gray-900">账户设置</span>
               </button>
             </div>
+          </div>
+
+          {/* 基金业绩图表 */}
+          <div className="bg-white shadow rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">基金业绩</h3>
+            <Suspense fallback={<div>加载图表中...</div>}>
+              <FundDetailChart fundId={1} />
+            </Suspense>
           </div>
 
           {/* 实时行情图表 */}

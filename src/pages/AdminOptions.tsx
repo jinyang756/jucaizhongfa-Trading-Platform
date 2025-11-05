@@ -158,7 +158,7 @@ export const AdminOptions: React.FC = () => {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-100 text-left">
-              <th className="p-3">ID</th>
+              <th className="p-3 hidden md:table-cell">ID</th>
               <th className="p-3">代码</th>
               <th className="p-3">名称</th>
               <th className="p-3">操作</th>
@@ -167,7 +167,7 @@ export const AdminOptions: React.FC = () => {
           <tbody>
             {options.map(o => (
               <tr key={o.id} className="border-t">
-                <td className="p-3">{o.id}</td>
+                <td className="p-3 hidden md:table-cell">{o.id}</td>
                 <td className="p-3">
                   {editingId === o.id ? (
                     <input 

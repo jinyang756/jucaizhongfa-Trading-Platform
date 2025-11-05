@@ -1,17 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth.js';
 import { useToast } from '../components/Toast'; // Import useToast
-
-interface Preferences {
-  notifications: boolean;
-  riskWarnings: boolean;
-}
 
 const PREF_KEY = 'user_preferences';
 
 export default function AccountSettings() {
   const { user, permissions, limits } = useAuth();
-  const [prefs, setPrefs] = useState<Preferences>({ notifications: true, riskWarnings: true });
+  const [prefs, setPrefs] = useState({ notifications: true, riskWarnings: true });
   const { showToast } = useToast(); // Destructure showToast
 
   // Define profile based on user and limits
@@ -34,7 +29,7 @@ export default function AccountSettings() {
     setFormData(profile);
   }, [user, limits]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: parseFloat(value) }));
   };
@@ -53,7 +48,7 @@ export default function AccountSettings() {
     } catch {}
   }, []);
 
-  const updatePref = (key: keyof Preferences, value: boolean) => {
+  const updatePref = (key, value) => {
     const next = { ...prefs, [key]: value };
     setPrefs(next);
     try { localStorage.setItem(PREF_KEY, JSON.stringify(next)); } catch {}

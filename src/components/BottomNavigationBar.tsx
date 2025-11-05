@@ -12,8 +12,8 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label }) => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex flex-col items-center justify-center p-2 text-xs font-medium transition-colors duration-200
-        ${isActive ? 'text-primary-600' : 'text-gray-500 hover:text-primary-600'}`
+        `flex flex-col items-center justify-center py-3 text-xs font-medium transition-colors duration-200 \
+        ${isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-indigo-300'}`
       }
     >
       <div className="text-xl mb-1">{icon}</div>
@@ -65,5 +65,4 @@ export const BottomNavigationBar: React.FC = () => {
       </div>
     </nav>
   );
-};
-
+};
