@@ -6,7 +6,7 @@ import FundTrading from './pages/FundTrading.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import AccountSettings from './pages/AccountSettings.jsx';
 import AdminContracts from './pages/AdminContracts.jsx';
-import { AdminDashboard } from './pages/AdminDashboard.jsx';
+import { AdminDashboard } from './pages/AdminDashboard.tsx';
 import AdminFunds from './pages/AdminFunds.jsx';
 import AdminOptions from './pages/AdminOptions.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
@@ -14,16 +14,17 @@ import ContractTrading from './pages/ContractTrading.jsx';
 import ErrorTest from './pages/ErrorTest.jsx';
 import FundLogs from './pages/FundLogs.jsx';
 import OptionTrading from './pages/OptionTrading.jsx';
-import Positions from './pages/Positions.jsx';
-import TransactionHistory from './pages/TransactionHistory.jsx';
+import Positions from './pages/Positions.tsx';
+import TransactionHistory from './pages/TransactionHistory.tsx';
 import { UserDashboard } from './pages/UserDashboard.jsx';
 import { useAuth } from './store/useAuth.js';
+import type { AuthUser } from './types/auth';
 
-const LazyAdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx').then(module => ({ default: module.AdminDashboard })));
+const LazyAdminDashboard = lazy(() => import('./pages/AdminDashboard.tsx').then(module => ({ default: module.AdminDashboard })));
 
 // 保护路由组件
-const ProtectedRoute = ({ children }) => {
-  const isLoggedIn = useAuth((state) => state.isLoggedIn);
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isLoggedIn: boolean = useAuth((state) => state.isLoggedIn);
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
@@ -31,8 +32,8 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // 包装主布局和导航的组件
-const MainLayout = () => {
-    const { user, logout } = useAuth();
+const MainLayout: React.FC = () => {
+    const { user, logout } = useAuth((state) => ({ user: state.user, logout: state.logout }));
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -53,7 +54,7 @@ const MainLayout = () => {
 
     return (
         <>
-            <nav className={`fixed top-0 left-0 right-0 z-50 p-4 text-white flex justify-between items-center transition-all duration-300 ${scrolled ? 'bg-gray-800 shadow-md' : 'bg-transparent'}`}>
+            <nav className="some-fixed-class">
                 <div className="flex items-center space-x-4">
                     <Link to="/" className="hover:text-gray-300">首页</Link>
                     <Link to="/trade" className="hover:text-gray-300">交易</Link>
@@ -61,7 +62,7 @@ const MainLayout = () => {
                 </div>
                 <div>
                     {user ? (
-                        <span className="mr-4">欢迎, {user.name}</span>
+                        <span className="mr-4">欢迎, {user.username}</span>
                     ) : (
                         <Link to="/login" className="hover:text-gray-300">登录</Link>
                     )}
@@ -83,7 +84,7 @@ const MainLayout = () => {
     );
 };
 
-const App = () => {
+const App: React.FC = () => {
   return (
     <Router>
       <Routes>

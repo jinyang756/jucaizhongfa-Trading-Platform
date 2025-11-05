@@ -4,10 +4,24 @@ import { useAuth } from '../store/useAuth.js';
 import { useToast } from '../components/Toast';
 import RealTimeChart from '../components/RealTimeChart';
 
+interface Position {
+  id: string;
+  type: 'fund' | 'option' | 'contract';
+  code: string;
+  name: string;
+  amount: number;
+  shares: number;
+  nav: number;
+  current_value: number;
+  profit_loss: number;
+  profit_loss_ratio: number;
+  purchase_date: string;
+}
+
 export const Positions = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [positions, setPositions] = useState([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all'); // 'all', 'fund', 'option', 'contract'

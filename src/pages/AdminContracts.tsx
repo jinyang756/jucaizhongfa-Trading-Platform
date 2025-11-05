@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 export type ContractRow = {
   id?: number;
   contract_code: string;
@@ -8,7 +8,7 @@ export type ContractRow = {
 };
 
 // ... existing code ...
-import { useToastStore } from '../store/useToastStore';
+
 import { useContractsApi } from '../api/contracts';
 import { validateForm, required, maxLength } from '../utils/validation';
 import { exportToExcel } from '../utils/exportExcel';
@@ -25,7 +25,7 @@ export const AdminContracts: React.FC = () => {
   const load = async () => {
     await getAllContracts();
     if (error) {
-      showToast('加载失败', 'error');
+      showToast(typeof error === 'string' ? error : (error as any)?.message || '加载失败', 'error');
     }
   };
 
@@ -50,7 +50,7 @@ export const AdminContracts: React.FC = () => {
       setForm({ contract_code: '', contract_name: '', market: 'SH' });
       await load();
     } else if (error) {
-      showToast('创建失败', 'error');
+      showToast(typeof error === 'string' ? error : (error as any)?.message || '创建失败', 'error');
     }
   };
 
@@ -83,7 +83,7 @@ export const AdminContracts: React.FC = () => {
       setEditingId(null);
       await load();
     } else if (error) {
-      showToast('更新失败', 'error');
+      showToast(typeof error === 'string' ? error : (error as any)?.message || '更新失败', 'error');
     }
   };
 
@@ -94,7 +94,7 @@ export const AdminContracts: React.FC = () => {
       setShowDeleteConfirm(null);
       await load();
     } else if (error) {
-      showToast('删除失败', 'error');
+      showToast(typeof error === 'string' ? error : (error as any)?.message || '删除失败', 'error');
     }
   };
 

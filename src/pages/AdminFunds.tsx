@@ -1,3 +1,6 @@
+
+import { useState, useEffect } from 'react';
+
 export interface FundRow {
   id?: number;
   fund_name: string;
@@ -8,20 +11,18 @@ export interface FundRow {
   created_at?: string;
 };
 
-// ... existing code ...
-import { useState, useEffect } from 'react';
-import { useToastStore } from '../store/useToastStore';
-import { useFundsApi } from '../api/funds';
-import { validateForm, required, maxLength, min, max } from '../utils/validation';
+
+import { validateForm, required, maxLength } from '../utils/validation';
 import { exportToExcel } from '../utils/exportExcel';
 import { useToast } from '../components/Toast';
+import { useFundsApi } from '../api/funds';
 
 const AdminFunds = () => {
   const { data: funds, loading, error, getAllFunds, createFund, updateFund, deleteFund: deleteFundApi } = useFundsApi();
   const [form, setForm] = useState<FundRow>({ fund_code: '', fund_name: '', fund_type: '股票型', initial_value: 0, current_value: 0 });
-  const [formErrors, setFormErrors] = useState({});
-  const [editingId, setEditingId] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FundRow, string>>>({});
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -49,13 +50,13 @@ const AdminFunds = () => {
       showToast('创建成功', 'success');
       setForm({ fund_code: '', fund_name: '', fund_type: '股票型', initial_value: 0, current_value: 0 });
       getAllFunds(); // Refresh the list
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       showToast('创建失败', 'error');
     }
   };
 
-  const update = async (id, updatedData) => {
+  const update = async (id: number, updatedData: Partial<FundRow>) => {
     const dataToValidate = {
       fund_code: updatedData.fund_code || '',
       fund_name: updatedData.fund_name || '',
@@ -63,7 +64,7 @@ const AdminFunds = () => {
       initial_value: updatedData.initial_value || 0,
     };
     
-    const validationRules = {};
+    const validationRules: Partial<Record<keyof FundRow, any>> = {};
     if (updatedData.fund_code) {
       validationRules.fund_code = { rules: [required, maxLength(10)], label: '基金代码' };
     }
@@ -88,25 +89,25 @@ const AdminFunds = () => {
       showToast('更新成功', 'success');
       setEditingId(null);
       getAllFunds(); // Refresh the list
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       showToast('更新失败', 'error');
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     try {
       await deleteFundApi(id);
       showToast('删除成功', 'success');
       getAllFunds(); // Refresh the list
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       showToast('删除失败', 'error');
     }
   };
 
   const handleExport = async () => {
-    await exportToExcel(funds, [
+    await exportToExcel(funds || [], [
       { key: 'id', header: 'ID' },
       { key: 'fund_code', header: '基金代码' },
       { key: 'fund_name', header: '基金名称' },
@@ -130,32 +131,32 @@ const AdminFunds = () => {
       <div className="flex gap-2 mb-4">
         <input 
           value={form.fund_code} 
-          onChange={e=>setForm(f=>({ ...f, fund_code: e.target.value }))} 
+          onChange={e=>setForm((f: FundRow)=>({ ...f, fund_code: e.target.value }))} 
           placeholder="基金代码" 
           className={`px-3 py-2 border rounded ${formErrors.fund_code ? 'border-red-500' : ''}`} 
         />
         <input 
           value={form.fund_name} 
-          onChange={e=>setForm(f=>({ ...f, fund_name: e.target.value }))} 
+          onChange={e=>setForm((f: FundRow)=>({ ...f, fund_name: e.target.value }))} 
           placeholder="基金名称" 
           className={`px-3 py-2 border rounded ${formErrors.fund_name ? 'border-red-500' : ''}`} 
         />
         <input 
           value={form.fund_type} 
-          onChange={e=>setForm(f=>({ ...f, fund_type: e.target.value }))} 
+          onChange={e=>setForm((f: FundRow)=>({ ...f, fund_type: e.target.value }))} 
           placeholder="基金类型" 
           className={`px-3 py-2 border rounded ${formErrors.fund_type ? 'border-red-500' : ''}`} 
         />
         <input 
           type="number"
           value={form.initial_value} 
-          onChange={e=>setForm(f=>({ ...f, initial_value: parseFloat(e.target.value) }))} 
+          onChange={e=>setForm((f: FundRow)=>({ ...f, initial_value: parseFloat(e.target.value) }))} 
           placeholder="初始价值" 
           className={`px-3 py-2 border rounded ${formErrors.initial_value ? 'border-red-500' : ''}`} 
         />
         <button disabled={loading} onClick={create} className="px-4 py-2 rounded bg-primary-600 text-white">创建</button>
       </div>
-      {error && <div className="text-red-500 mb-4">加载基金失败: {error.message}</div>}
+      {error && <div className="text-red-500 mb-4">加载基金失败: {typeof error === 'string' ? error : (error as any).message}</div>}
       <div className="bg-white rounded shadow">
         <table className="w-full">
           <thead>
@@ -173,17 +174,17 @@ const AdminFunds = () => {
           <tbody>
             {loading ? (
               <tr><td className="p-3 text-center" colSpan={8}>加载中...</td></tr>
-            ) : funds.length === 0 ? (
+            ) : (funds && funds.length === 0) ? (
               <tr><td className="p-3 text-center" colSpan={8}>无数据</td></tr>
             ) : (
-              funds.map(f => (
+              (funds || []).map((f: FundRow) => (
                 <tr key={f.id} className="border-t">
                   <td className="p-3 hidden md:table-cell">{f.id}</td>
                   <td className="p-3">
                     {editingId === f.id ? (
                       <input 
                         defaultValue={f.fund_code}
-                        onBlur={(e) => update(f.id, { fund_code: e.target.value })}
+                        onBlur={(e) => update(f.id!, { fund_code: e.target.value })}
                         className="px-2 py-1 border rounded text-sm"
                       />
                     ) : (
@@ -194,7 +195,7 @@ const AdminFunds = () => {
                     {editingId === f.id ? (
                       <input 
                         defaultValue={f.fund_name}
-                        onBlur={(e) => update(f.id, { fund_name: e.target.value })}
+                        onBlur={(e) => update(f.id!, { fund_name: e.target.value })}
                         className="px-2 py-1 border rounded text-sm"
                       />
                     ) : (
@@ -205,7 +206,7 @@ const AdminFunds = () => {
                     {editingId === f.id ? (
                       <input 
                         defaultValue={f.fund_type}
-                        onBlur={(e) => update(f.id, { fund_type: e.target.value })}
+                        onBlur={(e) => update(f.id!, { fund_type: e.target.value })}
                         className="px-2 py-1 border rounded text-sm"
                       />
                     ) : (
@@ -217,7 +218,7 @@ const AdminFunds = () => {
                       <input 
                         type="number"
                         defaultValue={f.initial_value}
-                        onBlur={(e) => update(f.id, { initial_value: parseFloat(e.target.value) })}
+                        onBlur={(e) => update(f.id!, { initial_value: parseFloat(e.target.value) })}
                         className="px-2 py-1 border rounded text-sm"
                       />
                     ) : (
@@ -229,7 +230,7 @@ const AdminFunds = () => {
                       <input 
                         type="number"
                         defaultValue={f.current_value}
-                        onBlur={(e) => update(f.id, { current_value: parseFloat(e.target.value) })}
+                        onBlur={(e) => update(f.id!, { current_value: parseFloat(e.target.value) })}
                         className="px-2 py-1 border rounded text-sm"
                       />
                     ) : (
@@ -248,7 +249,7 @@ const AdminFunds = () => {
                         </button>
                       ) : (
                         <button 
-                          onClick={() => setEditingId(f.id)}
+                          onClick={() => setEditingId(f.id!)}
                           className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
                           编辑
@@ -257,7 +258,7 @@ const AdminFunds = () => {
                       {showDeleteConfirm === f.id ? (
                         <div className="flex gap-1">
                           <button 
-                            onClick={() => handleDelete(f.id)}
+                            onClick={() => handleDelete(f.id!)}
                             className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
                           >
                             确认
@@ -271,7 +272,7 @@ const AdminFunds = () => {
                         </div>
                       ) : (
                         <button 
-                          onClick={() => setShowDeleteConfirm(f.id)}
+                          onClick={() => setShowDeleteConfirm(f.id!)}
                           className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
                         >
                           删除

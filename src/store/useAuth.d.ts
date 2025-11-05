@@ -1,14 +1,10 @@
-interface User {
-  name: string;
-  id: string;
-  level: string;
-}
+import { AuthUser, UserPermissions, UserLimits } from '../types/auth';
 
 interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   isLoggedIn: boolean;
   login: (username: string, password: string) => boolean;
   logout: () => void;
 }
 
-export const useAuth: import('zustand').UseBoundStore<import('zustand').StoreApi<AuthState>>;
+export declare const useAuth: import("zustand").UseBoundStore<import("zustand").StoreApi<AuthState>>;

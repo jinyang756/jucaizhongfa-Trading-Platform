@@ -1,13 +1,14 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/useAuth.js';
 import { formatCurrency } from '../utils/helpers';
 import MarketDashboard from '../components/MarketDashboard';
+import type { AuthUser } from '../types/auth';
 
 const FundDetailChart = lazy(() => import('../components/FundDetailChart'));
 
 export const UserDashboard = () => {
-  const { user } = useAuth();
+  const { user }: { user: AuthUser | null } = useAuth();
   const navigate = useNavigate();
 
 

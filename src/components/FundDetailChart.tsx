@@ -17,8 +17,6 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
 
   // State for controlling custom Tooltip
   const [activeTooltip, setActiveTooltip] = useState(false);
-  const [tooltipPayload, setTooltipPayload] = useState<any[]>([]);
-  const [tooltipCoordinate, setTooltipCoordinate] = useState<{ x: number; y: number } | undefined>(undefined);
 
   useEffect(() => {
     const handleResize = () => {
@@ -110,8 +108,6 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
   const handleChartClick = (data: any) => {
     if (isMobile && data && data.activePayload) {
       setActiveTooltip(true);
-      setTooltipPayload(data.activePayload);
-      setTooltipCoordinate(data.activeCoordinate);
     } else if (isMobile) {
       setActiveTooltip(false);
     }
@@ -162,8 +158,6 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
             <Tooltip
               cursor={isMobile ? false : true}
               active={isMobile ? activeTooltip : undefined}
-              payload={isMobile ? tooltipPayload : undefined}
-              coordinate={isMobile ? tooltipCoordinate : undefined}
               formatter={(value: number) => [`${value}%`, '收益率']}
               labelFormatter={(label) => `月份: ${label}`}
             />

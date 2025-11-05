@@ -3,25 +3,25 @@ import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { format } from 'date-fns';
 
-// type OrderType = 'fund' | 'option' | 'contract';
+type OrderType = 'fund' | 'option' | 'contract';
 
-// interface UnifiedOrder {
-//   id?: number;
-//   order_no: string;
-//   type: OrderType;
-//   amount: number;
-//   status: string;
-//   time: string;
-// }
+interface UnifiedOrder {
+  id?: number;
+  order_no: string;
+  type: OrderType;
+  amount: number;
+  status: string;
+  time: string;
+}
 
-const currency = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const currency = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const TransactionHistory = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [orders, setOrders] = useState([]);
-  const [filter, setFilter] = useState('all');
+  const [orders, setOrders] = useState<UnifiedOrder[]>([]);
+  const [filter, setFilter] = useState<OrderType | 'all'>('all');
 
   const filteredOrders = useMemo(() => {
     return orders.filter(o => (filter === 'all' ? true : o.type === filter));
@@ -39,28 +39,28 @@ export const TransactionHistory = () => {
           supabase.from('contract_orders').select('*').eq('user_id', user.id).order('open_time', { ascending: false }),
         ]);
 
-        const fundOrders = (fundRes.data || []).map((o) => ({
+        const fundOrders: UnifiedOrder[] = (fundRes.data || []).map((o) => ({
           id: o.id,
           order_no: o.order_no,
-          type: 'fund',
+          type: 'fund' as OrderType,
           amount: Number(o.invest_amount || 0),
           status: String(o.order_status || 'holding'),
           time: format(new Date(o.invest_time), 'yyyy-MM-dd HH:mm:ss'),
         }));
 
-        const optionOrders = (optRes.data || []).map((o) => ({
+        const optionOrders: UnifiedOrder[] = (optRes.data || []).map((o) => ({
           id: o.id,
           order_no: o.order_no,
-          type: 'option',
+          type: 'option' as OrderType,
           amount: Number(o.invest_amount || 0),
           status: String(o.profit_status || 'pending'),
           time: format(new Date(o.start_time), 'yyyy-MM-dd HH:mm:ss'),
         }));
 
-        const contractOrders = (ctrRes.data || []).map((o) => ({
+        const contractOrders: UnifiedOrder[] = (ctrRes.data || []).map((o) => ({
           id: o.id,
           order_no: o.order_no,
-          type: 'contract',
+          type: 'contract' as OrderType,
           amount: Number(o.margin_amount || 0),
           status: String(o.order_status || 'open'),
           time: format(new Date(o.open_time), 'yyyy-MM-dd HH:mm:ss'),
@@ -68,14 +68,14 @@ export const TransactionHistory = () => {
 
         setOrders([...fundOrders, ...optionOrders, ...contractOrders]);
       } else {
-        const demo = [
-          { order_no: `F${Date.now() - 100000}`, type: 'fund', amount: 2000, status: 'holding', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
-          { order_no: `O${Date.now() - 80000}`, type: 'option', amount: 300, status: 'win', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
-          { order_no: `C${Date.now() - 60000}`, type: 'contract', amount: 1200, status: 'closed', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
+        const demo: UnifiedOrder[] = [
+          { order_no: `F${Date.now() - 100000}`, type: 'fund' as OrderType, amount: 2000, status: 'holding', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
+          { order_no: `O${Date.now() - 80000}`, type: 'option' as OrderType, amount: 300, status: 'win', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
+          { order_no: `C${Date.now() - 60000}`, type: 'contract' as OrderType, amount: 1200, status: 'closed', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
         ];
         setOrders(demo);
       }
-    } catch (e) {
+    } catch (e: any) {
       setError(e?.message || '加载交易记录失败');
     } finally {
       setLoading(false);

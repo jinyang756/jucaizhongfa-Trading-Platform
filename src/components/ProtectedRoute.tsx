@@ -13,23 +13,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredUserType,
   redirectTo = '/login'
 }) => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   const location = useLocation();
 
-  // 加载中显示loading
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
-  }
 
   // 未登录重定向到登录页
-  if (!isAuthenticated || !user) {
+  if (!isLoggedIn || !user) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
@@ -54,22 +43,11 @@ interface PublicRouteProps {
 }
 
 export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoggedIn } = useAuth();
 
-  // 加载中显示loading
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
-  }
 
   // 已登录用户重定向到对应首页
-  if (isAuthenticated && user) {
+  if (isLoggedIn && user) {
     if (user.userType === 'admin') {
       return <Navigate to="/manager" replace />;
     } else {
