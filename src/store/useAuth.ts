@@ -1,7 +1,33 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export const useAuth = create(
+interface User {
+  id: number;
+  username: string;
+  userType: string;
+  currentBalance: number;
+  permissions: {
+    fund: boolean;
+    option: boolean;
+    contract: boolean;
+    shContract: boolean;
+    hkContract: boolean;
+  };
+  limits: {
+    singleTradeMax: number;
+    dailyTradeMax: number;
+    minTradeAmount: number;
+  };
+}
+
+interface AuthState {
+  user: User | null;
+  isLoggedIn: boolean;
+  login: (credentials: { username: string; password: string }, userType: string) => { success: boolean; message?: string };
+  logout: () => void;
+}
+
+export const useAuth = create<AuthState>()(
   persist(
     (set) => ({
       user: null,

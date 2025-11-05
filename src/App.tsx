@@ -1,26 +1,29 @@
 import React, { lazy } from 'react';
 import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
-import ErrorBoundary from './components/ErrorBoundary'; // 导入 ErrorBoundary
-import LoginPage from './pages/Login.jsx';
-import TradeDashboard from './pages/TradeDashboard.jsx';
-import FundTrading from './pages/FundTrading.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
-import AccountSettings from './pages/AccountSettings.jsx';
-import AdminContracts from './pages/AdminContracts.jsx';
-import AdminFunds from './pages/AdminFunds.jsx';
-import AdminOptions from './pages/AdminOptions.jsx';
-import AdminUsers from './pages/AdminUsers.jsx';
-import ContractTrading from './pages/ContractTrading.jsx';
-import ErrorTest from './pages/ErrorTest.jsx';
-import FundLogs from './pages/FundLogs.jsx';
-import OptionTrading from './pages/OptionTrading.jsx';
-import Positions from './pages/Positions.tsx';
-import TransactionHistory from './pages/TransactionHistory.tsx';
-// import { UserDashboard } from './pages/UserDashboard.jsx'; // 移除未使用的导入
-import MyDashboard from './pages/MyDashboard.tsx'; // 导入 MyDashboard
-import { useAuth } from './store/useAuth.js';
-import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // 导入 ProtectedRoute
-import { BottomNavigationBar } from './components/BottomNavigationBar.tsx'; // 导入 BottomNavigationBar
+import ErrorBoundary from './components/ErrorBoundary'; // Error boundary for handling errors
+import LoginPage from './pages/Login.jsx'; // Login page
+import TradeDashboard from './pages/TradeDashboard.jsx'; // Trade dashboard
+import FundTrading from './pages/FundTrading.jsx'; // Fund trading
+import ProfilePage from './pages/ProfilePage.jsx'; // Profile page
+import AccountSettings from './pages/AccountSettings.jsx'; // Account settings
+import AdminContracts from './pages/AdminContracts.jsx'; // Admin contracts
+import AdminFunds from './pages/AdminFunds.jsx'; // Admin funds
+import AdminOptions from './pages/AdminOptions.jsx'; // Admin options
+import AdminUsers from './pages/AdminUsers.jsx'; // Admin users
+import ContractTrading from './pages/ContractTrading.jsx'; // Contract trading
+import ErrorTest from './pages/ErrorTest.jsx'; // Error test
+import FundLogs from './pages/FundLogs.jsx'; // Fund logs
+import OptionTrading from './pages/OptionTrading.jsx'; // Option trading
+import Positions from './pages/Positions.tsx'; // Positions
+import TransactionHistory from './pages/TransactionHistory.tsx'; // Transaction history
+// import { UserDashboard } from './pages/UserDashboard.jsx'; // Removed unused import
+import MyDashboard from './pages/MyDashboard.tsx'; // My dashboard
+import Home from './pages/Home.tsx'; // Home page (standard)
+import Trade from './pages/Trade.tsx'; // Trade page (standard)
+import Profile from './pages/Profile.tsx'; // Profile page (standard)
+import { useAuth } from './store/useAuth'; // Authentication store
+import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // Protected route component
+import { BottomNavigationBar } from './components/BottomNavigationBar.tsx'; // Bottom navigation bar
 
 const LazyAdminDashboard = lazy(() => import('./pages/AdminDashboard.tsx').then(module => ({ default: module.AdminDashboard })));
 
@@ -75,15 +78,18 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/dashboard" element={<MyDashboard />} />
-            <Route path="/trade" element={<TradeDashboard />} />
+            <Route path="/trade" element={<Trade />} />
+            <Route path="/trade-dashboard" element={<TradeDashboard />} />
             <Route path="/positions" element={<Positions />} />
             <Route path="/history" element={<TransactionHistory />} />
             <Route path="/funds" element={<FundTrading />} />
             <Route path="/contracts" element={<ContractTrading />} />
             <Route path="/options" element={<OptionTrading />} />
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile-page" element={<ProfilePage />} />
             <Route path="/settings" element={<AccountSettings />} />
             <Route path="/fund-logs/:fundId" element={<FundLogs />} />
             <Route path="/error-test" element={<ErrorTest />} />
