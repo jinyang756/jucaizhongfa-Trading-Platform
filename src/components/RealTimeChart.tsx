@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface PriceData {
   time: string;
@@ -26,16 +34,16 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
     // 初始化历史数据
     const initialData: PriceData[] = [];
     const now = new Date();
-    
+
     for (let i = 29; i >= 0; i--) {
       const time = new Date(now.getTime() - i * 60000);
       initialData.push({
         time: time.toLocaleTimeString('zh-CN', { hour12: false }).slice(0, 5),
         price: 100 + (Math.random() - 0.5) * 20, // Initial random price around 100
-        symbol: symbol
+        symbol: symbol,
       });
     }
-    
+
     setData(initialData);
     setCurrentPrice(initialData[initialData.length - 1].price);
 
@@ -46,12 +54,15 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
         const now = new Date(customEvent.detail.ts);
 
         setCurrentPrice(newPrice);
-        setData(prevData => {
-          const newData = [...prevData.slice(1), {
-            time: now.toLocaleTimeString('zh-CN', { hour12: false }).slice(0, 5),
-            price: newPrice,
-            symbol: symbol
-          }];
+        setData((prevData) => {
+          const newData = [
+            ...prevData.slice(1),
+            {
+              time: now.toLocaleTimeString('zh-CN', { hour12: false }).slice(0, 5),
+              price: newPrice,
+              symbol: symbol,
+            },
+          ];
           return newData;
         });
       }
@@ -80,9 +91,8 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
   };
 
   // 计算涨跌状态
-  const priceChange = data.length > 1
-    ? ((currentPrice - data[0].price) / data[0].price * 100).toFixed(2)
-    : '0.00';
+  const priceChange =
+    data.length > 1 ? (((currentPrice - data[0].price) / data[0].price) * 100).toFixed(2) : '0.00';
   const isUp = parseFloat(priceChange) > 0;
 
   return (
@@ -94,23 +104,16 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
             ${currentPrice.toLocaleString()}
           </div>
           <div className={`text-sm ${isUp ? 'text-red-500' : 'text-green-500'}`}>
-            {isUp ? '+' : ''}{priceChange}%
+            {isUp ? '+' : ''}
+            {priceChange}%
           </div>
         </div>
       </div>
-      
+
       <ResponsiveContainer width="100%" aspect={2}>
-        <LineChart
-          data={data}
-          onClick={handleChartClick}
-          onMouseLeave={handleChartMouseLeave}
-        >
+        <LineChart data={data} onClick={handleChartClick} onMouseLeave={handleChartMouseLeave}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-          <XAxis
-            dataKey="time"
-            tick={{ fontSize: 12 }}
-            axisLine={{ stroke: '#e5e7eb' }}
-          />
+          <XAxis dataKey="time" tick={{ fontSize: 12 }} axisLine={{ stroke: '#e5e7eb' }} />
           <YAxis
             domain={['dataMin - 50', 'dataMax + 50']}
             tick={{ fontSize: 12 }}
@@ -118,11 +121,11 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
             tickFormatter={(value) => `$${value.toLocaleString()}`}
           />
           <Tooltip
-              cursor={isMobile ? false : true}
-              active={isMobile ? activeTooltip : undefined}
-              formatter={(value: number) => [`${value}%`, '价格']}
-              labelFormatter={(label) => `时间: ${label}`}
-            />
+            cursor={isMobile ? false : true}
+            active={isMobile ? activeTooltip : undefined}
+            formatter={(value: number) => [`${value}%`, '价格']}
+            labelFormatter={(label) => `时间: ${label}`}
+          />
           <Line
             type="monotone"
             dataKey="price"

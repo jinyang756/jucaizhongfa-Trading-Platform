@@ -3,21 +3,21 @@ import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
 import { useToast } from '../components/Toast';
-import { startDataSimulation, stopDataSimulation } from '../services/mockDataService';
+import { startDataSimulation, stopDataSimulation } from '../utils/mockDataService';
 import RealTimeChart from '../components/RealTimeChart';
 
 const AICalloutCard = () => (
-    <div className="bg-gradient-to-r from-indigo-900/70 to-purple-900/70 p-3 rounded-lg border border-indigo-500/50 mb-4 shadow-xl">
-        <div className="flex items-center justify-between">
-            <h4 className="text-md font-bold text-yellow-300 flex items-center">
-                <i className="fas fa-robot mr-2 pulse"></i> AI 决策助理
-            </h4>
-            <span className="text-xs text-green-400">信号准确率: 78.5%</span>
-        </div>
-        <p className="mt-1 text-sm text-gray-200">
-            【中国平安 45.67】 → **技术形态强劲，建议买入**。请关注下方AI风控止盈线。
-        </p>
+  <div className="bg-gradient-to-r from-indigo-900/70 to-purple-900/70 p-3 rounded-lg border border-indigo-500/50 mb-4 shadow-xl">
+    <div className="flex items-center justify-between">
+      <h4 className="text-md font-bold text-yellow-300 flex items-center">
+        <i className="fas fa-robot mr-2 pulse"></i> AI 决策助理
+      </h4>
+      <span className="text-xs text-green-400">信号准确率: 78.5%</span>
     </div>
+    <p className="mt-1 text-sm text-gray-200">
+      【中国平安 45.67】 → **技术形态强劲，建议买入**。请关注下方AI风控止盈线。
+    </p>
+  </div>
 );
 
 export const FundTrading = () => {
@@ -37,12 +37,33 @@ export const FundTrading = () => {
     try {
       if (!supabaseEnabled) {
         const mockFunds = [
-          { id: 1, fund_code: 'F0001', fund_name: '稳健增长基金', fund_type: '混合型', risk_level: '中等', min_amount: 1000 },
-          { id: 2, fund_code: 'F0002', fund_name: '科技创新基金', fund_type: '股票型', risk_level: '高', min_amount: 5000 },
-          { id: 3, fund_code: 'F0003', fund_name: '货币市场基金', fund_type: '货币型', risk_level: '低', min_amount: 100 }
+          {
+            id: 1,
+            fund_code: 'F0001',
+            fund_name: '稳健增长基金',
+            fund_type: '混合型',
+            risk_level: '中等',
+            min_amount: 1000,
+          },
+          {
+            id: 2,
+            fund_code: 'F0002',
+            fund_name: '科技创新基金',
+            fund_type: '股票型',
+            risk_level: '高',
+            min_amount: 5000,
+          },
+          {
+            id: 3,
+            fund_code: 'F0003',
+            fund_name: '货币市场基金',
+            fund_type: '货币型',
+            risk_level: '低',
+            min_amount: 100,
+          },
         ];
         setFunds(mockFunds);
-        startDataSimulation(mockFunds.map(f => f.fund_code)); // Start simulation with all fund codes
+        startDataSimulation(mockFunds.map((f) => f.fund_code)); // Start simulation with all fund codes
       } else {
         const { data, error } = await supabase
           .from('funds')
@@ -50,7 +71,7 @@ export const FundTrading = () => {
           .order('id');
         if (error) throw error;
         setFunds(data || []);
-        startDataSimulation(data.map(f => f.fund_code)); // Start simulation with all fund codes
+        startDataSimulation(data.map((f) => f.fund_code)); // Start simulation with all fund codes
       }
     } catch (e) {
       console.error(e);
@@ -63,7 +84,7 @@ export const FundTrading = () => {
   // 加载订单历史
   const loadOrders = async () => {
     if (!user) return;
-    
+
     try {
       if (!supabaseEnabled) {
         // 演示数据
@@ -80,7 +101,7 @@ export const FundTrading = () => {
             order_status: 'holding',
             order_type: 'buy',
             created_at: new Date(Date.now() - 86400000).toISOString(),
-            profit_amount: 150.50
+            profit_amount: 150.5,
           },
           {
             id: 2,
@@ -90,12 +111,12 @@ export const FundTrading = () => {
             fund_code: 'F0002',
             amount: 5000,
             shares: 4166.67,
-            nav: 1.2000,
+            nav: 1.2,
             order_status: 'holding',
             order_type: 'buy',
             created_at: new Date(Date.now() - 172800000).toISOString(),
-            profit_amount: -85.20
-          }
+            profit_amount: -85.2,
+          },
         ]);
       } else {
         const { data, error } = await supabase
@@ -113,8 +134,8 @@ export const FundTrading = () => {
     }
   };
 
-  useEffect(() => { 
-    loadFunds(); 
+  useEffect(() => {
+    loadFunds();
     loadOrders();
 
     return () => {
@@ -133,12 +154,11 @@ export const FundTrading = () => {
 
   // 验证交易限额
   const validateTradeLimit = () => {
-    const todayFundOrders = orders
-      .filter(order => {
-        const orderDate = new Date(order.created_at).toDateString();
-        const today = new Date().toDateString();
-        return orderDate === today && order.order_type === 'buy';
-      });
+    const todayFundOrders = orders.filter((order) => {
+      const orderDate = new Date(order.created_at).toDateString();
+      const today = new Date().toDateString();
+      return orderDate === today && order.order_type === 'buy';
+    });
     const result = validateTradeLimits(user, amount, todayFundOrders, 'fund');
     if (!result.isValid) {
       showToast(result.message, 'error');
@@ -148,7 +168,7 @@ export const FundTrading = () => {
 
   // 验证基金最低投资额
   const validateMinAmount = () => {
-    const selectedFund = funds.find(f => f.fund_code === selected);
+    const selectedFund = funds.find((f) => f.fund_code === selected);
     if (selectedFund?.min_amount && amount < selectedFund.min_amount) {
       setMsg(`投资金额不能低于最低投资额 ¥${selectedFund.min_amount.toLocaleString()}`);
       return false;
@@ -161,19 +181,19 @@ export const FundTrading = () => {
       setMsg('仅用户可下单');
       return;
     }
-    
+
     if (!validatePermissions()) return;
-    
-    if (!selected) { 
-      setMsg('请选择基金'); 
-      return; 
+
+    if (!selected) {
+      setMsg('请选择基金');
+      return;
     }
-    if (!amount || amount <= 0) { 
-      setMsg('请输入有效金额'); 
-      return; 
+    if (!amount || amount <= 0) {
+      setMsg('请输入有效金额');
+      return;
     }
 
-    const selectedFund = funds.find(f => f.fund_code === selected);
+    const selectedFund = funds.find((f) => f.fund_code === selected);
     if (!selectedFund) {
       setMsg('未找到所选基金');
       return;
@@ -190,7 +210,7 @@ export const FundTrading = () => {
     try {
       const orderNo = `FND${Date.now()}`;
       const currentTime = new Date().toISOString();
-      
+
       if (!supabaseEnabled) {
         setMsg('下单成功（本地演示）');
         // 添加到本地订单列表
@@ -206,9 +226,9 @@ export const FundTrading = () => {
           order_status: 'holding',
           order_type: 'buy',
           created_at: currentTime,
-          profit_amount: 0
+          profit_amount: 0,
         };
-        setOrders(prev => [newOrder, ...prev]);
+        setOrders((prev) => [newOrder, ...prev]);
       } else {
         const { error } = await supabase.from('fund_orders').insert({
           order_no: orderNo,
@@ -220,13 +240,13 @@ export const FundTrading = () => {
           order_status: 'holding',
           order_type: 'buy',
           created_at: currentTime,
-          profit_amount: 0
+          profit_amount: 0,
         });
         if (error) throw error;
         showToast('下单成功', 'success');
         loadOrders(); // 重新加载订单历史
       }
-      
+
       setAmount(0);
       setSelected('');
     } catch (e) {
@@ -247,28 +267,40 @@ export const FundTrading = () => {
 
   const getOrderStatusText = (status) => {
     switch (status) {
-      case 'holding': return '持仓中';
-      case 'redeemed': return '已赎回';
-      case 'cancelled': return '已取消';
-      default: return status;
+      case 'holding':
+        return '持仓中';
+      case 'redeemed':
+        return '已赎回';
+      case 'cancelled':
+        return '已取消';
+      default:
+        return status;
     }
   };
 
   const getOrderStatusColor = (status) => {
     switch (status) {
-      case 'holding': return 'text-blue-600';
-      case 'redeemed': return 'text-gray-600';
-      case 'cancelled': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'holding':
+        return 'text-blue-600';
+      case 'redeemed':
+        return 'text-gray-600';
+      case 'cancelled':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
   const getRiskLevelColor = (level) => {
     switch (level) {
-      case '低': return 'text-green-600 bg-green-100';
-      case '中等': return 'text-yellow-600 bg-yellow-100';
-      case '高': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case '低':
+        return 'text-green-600 bg-green-100';
+      case '中等':
+        return 'text-yellow-600 bg-yellow-100';
+      case '高':
+        return 'text-red-600 bg-red-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -312,54 +344,62 @@ export const FundTrading = () => {
       {/* 交易表单 */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h3 className="text-lg font-medium mb-4">基金投资</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">选择基金</label>
-            <select 
-              value={selected} 
-              onChange={e => setSelected(e.target.value)} 
+            <select
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">请选择基金</option>
-              {funds.map(f => (
+              {funds.map((f) => (
                 <option key={f.id} value={f.fund_code}>
                   {f.fund_code} - {f.fund_name}
                 </option>
               ))}
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">投资金额</label>
-            <input 
-              type="number" 
-              value={amount || ''} 
-              onChange={e => setAmount(parseFloat(e.target.value))} 
-              placeholder="投资金额" 
+            <input
+              type="number"
+              value={amount || ''}
+              onChange={(e) => setAmount(parseFloat(e.target.value))}
+              placeholder="投资金额"
               step="100"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
-        
+
         {/* 显示选中基金的详细信息 */}
         {selected && (
           <div className="mb-4 p-3 bg-gray-50 rounded-lg">
             {(() => {
-              const selectedFund = funds.find(f => f.fund_code === selected);
+              const selectedFund = funds.find((f) => f.fund_code === selected);
               return selectedFund ? (
                 <div className="text-sm text-gray-600">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div><span className="font-medium">基金类型：</span>{selectedFund.fund_type}</div>
+                    <div>
+                      <span className="font-medium">基金类型：</span>
+                      {selectedFund.fund_type}
+                    </div>
                     <div>
                       <span className="font-medium">风险等级：</span>
-                      <span className={`inline-block px-2 py-1 text-xs rounded-full ml-1 ${getRiskLevelColor(selectedFund.risk_level || '')}`}>
+                      <span
+                        className={`inline-block px-2 py-1 text-xs rounded-full ml-1 ${getRiskLevelColor(selectedFund.risk_level || '')}`}
+                      >
                         {selectedFund.risk_level}
                       </span>
                     </div>
                     {selectedFund.min_amount && (
-                      <div><span className="font-medium">最低投资：</span>{formatCurrency(selectedFund.min_amount)}</div>
+                      <div>
+                        <span className="font-medium">最低投资：</span>
+                        {formatCurrency(selectedFund.min_amount)}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -367,23 +407,21 @@ export const FundTrading = () => {
             })()}
           </div>
         )}
-        
+
         <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            投资基金具有市场风险，请谨慎投资
-          </div>
-          <button 
-            disabled={loading || !amount || !selected} 
-            onClick={placeOrder} 
+          <div className="text-sm text-gray-500">投资基金具有市场风险，请谨慎投资</div>
+          <button
+            disabled={loading || !amount || !selected}
+            onClick={placeOrder}
             className="w-full py-2.5 rounded-md text-white font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-indigo-900/40 transform transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? '投资中...' : '确认买入（市价）'}
           </button>
-          <button 
+          <button
             onClick={() => showToast('一键跟单功能开发中...', 'info')}
             className="w-full mt-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-              <i className="fas fa-magic mr-1"></i> 一键跟单AI信号
+            <i className="fas fa-magic mr-1"></i> 一键跟单AI信号
           </button>
         </div>
       </div>
@@ -395,10 +433,10 @@ export const FundTrading = () => {
           {/* AI 风控建议 */}
           <div className="bg-gradient-to-r from-red-900/70 to-orange-900/70 p-3 rounded-lg border border-red-500/50 mt-4 shadow-xl">
             <h4 className="text-md font-bold text-red-300 flex items-center">
-                <i className="fas fa-exclamation-triangle mr-2"></i> AI 风控建议
+              <i className="fas fa-exclamation-triangle mr-2"></i> AI 风控建议
             </h4>
             <p className="mt-1 text-sm text-gray-200">
-                【中国平安 45.67】 → **当前波动较大，建议设置止损线在 44.50**，止盈线在 47.00。
+              【中国平安 45.67】 → **当前波动较大，建议设置止损线在 44.50**，止盈线在 47.00。
             </p>
           </div>
           <RealTimeChart symbol={selected} />
@@ -415,24 +453,44 @@ export const FundTrading = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">订单号</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">基金代码</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">金额</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">份额</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">净值</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">状态</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">类型</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/5">盈亏金额</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    订单号
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
+                    基金代码
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
+                    金额
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    份额
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    净值
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
+                    状态
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
+                    类型
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    创建时间
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/5">
+                    盈亏金额
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">暂无交易记录</td>
+                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                      暂无交易记录
+                    </td>
                   </tr>
                 ) : (
-                  orders.map(order => (
+                  orders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 hidden md:table-cell">
                         {order.order_no}
@@ -461,8 +519,18 @@ export const FundTrading = () => {
                         {formatDateTime(order.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm w-3/5">
-                        <span className={order.profit_amount > 0 ? 'text-green-600' : order.profit_amount < 0 ? 'text-red-600' : 'text-gray-600'}>
-                          {order.profit_amount !== undefined ? formatCurrency(order.profit_amount) : '--'}
+                        <span
+                          className={
+                            order.profit_amount > 0
+                              ? 'text-green-600'
+                              : order.profit_amount < 0
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                          }
+                        >
+                          {order.profit_amount !== undefined
+                            ? formatCurrency(order.profit_amount)
+                            : '--'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

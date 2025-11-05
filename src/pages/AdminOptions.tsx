@@ -5,7 +5,12 @@ import { useToast } from '../components/Toast';
 import { validateForm, required, maxLength } from '../utils/validation';
 import { debounce } from '../utils/helpers';
 
-interface OptionRow { id?: number; option_code: string; option_name: string; status?: string }
+interface OptionRow {
+  id?: number;
+  option_code: string;
+  option_name: string;
+  status?: string;
+}
 
 export const AdminOptions: React.FC = () => {
   const [options, setOptions] = useState<OptionRow[]>([]);
@@ -22,7 +27,7 @@ export const AdminOptions: React.FC = () => {
     if (updatedData.option_code || updatedData.option_name) {
       const dataToValidate = {
         option_code: updatedData.option_code ?? '',
-        option_name: updatedData.option_name ?? ''
+        option_name: updatedData.option_name ?? '',
       };
       const rules: any = {};
       if (updatedData.option_code !== undefined) {
@@ -40,7 +45,7 @@ export const AdminOptions: React.FC = () => {
     setLoading(true);
     try {
       if (!supabaseEnabled) {
-        setOptions(prev => prev.map(o => o.id === id ? { ...o, ...updatedData } : o));
+        setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, ...updatedData } : o)));
         showToast('更新成功（本地演示）', 'success');
       } else {
         const { error } = await supabase.from('options').update(updatedData).eq('id', id);
@@ -75,13 +80,15 @@ export const AdminOptions: React.FC = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const create = async () => {
     // 表单校验
     const validationRules = {
       option_code: { rules: [required, maxLength(10)], label: '期权代码' },
-      option_name: { rules: [required, maxLength(50)], label: '期权名称' }
+      option_name: { rules: [required, maxLength(50)], label: '期权名称' },
     };
     const { isValid, errors } = validateForm(form, validationRules);
     setFormErrors(errors);
@@ -92,10 +99,12 @@ export const AdminOptions: React.FC = () => {
     setLoading(true);
     try {
       if (!supabaseEnabled) {
-        setOptions(prev => [{ id: Date.now(), ...form }, ...prev]);
+        setOptions((prev) => [{ id: Date.now(), ...form }, ...prev]);
         showToast('创建成功（本地演示）', 'success');
       } else {
-        const { error } = await supabase.from('options').insert({ option_code: form.option_code, option_name: form.option_name });
+        const { error } = await supabase
+          .from('options')
+          .insert({ option_code: form.option_code, option_name: form.option_name });
         if (error) throw error;
         showToast('创建成功', 'success');
         await load();
@@ -113,7 +122,7 @@ export const AdminOptions: React.FC = () => {
     setLoading(true);
     try {
       if (!supabaseEnabled) {
-        setOptions(prev => prev.filter(o => o.id !== id));
+        setOptions((prev) => prev.filter((o) => o.id !== id));
         showToast('删除成功（本地演示）', 'success');
       } else {
         const { error } = await supabase.from('options').delete().eq('id', id);
@@ -131,12 +140,16 @@ export const AdminOptions: React.FC = () => {
   };
 
   const handleExport = async () => {
-    await exportToExcel<OptionRow>(options, [
-      { key: 'id', header: 'ID' },
-      { key: 'option_code', header: '期权代码' },
-      { key: 'option_name', header: '期权名称' },
-      { key: 'status', header: '状态' },
-    ], { filename: '期权列表.xlsx', sheetName: 'Options' });
+    await exportToExcel<OptionRow>(
+      options,
+      [
+        { key: 'id', header: 'ID' },
+        { key: 'option_code', header: '期权代码' },
+        { key: 'option_name', header: '期权名称' },
+        { key: 'status', header: '状态' },
+      ],
+      { filename: '期权列表.xlsx', sheetName: 'Options' },
+    );
   };
 
   return (
@@ -146,13 +159,31 @@ export const AdminOptions: React.FC = () => {
         <button
           onClick={handleExport}
           className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-        >导出Excel</button>
+        >
+          导出Excel
+        </button>
       </div>
       {/* 统一使用Toast，移除旧消息展示 */}
       <div className="flex gap-2 mb-4">
-        <input value={form.option_code} onChange={e=>setForm(f=>({ ...f, option_code: e.target.value }))} placeholder="期权代码" className={`px-3 py-2 border rounded ${formErrors.option_code ? 'border-red-500' : ''}`} />
-        <input value={form.option_name} onChange={e=>setForm(f=>({ ...f, option_name: e.target.value }))} placeholder="期权名称" className={`px-3 py-2 border rounded ${formErrors.option_name ? 'border-red-500' : ''}`} />
-        <button disabled={loading} onClick={create} className="px-4 py-2 rounded bg-primary-600 text-white">创建</button>
+        <input
+          value={form.option_code}
+          onChange={(e) => setForm((f) => ({ ...f, option_code: e.target.value }))}
+          placeholder="期权代码"
+          className={`px-3 py-2 border rounded ${formErrors.option_code ? 'border-red-500' : ''}`}
+        />
+        <input
+          value={form.option_name}
+          onChange={(e) => setForm((f) => ({ ...f, option_name: e.target.value }))}
+          placeholder="期权名称"
+          className={`px-3 py-2 border rounded ${formErrors.option_name ? 'border-red-500' : ''}`}
+        />
+        <button
+          disabled={loading}
+          onClick={create}
+          className="px-4 py-2 rounded bg-primary-600 text-white"
+        >
+          创建
+        </button>
       </div>
       <div className="bg-white rounded shadow">
         <table className="w-full">
@@ -165,12 +196,12 @@ export const AdminOptions: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {options.map(o => (
+            {options.map((o) => (
               <tr key={o.id} className="border-t">
                 <td className="p-3 hidden md:table-cell">{o.id}</td>
                 <td className="p-3">
                   {editingId === o.id ? (
-                    <input 
+                    <input
                       defaultValue={o.option_code}
                       onChange={(e) => debouncedUpdate(o.id!, { option_code: e.target.value })}
                       className="px-2 py-1 border rounded text-sm"
@@ -181,7 +212,7 @@ export const AdminOptions: React.FC = () => {
                 </td>
                 <td className="p-3">
                   {editingId === o.id ? (
-                    <input 
+                    <input
                       defaultValue={o.option_name}
                       onChange={(e) => debouncedUpdate(o.id!, { option_name: e.target.value })}
                       className="px-2 py-1 border rounded text-sm"
@@ -193,14 +224,14 @@ export const AdminOptions: React.FC = () => {
                 <td className="p-3">
                   <div className="flex gap-2">
                     {editingId === o.id ? (
-                      <button 
+                      <button
                         onClick={() => setEditingId(null)}
                         className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
                       >
                         取消
                       </button>
                     ) : (
-                      <button 
+                      <button
                         onClick={() => setEditingId(o.id!)}
                         className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
                       >
@@ -209,13 +240,13 @@ export const AdminOptions: React.FC = () => {
                     )}
                     {showDeleteConfirm === o.id ? (
                       <div className="flex gap-1">
-                        <button 
+                        <button
                           onClick={() => deleteOption(o.id!)}
                           className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
                         >
                           确认
                         </button>
-                        <button 
+                        <button
                           onClick={() => setShowDeleteConfirm(null)}
                           className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
                         >
@@ -223,7 +254,7 @@ export const AdminOptions: React.FC = () => {
                         </button>
                       </div>
                     ) : (
-                      <button 
+                      <button
                         onClick={() => setShowDeleteConfirm(o.id!)}
                         className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
                       >
@@ -235,7 +266,11 @@ export const AdminOptions: React.FC = () => {
               </tr>
             ))}
             {options.length === 0 && (
-              <tr><td className="p-3" colSpan={4}>无数据</td></tr>
+              <tr>
+                <td className="p-3" colSpan={4}>
+                  无数据
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

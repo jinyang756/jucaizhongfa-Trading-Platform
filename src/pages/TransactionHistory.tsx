@@ -14,7 +14,8 @@ interface UnifiedOrder {
   time: string;
 }
 
-const currency = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const currency = (n: number) =>
+  n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const TransactionHistory = () => {
   const { user } = useAuth();
@@ -24,7 +25,7 @@ export const TransactionHistory = () => {
   const [filter, setFilter] = useState<OrderType | 'all'>('all');
 
   const filteredOrders = useMemo(() => {
-    return orders.filter(o => (filter === 'all' ? true : o.type === filter));
+    return orders.filter((o) => (filter === 'all' ? true : o.type === filter));
   }, [orders, filter]);
 
   async function loadOrders() {
@@ -34,9 +35,21 @@ export const TransactionHistory = () => {
     try {
       if (supabaseEnabled) {
         const [fundRes, optRes, ctrRes] = await Promise.all([
-          supabase.from('fund_orders').select('*').eq('user_id', user.id).order('invest_time', { ascending: false }),
-          supabase.from('option_orders').select('*').eq('user_id', user.id).order('start_time', { ascending: false }),
-          supabase.from('contract_orders').select('*').eq('user_id', user.id).order('open_time', { ascending: false }),
+          supabase
+            .from('fund_orders')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('invest_time', { ascending: false }),
+          supabase
+            .from('option_orders')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('start_time', { ascending: false }),
+          supabase
+            .from('contract_orders')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('open_time', { ascending: false }),
         ]);
 
         const fundOrders: UnifiedOrder[] = (fundRes.data || []).map((o) => ({
@@ -69,9 +82,27 @@ export const TransactionHistory = () => {
         setOrders([...fundOrders, ...optionOrders, ...contractOrders]);
       } else {
         const demo: UnifiedOrder[] = [
-          { order_no: `F${Date.now() - 100000}`, type: 'fund' as OrderType, amount: 2000, status: 'holding', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
-          { order_no: `O${Date.now() - 80000}`, type: 'option' as OrderType, amount: 300, status: 'win', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
-          { order_no: `C${Date.now() - 60000}`, type: 'contract' as OrderType, amount: 1200, status: 'closed', time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
+          {
+            order_no: `F${Date.now() - 100000}`,
+            type: 'fund' as OrderType,
+            amount: 2000,
+            status: 'holding',
+            time: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+          },
+          {
+            order_no: `O${Date.now() - 80000}`,
+            type: 'option' as OrderType,
+            amount: 300,
+            status: 'win',
+            time: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+          },
+          {
+            order_no: `C${Date.now() - 60000}`,
+            type: 'contract' as OrderType,
+            amount: 1200,
+            status: 'closed',
+            time: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+          },
         ];
         setOrders(demo);
       }
@@ -92,11 +123,33 @@ export const TransactionHistory = () => {
       <h1 className="text-2xl font-bold mb-4">交易记录</h1>
 
       <div className="flex items-center gap-2 mb-4">
-        <button className={`px-3 py-1 rounded ${filter==='all'?'bg-primary-600 text-white':'bg-gray-100'}`} onClick={() => setFilter('all')}>全部</button>
-        <button className={`px-3 py-1 rounded ${filter==='fund'?'bg-primary-600 text-white':'bg-gray-100'}`} onClick={() => setFilter('fund')}>基金</button>
-        <button className={`px-3 py-1 rounded ${filter==='option'?'bg-primary-600 text-white':'bg-gray-100'}`} onClick={() => setFilter('option')}>期权</button>
-        <button className={`px-3 py-1 rounded ${filter==='contract'?'bg-primary-600 text-white':'bg-gray-100'}`} onClick={() => setFilter('contract')}>合约</button>
-        <button className="ml-auto px-3 py-1 rounded bg-gray-100" onClick={loadOrders}>刷新</button>
+        <button
+          className={`px-3 py-1 rounded ${filter === 'all' ? 'bg-primary-600 text-white' : 'bg-gray-100'}`}
+          onClick={() => setFilter('all')}
+        >
+          全部
+        </button>
+        <button
+          className={`px-3 py-1 rounded ${filter === 'fund' ? 'bg-primary-600 text-white' : 'bg-gray-100'}`}
+          onClick={() => setFilter('fund')}
+        >
+          基金
+        </button>
+        <button
+          className={`px-3 py-1 rounded ${filter === 'option' ? 'bg-primary-600 text-white' : 'bg-gray-100'}`}
+          onClick={() => setFilter('option')}
+        >
+          期权
+        </button>
+        <button
+          className={`px-3 py-1 rounded ${filter === 'contract' ? 'bg-primary-600 text-white' : 'bg-gray-100'}`}
+          onClick={() => setFilter('contract')}
+        >
+          合约
+        </button>
+        <button className="ml-auto px-3 py-1 rounded bg-gray-100" onClick={loadOrders}>
+          刷新
+        </button>
       </div>
 
       {error && <div className="mb-3 p-3 bg-danger-50 text-danger-700 rounded">{error}</div>}
@@ -117,7 +170,9 @@ export const TransactionHistory = () => {
             {filteredOrders.map((o, idx) => (
               <tr key={`${o.order_no}-${idx}`} className="border-t">
                 <td className="p-3 font-mono hidden md:table-cell">{o.order_no}</td>
-                <td className="p-3">{o.type === 'fund' ? '基金' : o.type === 'option' ? '期权' : '合约'}</td>
+                <td className="p-3">
+                  {o.type === 'fund' ? '基金' : o.type === 'option' ? '期权' : '合约'}
+                </td>
                 <td className="p-3">{currency(o.amount)}</td>
                 <td className="p-3">{o.status}</td>
                 <td className="p-3 hide-on-sm">{o.time}</td>
@@ -125,7 +180,9 @@ export const TransactionHistory = () => {
             ))}
             {filteredOrders.length === 0 && (
               <tr>
-                <td className="p-3 text-gray-500" colSpan={5}>暂无记录</td>
+                <td className="p-3 text-gray-500" colSpan={5}>
+                  暂无记录
+                </td>
               </tr>
             )}
           </tbody>

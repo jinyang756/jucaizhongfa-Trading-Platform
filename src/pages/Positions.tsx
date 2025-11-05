@@ -54,7 +54,7 @@ export const Positions = () => {
             nav: 50,
             current_value: 600,
             profit_loss: 100,
-            profit_loss_ratio: 0.20,
+            profit_loss_ratio: 0.2,
             purchase_date: '2024-05-01T14:30:00Z',
           },
           {
@@ -95,7 +95,7 @@ export const Positions = () => {
 
         const allPositions: Position[] = [];
 
-        fundOrders.forEach(order => {
+        fundOrders.forEach((order) => {
           allPositions.push({
             id: `fund-${order.id}`,
             type: 'fund',
@@ -111,7 +111,7 @@ export const Positions = () => {
           });
         });
 
-        optionOrders.forEach(order => {
+        optionOrders.forEach((order) => {
           allPositions.push({
             id: `option-${order.id}`,
             type: 'option',
@@ -127,7 +127,7 @@ export const Positions = () => {
           });
         });
 
-        contractOrders.forEach(order => {
+        contractOrders.forEach((order) => {
           allPositions.push({
             id: `contract-${order.id}`,
             type: 'contract',
@@ -157,7 +157,8 @@ export const Positions = () => {
     loadPositions();
   }, [user, filter]);
 
-  const filteredPositions = filter === 'all' ? positions : positions.filter(p => p.type === filter);
+  const filteredPositions =
+    filter === 'all' ? positions : positions.filter((p) => p.type === filter);
 
   const formatCurrency = (amount: number) => {
     return `¥${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -175,10 +176,14 @@ export const Positions = () => {
 
   const getPositionTypeColor = (type: 'fund' | 'option' | 'contract') => {
     switch (type) {
-      case 'fund': return 'bg-blue-100 text-blue-800';
-      case 'option': return 'bg-purple-100 text-purple-800';
-      case 'contract': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'fund':
+        return 'bg-blue-100 text-blue-800';
+      case 'option':
+        return 'bg-purple-100 text-purple-800';
+      case 'contract':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -225,32 +230,87 @@ export const Positions = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">代码/名称</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">持仓金额</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">当前价值</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">盈亏</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">盈亏率</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">购买日期</th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  类型
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  代码/名称
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  持仓金额
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  当前价值
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  盈亏
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  盈亏率
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  购买日期
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPositions.map((position) => (
                 <tr key={position.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPositionTypeColor(position.type)}`}>
-                      {position.type === 'fund' ? '基金' : position.type === 'option' ? '期权' : '合约'}
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPositionTypeColor(position.type)}`}
+                    >
+                      {position.type === 'fund'
+                        ? '基金'
+                        : position.type === 'option'
+                          ? '期权'
+                          : '合约'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="text-sm font-medium text-gray-900">{position.code}</div>
                     <div className="text-sm text-gray-500">{position.name}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(position.amount)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(position.current_value)}</td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${getProfitLossColor(position.profit_loss)}`}>{formatCurrency(position.profit_loss)}</td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${getProfitLossColor(position.profit_loss)}`}>{formatPercentage(position.profit_loss_ratio)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(position.purchase_date).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatCurrency(position.amount)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatCurrency(position.current_value)}
+                  </td>
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap text-sm ${getProfitLossColor(position.profit_loss)}`}
+                  >
+                    {formatCurrency(position.profit_loss)}
+                  </td>
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap text-sm ${getProfitLossColor(position.profit_loss)}`}
+                  >
+                    {formatPercentage(position.profit_loss_ratio)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(position.purchase_date).toLocaleDateString()}
+                  </td>
                 </tr>
               ))}
             </tbody>

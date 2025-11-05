@@ -7,7 +7,7 @@ const ErrorTest: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">错误边界测试页面</h1>
-      
+
       <div className="mb-4">
         <button
           onClick={() => setShouldThrow(true)}
@@ -16,7 +16,7 @@ const ErrorTest: React.FC = () => {
           触发错误
         </button>
       </div>
-      
+
       <div className="p-4 border rounded">
         <ErrorThrower shouldThrow={shouldThrow} />
       </div>

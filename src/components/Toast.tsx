@@ -5,14 +5,6 @@ import { useToastStore, type Toast } from '../store/useToastStore';
 // Toast类型定义
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
-
-
-
-
-
-
-
-
 // Toast提供者组件
 export const ToastProvider: React.FC = () => {
   const { toasts, hideToast } = useToastStore();
@@ -37,7 +29,7 @@ export const ToastProvider: React.FC = () => {
         </div>
       ))}
     </div>,
-    toastContainer
+    toastContainer,
   );
 };
 

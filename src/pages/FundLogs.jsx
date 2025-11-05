@@ -3,7 +3,8 @@ import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { format } from 'date-fns';
 
-const currency = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const currency = (n) =>
+  n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export const FundLogs = () => {
   const { user } = useAuth();
@@ -34,8 +35,20 @@ export const FundLogs = () => {
         setLogs(mapped);
       } else {
         const demo = [
-          { admin_username: 'admin001', amount: 5000, operate_type: 'deposit', remark: '演示数据', operate_time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
-          { admin_username: 'admin001', amount: -800, operate_type: 'withdraw', remark: '演示数据', operate_time: format(new Date(), 'yyyy-MM-dd HH:mm:ss') },
+          {
+            admin_username: 'admin001',
+            amount: 5000,
+            operate_type: 'deposit',
+            remark: '演示数据',
+            operate_time: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+          },
+          {
+            admin_username: 'admin001',
+            amount: -800,
+            operate_type: 'withdraw',
+            remark: '演示数据',
+            operate_time: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+          },
         ];
         setLogs(demo);
       }
@@ -56,7 +69,9 @@ export const FundLogs = () => {
       <h1 className="text-2xl font-bold mb-4">资金明细</h1>
 
       <div className="mb-4 flex items-center">
-        <button className="ml-auto px-3 py-1 rounded bg-gray-100" onClick={loadLogs}>刷新</button>
+        <button className="ml-auto px-3 py-1 rounded bg-gray-100" onClick={loadLogs}>
+          刷新
+        </button>
       </div>
 
       {error && <div className="mb-3 p-3 bg-danger-50 text-danger-700 rounded">{error}</div>}
@@ -85,7 +100,9 @@ export const FundLogs = () => {
             ))}
             {logs.length === 0 && (
               <tr>
-                <td className="p-3 text-gray-500" colSpan={5}>暂无记录</td>
+                <td className="p-3 text-gray-500" colSpan={5}>
+                  暂无记录
+                </td>
               </tr>
             )}
           </tbody>

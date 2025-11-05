@@ -21,9 +21,7 @@ export const useContractsApi = () => {
     return fetchData(async () => {
       if (!supabaseEnabled) {
         // Mock data for contracts
-        return [
-          { id: 1, contract_code: 'SH0001', contract_name: '演示合约', market: 'SH' },
-        ];
+        return [{ id: 1, contract_code: 'SH0001', contract_name: '演示合约', market: 'SH' }];
       }
 
       let query = supabase.from('contracts').select('*');
@@ -82,7 +80,11 @@ export const useContractsApi = () => {
       if (!supabaseEnabled) {
         return [{ id, ...contract }] as ContractRow[]; // Changed to return array
       }
-      const { data, error } = await supabase.from('contracts').update(contract).eq('id', id).select();
+      const { data, error } = await supabase
+        .from('contracts')
+        .update(contract)
+        .eq('id', id)
+        .select();
       if (error) throw error;
       return data || null; // Changed to return array or null
     });

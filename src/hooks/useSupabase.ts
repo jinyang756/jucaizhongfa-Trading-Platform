@@ -30,44 +30,47 @@ export function useSupabase() {
   }, []);
 
   // 通用错误处理
-  const handleError = useCallback((error: any, fallbackMessage: string = '操作失败') => {
-    console.error(error);
-    
-    // 处理Supabase特定错误
-    if (error?.code) {
-      switch (error.code) {
-        case '23505': // 唯一约束冲突
-          showToast('数据已存在，请勿重复添加', 'error');
-          break;
-        case '23503': // 外键约束冲突
-          showToast('操作失败：关联数据不存在', 'error');
-          break;
-        case '42P01': // 表不存在
-          showToast('系统错误：数据表不存在', 'error');
-          break;
-        case '42703': // 列不存在
-          showToast('系统错误：数据字段不存在', 'error');
-          break;
-        case '28000': // 无效的授权规范
-        case '28P01': // 密码认证失败
-          showToast('授权失败，请重新登录', 'error');
-          break;
-        case '3D000': // 数据库不存在
-        case '3F000': // 模式不存在
-          showToast('系统配置错误，请联系管理员', 'error');
-          break;
-        case '08006': // 连接失败
-        case '08001': // 连接异常
-        case '08004': // 拒绝连接
-          showToast('数据库连接失败，请检查网络', 'error');
-          break;
-        default:
-          showToast(`${fallbackMessage}: ${error.message || '未知错误'}`, 'error');
+  const handleError = useCallback(
+    (error: any, fallbackMessage: string = '操作失败') => {
+      console.error(error);
+
+      // 处理Supabase特定错误
+      if (error?.code) {
+        switch (error.code) {
+          case '23505': // 唯一约束冲突
+            showToast('数据已存在，请勿重复添加', 'error');
+            break;
+          case '23503': // 外键约束冲突
+            showToast('操作失败：关联数据不存在', 'error');
+            break;
+          case '42P01': // 表不存在
+            showToast('系统错误：数据表不存在', 'error');
+            break;
+          case '42703': // 列不存在
+            showToast('系统错误：数据字段不存在', 'error');
+            break;
+          case '28000': // 无效的授权规范
+          case '28P01': // 密码认证失败
+            showToast('授权失败，请重新登录', 'error');
+            break;
+          case '3D000': // 数据库不存在
+          case '3F000': // 模式不存在
+            showToast('系统配置错误，请联系管理员', 'error');
+            break;
+          case '08006': // 连接失败
+          case '08001': // 连接异常
+          case '08004': // 拒绝连接
+            showToast('数据库连接失败，请检查网络', 'error');
+            break;
+          default:
+            showToast(`${fallbackMessage}: ${error.message || '未知错误'}`, 'error');
+        }
+      } else {
+        showToast(fallbackMessage, 'error');
       }
-    } else {
-      showToast(fallbackMessage, 'error');
-    }
-  }, [showToast]);
+    },
+    [showToast],
+  );
 
   // 初始化时检查连接
   useEffect(() => {
@@ -79,6 +82,6 @@ export function useSupabase() {
     isLoading,
     checkConnection,
     handleError,
-    supabaseEnabled
+    supabaseEnabled,
   };
 }

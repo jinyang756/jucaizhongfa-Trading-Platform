@@ -15,12 +15,24 @@ import { exportToExcel } from '../utils/exportExcel';
 import { useToast } from '../components/Toast';
 
 export const AdminContracts: React.FC = () => {
-  const [form, setForm] = useState<ContractRow>({ contract_code: '', contract_name: '', market: 'SH' });
+  const [form, setForm] = useState<ContractRow>({
+    contract_code: '',
+    contract_name: '',
+    market: 'SH',
+  });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const { showToast } = useToast();
-  const { data: contracts, loading, error, getAllContracts, createContract, updateContract, deleteContract } = useContractsApi();
+  const {
+    data: contracts,
+    loading,
+    error,
+    getAllContracts,
+    createContract,
+    updateContract,
+    deleteContract,
+  } = useContractsApi();
 
   const load = async () => {
     await getAllContracts();
@@ -29,14 +41,16 @@ export const AdminContracts: React.FC = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const create = async () => {
     // 表单校验
     const validationRules = {
       contract_code: { rules: [required, maxLength(10)], label: '合约代码' },
       contract_name: { rules: [required, maxLength(50)], label: '合约名称' },
-      market: { rules: [required], label: '市场' }
+      market: { rules: [required], label: '市场' },
     };
     const { isValid, errors } = validateForm(form, validationRules);
     setFormErrors(errors);
@@ -99,12 +113,16 @@ export const AdminContracts: React.FC = () => {
   };
 
   const handleExport = async () => {
-    await exportToExcel<ContractRow>(contracts || [], [
-      { key: 'id', header: 'ID' },
-      { key: 'contract_code', header: '合约代码' },
-      { key: 'contract_name', header: '合约名称' },
-      { key: 'market', header: '市场' },
-    ], { filename: '合约列表.xlsx', sheetName: 'Contracts' });
+    await exportToExcel<ContractRow>(
+      contracts || [],
+      [
+        { key: 'id', header: 'ID' },
+        { key: 'contract_code', header: '合约代码' },
+        { key: 'contract_name', header: '合约名称' },
+        { key: 'market', header: '市场' },
+      ],
+      { filename: '合约列表.xlsx', sheetName: 'Contracts' },
+    );
   };
 
   return (
@@ -114,17 +132,39 @@ export const AdminContracts: React.FC = () => {
         <button
           onClick={handleExport}
           className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-        >导出Excel</button>
+        >
+          导出Excel
+        </button>
       </div>
       {/* 统一使用Toast，移除旧消息展示 */}
       <div className="flex gap-2 mb-4">
-        <input value={form.contract_code} onChange={e=>setForm(f=>({ ...f, contract_code: e.target.value }))} placeholder="合约代码" className={`px-3 py-2 border rounded ${formErrors.contract_code ? 'border-red-500' : ''}`} />
-        <input value={form.contract_name} onChange={e=>setForm(f=>({ ...f, contract_name: e.target.value }))} placeholder="合约名称" className={`px-3 py-2 border rounded ${formErrors.contract_name ? 'border-red-500' : ''}`} />
-        <select value={form.market} onChange={e=>setForm(f=>({ ...f, market: e.target.value }))} className={`px-3 py-2 border rounded ${formErrors.market ? 'border-red-500' : ''}`}>
+        <input
+          value={form.contract_code}
+          onChange={(e) => setForm((f) => ({ ...f, contract_code: e.target.value }))}
+          placeholder="合约代码"
+          className={`px-3 py-2 border rounded ${formErrors.contract_code ? 'border-red-500' : ''}`}
+        />
+        <input
+          value={form.contract_name}
+          onChange={(e) => setForm((f) => ({ ...f, contract_name: e.target.value }))}
+          placeholder="合约名称"
+          className={`px-3 py-2 border rounded ${formErrors.contract_name ? 'border-red-500' : ''}`}
+        />
+        <select
+          value={form.market}
+          onChange={(e) => setForm((f) => ({ ...f, market: e.target.value }))}
+          className={`px-3 py-2 border rounded ${formErrors.market ? 'border-red-500' : ''}`}
+        >
           <option value="SH">SH</option>
           <option value="HK">HK</option>
         </select>
-        <button disabled={loading} onClick={create} className="px-4 py-2 rounded bg-primary-600 text-white">创建</button>
+        <button
+          disabled={loading}
+          onClick={create}
+          className="px-4 py-2 rounded bg-primary-600 text-white"
+        >
+          创建
+        </button>
       </div>
       <div className="bg-white rounded shadow">
         <table className="w-full">
@@ -139,14 +179,18 @@ export const AdminContracts: React.FC = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td className="p-3" colSpan={5}>加载中...</td></tr>
+              <tr>
+                <td className="p-3" colSpan={5}>
+                  加载中...
+                </td>
+              </tr>
             ) : (
-              contracts?.map(c => (
+              contracts?.map((c) => (
                 <tr key={c.id} className="border-t">
                   <td className="p-3 hidden md:table-cell">{c.id}</td>
                   <td className="p-3">
                     {editingId === c.id ? (
-                      <input 
+                      <input
                         defaultValue={c.contract_code}
                         onBlur={(e) => update(c.id!, { contract_code: e.target.value })}
                         className="px-2 py-1 border rounded text-sm"
@@ -157,7 +201,7 @@ export const AdminContracts: React.FC = () => {
                   </td>
                   <td className="p-3">
                     {editingId === c.id ? (
-                      <input 
+                      <input
                         defaultValue={c.contract_name}
                         onBlur={(e) => update(c.id!, { contract_name: e.target.value })}
                         className="px-2 py-1 border rounded text-sm"
@@ -168,7 +212,7 @@ export const AdminContracts: React.FC = () => {
                   </td>
                   <td className="p-3">
                     {editingId === c.id ? (
-                      <select 
+                      <select
                         defaultValue={c.market}
                         onChange={(e) => update(c.id!, { market: e.target.value })}
                         className="px-2 py-1 border rounded text-sm"
@@ -184,14 +228,14 @@ export const AdminContracts: React.FC = () => {
                   <td className="p-3">
                     <div className="flex gap-2">
                       {editingId === c.id ? (
-                        <button 
+                        <button
                           onClick={() => setEditingId(null)}
                           className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
                         >
                           取消
                         </button>
                       ) : (
-                        <button 
+                        <button
                           onClick={() => setEditingId(c.id!)}
                           className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
@@ -200,13 +244,13 @@ export const AdminContracts: React.FC = () => {
                       )}
                       {showDeleteConfirm === c.id ? (
                         <div className="flex gap-1">
-                          <button 
+                          <button
                             onClick={() => deleteContractHandler(c.id!)}
                             className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
                           >
                             确认
                           </button>
-                          <button 
+                          <button
                             onClick={() => setShowDeleteConfirm(null)}
                             className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
                           >
@@ -214,7 +258,7 @@ export const AdminContracts: React.FC = () => {
                           </button>
                         </div>
                       ) : (
-                        <button 
+                        <button
                           onClick={() => setShowDeleteConfirm(c.id!)}
                           className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
                         >
@@ -227,7 +271,11 @@ export const AdminContracts: React.FC = () => {
               ))
             )}
             {contracts?.length === 0 && !loading && (
-              <tr><td className="p-3" colSpan={5}>无数据</td></tr>
+              <tr>
+                <td className="p-3" colSpan={5}>
+                  无数据
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

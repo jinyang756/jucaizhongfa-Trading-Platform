@@ -14,7 +14,10 @@ function loadEnv(envPath = path.resolve(process.cwd(), '.env')) {
         const key = m[1];
         let value = m[2];
         // 去掉可能的引号
-        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith('\'') && value.endsWith('\''))) {
+        if (
+          (value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))
+        ) {
           value = value.slice(1, -1);
         }
         env[key] = value;
@@ -37,26 +40,33 @@ async function main() {
 
   const sql = fs.readFileSync(sqlPath, 'utf-8');
 
-  const databaseUrl = process.env.POSTGRES_URL_NON_POOLING
-    || process.env.POSTGRES_URL
-    || process.env.POSTGRES_PRISMA_URL;
+  const databaseUrl =
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL;
 
   if (!databaseUrl) {
-    console.error('缺少数据库连接字符串，请在 .env 中配置 POSTGRES_URL_NON_POOLING 或 POSTGRES_URL');
+    console.error(
+      '缺少数据库连接字符串，请在 .env 中配置 POSTGRES_URL_NON_POOLING 或 POSTGRES_URL',
+    );
     process.exit(1);
   }
 
   const client = new Client({
     connectionString: databaseUrl,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
   });
 
   try {
     console.log('连接到数据库...');
     await client.connect();
     console.log('执行兼容性修复...');
-    await client.query(`ALTER TABLE IF EXISTS fund_logs ADD COLUMN IF NOT EXISTS operate_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`);
-    await client.query(`ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`);
+    await client.query(
+      `ALTER TABLE IF EXISTS fund_logs ADD COLUMN IF NOT EXISTS operate_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`,
+    );
+    await client.query(
+      `ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`,
+    );
     console.log('执行schema SQL...');
     await client.query(sql);
     console.log('✅ 数据库表结构创建完成');

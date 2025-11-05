@@ -14,22 +14,24 @@ export function useFetch<T>(initialData: T | null = null): UseFetchResult<T> {
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToastStore();
 
-  const fetchData = useCallback(async (fetcher: () => Promise<T | null>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await fetcher();
-      setData(result);
-      return result;
-    } catch (err: any) {
-      setError(err.message);
-      showToast(err.message, 'error');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast]);
+  const fetchData = useCallback(
+    async (fetcher: () => Promise<T | null>) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await fetcher();
+        setData(result);
+        return result;
+      } catch (err: any) {
+        setError(err.message);
+        showToast(err.message, 'error');
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [showToast],
+  );
 
   return { data, loading, error, fetchData };
 }
-

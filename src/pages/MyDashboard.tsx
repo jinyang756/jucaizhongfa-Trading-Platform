@@ -1,7 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Col, Row } from 'antd';
-import { HistoryOutlined, FileTextOutlined, WalletOutlined, SettingOutlined } from '@ant-design/icons';
+import {
+  HistoryOutlined,
+  FileTextOutlined,
+  WalletOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
 
 export const MyDashboard: React.FC = () => {
   const navigate = useNavigate();

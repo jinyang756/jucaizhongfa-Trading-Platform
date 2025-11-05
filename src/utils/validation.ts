@@ -12,7 +12,7 @@ export type ValidationRule = (value: any, label?: string) => ValidationResult;
 // 创建校验结果
 const createResult = (isValid: boolean, message: string = ''): ValidationResult => ({
   isValid,
-  message
+  message,
 });
 
 // 必填项校验
@@ -22,20 +22,24 @@ export const required = (value: any, label: string = '该字段'): ValidationRes
 };
 
 // 最小长度校验
-export const minLength = (min: number) => (value: string, label: string = '该字段'): ValidationResult => {
-  if (value === undefined || value === null || value === '') {
-    return createResult(true);
-  }
-  return createResult(value.length >= min, `${label}长度不能少于${min}个字符`);
-};
+export const minLength =
+  (min: number) =>
+  (value: string, label: string = '该字段'): ValidationResult => {
+    if (value === undefined || value === null || value === '') {
+      return createResult(true);
+    }
+    return createResult(value.length >= min, `${label}长度不能少于${min}个字符`);
+  };
 
 // 最大长度校验
-export const maxLength = (max: number) => (value: string, label: string = '该字段'): ValidationResult => {
-  if (value === undefined || value === null || value === '') {
-    return createResult(true);
-  }
-  return createResult(value.length <= max, `${label}长度不能超过${max}个字符`);
-};
+export const maxLength =
+  (max: number) =>
+  (value: string, label: string = '该字段'): ValidationResult => {
+    if (value === undefined || value === null || value === '') {
+      return createResult(true);
+    }
+    return createResult(value.length <= max, `${label}长度不能超过${max}个字符`);
+  };
 
 // 数字校验
 export const isNumber = (value: any, label: string = '该字段'): ValidationResult => {
@@ -47,22 +51,26 @@ export const isNumber = (value: any, label: string = '该字段'): ValidationRes
 };
 
 // 最小值校验
-export const min = (minValue: number) => (value: any, label: string = '该字段'): ValidationResult => {
-  if (value === undefined || value === null || value === '') {
-    return createResult(true);
-  }
-  const numValue = Number(value);
-  return createResult(numValue >= minValue, `${label}不能小于${minValue}`);
-};
+export const min =
+  (minValue: number) =>
+  (value: any, label: string = '该字段'): ValidationResult => {
+    if (value === undefined || value === null || value === '') {
+      return createResult(true);
+    }
+    const numValue = Number(value);
+    return createResult(numValue >= minValue, `${label}不能小于${minValue}`);
+  };
 
 // 最大值校验
-export const max = (maxValue: number) => (value: any, label: string = '该字段'): ValidationResult => {
-  if (value === undefined || value === null || value === '') {
-    return createResult(true);
-  }
-  const numValue = Number(value);
-  return createResult(numValue <= maxValue, `${label}不能大于${maxValue}`);
-};
+export const max =
+  (maxValue: number) =>
+  (value: any, label: string = '该字段'): ValidationResult => {
+    if (value === undefined || value === null || value === '') {
+      return createResult(true);
+    }
+    const numValue = Number(value);
+    return createResult(numValue <= maxValue, `${label}不能大于${maxValue}`);
+  };
 
 // 邮箱格式校验
 export const isEmail = (value: string, label: string = '邮箱'): ValidationResult => {
@@ -93,12 +101,14 @@ export const isStrongPassword = (value: string, label: string = '密码'): Valid
 };
 
 // 自定义正则校验
-export const pattern = (regex: RegExp, errorMessage: string) => (value: string): ValidationResult => {
-  if (value === undefined || value === null || value === '') {
-    return createResult(true);
-  }
-  return createResult(regex.test(value), errorMessage);
-};
+export const pattern =
+  (regex: RegExp, errorMessage: string) =>
+  (value: string): ValidationResult => {
+    if (value === undefined || value === null || value === '') {
+      return createResult(true);
+    }
+    return createResult(regex.test(value), errorMessage);
+  };
 
 // 组合多个校验规则
 export const validate = (value: any, rules: ValidationRule[], label?: string): ValidationResult => {
@@ -114,7 +124,7 @@ export const validate = (value: any, rules: ValidationRule[], label?: string): V
 // 校验表单对象
 export const validateForm = (
   formData: Record<string, any>,
-  validationRules: Record<string, { rules: ValidationRule[], label?: string }>
+  validationRules: Record<string, { rules: ValidationRule[]; label?: string }>,
 ): { isValid: boolean; errors: Record<string, string> } => {
   const errors: Record<string, string> = {};
   let isValid = true;
@@ -123,7 +133,7 @@ export const validateForm = (
     if (validationRules.hasOwnProperty(field)) {
       const { rules, label } = validationRules[field];
       const result = validate(formData[field], rules, label);
-      
+
       if (!result.isValid) {
         errors[field] = result.message;
         isValid = false;

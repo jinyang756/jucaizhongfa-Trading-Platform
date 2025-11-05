@@ -1,5 +1,5 @@
-import type { AuthUser } from '../types/auth';
-import type { FundOrder, OptionOrder, ContractOrder } from '../utils/supabase';
+import type { AuthUser } from '../auth';
+import type { FundOrder, OptionOrder, ContractOrder } from './supabase';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -9,7 +9,7 @@ export interface ValidationResult {
 // 统一的权限校验函数
 export const validateUserPermissions = (
   user: AuthUser | null,
-  permissionType: 'fund' | 'option' | 'shContract' | 'hkContract'
+  permissionType: 'fund' | 'option' | 'shContract' | 'hkContract',
 ): ValidationResult => {
   if (!user || !user.permissions) {
     return { isValid: false, message: '用户未登录或权限信息缺失' };
@@ -47,7 +47,7 @@ export const validateTradeLimits = (
   user: AuthUser | null,
   amount: number, // 对于基金和期权是投资金额，对于合约是保证金
   todayOrders: (FundOrder | OptionOrder | ContractOrder)[],
-  tradeType: 'fund' | 'option' | 'contract'
+  tradeType: 'fund' | 'option' | 'contract',
 ): ValidationResult => {
   if (!user || !user.limits) {
     return { isValid: false, message: '用户未登录或限额信息缺失' };
@@ -55,7 +55,10 @@ export const validateTradeLimits = (
 
   // 检查单笔交易限额
   if (amount > user.limits.singleTradeMax) {
-    return { isValid: false, message: `投资金额超过单笔限额 ¥${user.limits.singleTradeMax.toLocaleString()}` };
+    return {
+      isValid: false,
+      message: `投资金额超过单笔限额 ¥${user.limits.singleTradeMax.toLocaleString()}`,
+    };
   }
 
   // 检查今日交易总额
@@ -73,7 +76,10 @@ export const validateTradeLimits = (
   }, 0);
 
   if (todayTotal + amount > user.limits.dailyTradeMax) {
-    return { isValid: false, message: `今日交易总额将超过限额 ¥${user.limits.dailyTradeMax.toLocaleString()}` };
+    return {
+      isValid: false,
+      message: `今日交易总额将超过限额 ¥${user.limits.dailyTradeMax.toLocaleString()}`,
+    };
   }
 
   return { isValid: true, message: '' };
@@ -83,7 +89,7 @@ export const validateTradeLimits = (
 export const validateContractSpecifics = (
   lever: number,
   minLever: number | undefined,
-  maxLever: number | undefined
+  maxLever: number | undefined,
 ): ValidationResult => {
   if (minLever && lever < minLever) {
     return { isValid: false, message: `杠杆倍数不能小于 ${minLever}` };
@@ -93,4 +99,3 @@ export const validateContractSpecifics = (
   }
   return { isValid: true, message: '' };
 };
-

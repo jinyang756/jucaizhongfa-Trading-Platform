@@ -12,6 +12,9 @@ export interface ToastState {
   hideToast: (id: number) => void;
 }
 
-declare const useToastStore: import('zustand').UseBoundStore<ToastState, StateCreator<ToastState, [], [], ToastState>>;
+declare const useToastStore: import('zustand').UseBoundStore<
+  ToastState,
+  StateCreator<ToastState, [], [], ToastState>
+>;
 
 export { useToastStore };

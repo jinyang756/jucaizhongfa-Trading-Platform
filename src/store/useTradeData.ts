@@ -20,5 +20,6 @@ export const useTradeData = create<TradeDataState>((set) => ({
   updatePortfolioValue: (value) => set({ portfolioValue: value }),
   updateDailyProfit: (profit) => set({ dailyProfit: profit }),
   addPosition: (position) => set((state) => ({ positions: [...state.positions, position] })),
-  addTransaction: (transaction) => set((state) => ({ transactions: [...state.transactions, transaction] })),
+  addTransaction: (transaction) =>
+    set((state) => ({ transactions: [...state.transactions, transaction] })),
 }));

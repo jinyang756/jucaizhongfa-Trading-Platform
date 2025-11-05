@@ -1,5 +1,5 @@
 import React, { lazy } from 'react';
-import { Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary'; // Error boundary for handling errors
 import LoginPage from './pages/Login.jsx'; // Login page
 import TradeDashboard from './pages/TradeDashboard.jsx'; // Trade dashboard
@@ -25,16 +25,15 @@ import { useAuth } from './store/useAuth'; // Authentication store
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // Protected route component
 import { BottomNavigationBar } from './components/BottomNavigationBar.tsx'; // Bottom navigation bar
 
-const LazyAdminDashboard = lazy(() => import('./pages/AdminDashboard.tsx').then(module => ({ default: module.AdminDashboard })));
+const LazyAdminDashboard = lazy(() =>
+  import('./pages/AdminDashboard.tsx').then((module) => ({ default: module.AdminDashboard })),
+);
 
 // 包装主布局和导航的组件
 const MainLayout: React.FC = () => {
-    const user = useAuth((state) => state.user);
-    const logout = useAuth((state) => state.logout);
-
-    return (
-        <>
-            {/* <nav className="some-fixed-class">
+  return (
+    <>
+      {/* <nav className="some-fixed-class">
                 <div className="flex items-center space-x-4">
                     <Link to="/" className="hover:text-gray-300">首页</Link>
                     <Link to="/trade" className="hover:text-gray-300">交易</Link>
@@ -53,60 +52,61 @@ const MainLayout: React.FC = () => {
                     )}
                 </div>
             </nav> */}
-            <div className="flex-grow pt-16"> {/* Add padding-top to prevent content from being hidden behind the fixed header */}
-                <Outlet /> {/* 路由出口 */}
-            </div>
-            <BottomNavigationBar />
-        </>
-    );
+      <div className="flex-grow pt-16">
+        {' '}
+        {/* Add padding-top to prevent content from being hidden behind the fixed header */}
+        <Outlet /> {/* 路由出口 */}
+      </div>
+      <BottomNavigationBar />
+    </>
+  );
 };
 
 function App() {
-    // const isLoggedIn = useAuth((state) => state.isLoggedIn); // 移除未使用的声明
-    const userType = useAuth((state) => state.user?.userType);
+  const userType = useAuth((state) => state.user?.userType);
 
-    return (
+  return (
     <ErrorBoundary>
       {/* <Router> */}
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <MainLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/home" replace />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/dashboard" element={<MyDashboard />} />
-            <Route path="/trade" element={<Trade />} />
-            <Route path="/trade-dashboard" element={<TradeDashboard />} />
-            <Route path="/positions" element={<Positions />} />
-            <Route path="/history" element={<TransactionHistory />} />
-            <Route path="/funds" element={<FundTrading />} />
-            <Route path="/contracts" element={<ContractTrading />} />
-            <Route path="/options" element={<OptionTrading />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile-page" element={<ProfilePage />} />
-            <Route path="/settings" element={<AccountSettings />} />
-            <Route path="/fund-logs/:fundId" element={<FundLogs />} />
-            <Route path="/error-test" element={<ErrorTest />} />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/dashboard" element={<MyDashboard />} />
+          <Route path="/trade" element={<Trade />} />
+          <Route path="/trade-dashboard" element={<TradeDashboard />} />
+          <Route path="/positions" element={<Positions />} />
+          <Route path="/history" element={<TransactionHistory />} />
+          <Route path="/funds" element={<FundTrading />} />
+          <Route path="/contracts" element={<ContractTrading />} />
+          <Route path="/options" element={<OptionTrading />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile-page" element={<ProfilePage />} />
+          <Route path="/settings" element={<AccountSettings />} />
+          <Route path="/fund-logs/:fundId" element={<FundLogs />} />
+          <Route path="/error-test" element={<ErrorTest />} />
 
-            {/* Admin Routes */}
-            {userType === 'admin' && (
-              <>
-                <Route path="/admin/dashboard" element={<LazyAdminDashboard />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/admin/funds" element={<AdminFunds />} />
-                <Route path="/admin/contracts" element={<AdminContracts />} />
-                <Route path="/admin/options" element={<AdminOptions />} />
-              </>
-            )}
-          </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+          {/* Admin Routes */}
+          {userType === 'admin' && (
+            <>
+              <Route path="/admin/dashboard" element={<LazyAdminDashboard />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/funds" element={<AdminFunds />} />
+              <Route path="/admin/contracts" element={<AdminContracts />} />
+              <Route path="/admin/options" element={<AdminOptions />} />
+            </>
+          )}
+        </Route>
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
       {/* </Router> */}
     </ErrorBoundary>
   );

@@ -29,8 +29,19 @@ export const BottomNavigationBar: React.FC = () => {
         <NavItem
           to="/dashboard"
           icon={
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 001.125-1.125V9.75M8.25 21h8.25" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 001.125-1.125V9.75M8.25 21h8.25"
+              />
             </svg>
           }
           label="首页"
@@ -38,8 +49,19 @@ export const BottomNavigationBar: React.FC = () => {
         <NavItem
           to="/trade"
           icon={
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125l7.246-7.246a4.5 4.5 0 016.364 0l.493.492-.75.75a.75.75 0 00-.01.99l2.25 2.25a.75 0 00.99-.01l.75-.75.493.493a4.5 4.5 0 010 6.364L12 21.75l-4.687-4.688a.75.75 0 00-.99.01l-2.25 2.25a.75 0 00-.01-.99l.75-.75-.493-.493a4.5 4.5 0 010-6.364z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 13.125l7.246-7.246a4.5 4.5 0 016.364 0l.493.492-.75.75a.75.75 0 00-.01.99l2.25 2.25a.75 0 00.99-.01l.75-.75.493.493a4.5 4.5 0 010 6.364L12 21.75l-4.687-4.688a.75.75 0 00-.99.01l-2.25 2.25a.75 0 00-.01-.99l.75-.75-.493-.493a4.5 4.5 0 010-6.364z"
+              />
             </svg>
           }
           label="交易大厅"
@@ -47,8 +69,19 @@ export const BottomNavigationBar: React.FC = () => {
         <NavItem
           to="/profile"
           icon={
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+              />
             </svg>
           }
           label="个人中心"

@@ -25,8 +25,24 @@ export const useFundsApi = () => {
       if (!supabaseEnabled) {
         // Mock data for funds
         return [
-          { id: 1, fund_name: '股票基金A', fund_code: 'F001', fund_type: '股票型', initial_value: 10000, current_value: 12000, created_at: '2023-01-01' },
-          { id: 2, fund_name: '债券基金B', fund_code: 'F002', fund_type: '债券型', initial_value: 5000, current_value: 5500, created_at: '2023-02-01' },
+          {
+            id: 1,
+            fund_name: '股票基金A',
+            fund_code: 'F001',
+            fund_type: '股票型',
+            initial_value: 10000,
+            current_value: 12000,
+            created_at: '2023-01-01',
+          },
+          {
+            id: 2,
+            fund_name: '债券基金B',
+            fund_code: 'F002',
+            fund_type: '债券型',
+            initial_value: 5000,
+            current_value: 5500,
+            created_at: '2023-02-01',
+          },
         ];
       }
 
@@ -62,7 +78,15 @@ export const useFundsApi = () => {
     return fetchData(async () => {
       if (!supabaseEnabled) {
         // Mock data for single fund
-        const mockFund = { id: 1, fund_name: '股票基金A', fund_code: 'F001', fund_type: '股票型', initial_value: 10000, current_value: 12000, created_at: '2023-01-01' };
+        const mockFund = {
+          id: 1,
+          fund_name: '股票基金A',
+          fund_code: 'F001',
+          fund_type: '股票型',
+          initial_value: 10000,
+          current_value: 12000,
+          created_at: '2023-01-01',
+        };
         return [mockFund];
       }
       const { data, error } = await supabase.from('funds').select('*').eq('id', id).single();

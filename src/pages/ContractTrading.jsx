@@ -28,9 +28,33 @@ export const ContractTrading = () => {
     try {
       if (!supabaseEnabled) {
         setContracts([
-          { id: 1, contract_code: 'SH0001', contract_name: '上海原油合约', market: 'SH', lever_min: 1, lever_max: 20, margin_ratio: 5.0 },
-          { id: 2, contract_code: 'HK0001', contract_name: '香港恒生合约', market: 'HK', lever_min: 1, lever_max: 20, margin_ratio: 5.0 },
-          { id: 3, contract_code: 'SH0002', contract_name: '上海黄金合约', market: 'SH', lever_min: 1, lever_max: 15, margin_ratio: 8.0 }
+          {
+            id: 1,
+            contract_code: 'SH0001',
+            contract_name: '上海原油合约',
+            market: 'SH',
+            lever_min: 1,
+            lever_max: 20,
+            margin_ratio: 5.0,
+          },
+          {
+            id: 2,
+            contract_code: 'HK0001',
+            contract_name: '香港恒生合约',
+            market: 'HK',
+            lever_min: 1,
+            lever_max: 20,
+            margin_ratio: 5.0,
+          },
+          {
+            id: 3,
+            contract_code: 'SH0002',
+            contract_name: '上海黄金合约',
+            market: 'SH',
+            lever_min: 1,
+            lever_max: 15,
+            margin_ratio: 8.0,
+          },
         ]);
       } else {
         const { data, error } = await supabase
@@ -51,7 +75,7 @@ export const ContractTrading = () => {
   // 加载订单历史
   const loadOrders = async () => {
     if (!user) return;
-    
+
     try {
       if (!supabaseEnabled) {
         // 演示数据
@@ -72,7 +96,7 @@ export const ContractTrading = () => {
             order_status: 'closed',
             open_time: new Date(Date.now() - 86400000).toISOString(),
             close_time: new Date(Date.now() - 82800000).toISOString(),
-            profit_amount: 1500
+            profit_amount: 1500,
           },
           {
             id: 2,
@@ -87,8 +111,8 @@ export const ContractTrading = () => {
             margin_amount: 5600,
             order_status: 'holding',
             open_time: new Date(Date.now() - 3600000).toISOString(),
-            profit_amount: -200
-          }
+            profit_amount: -200,
+          },
         ]);
       } else {
         const { data, error } = await supabase
@@ -106,8 +130,8 @@ export const ContractTrading = () => {
     }
   };
 
-  useEffect(() => { 
-    loadContracts(); 
+  useEffect(() => {
+    loadContracts();
     loadOrders();
   }, [user]);
 
@@ -115,7 +139,7 @@ export const ContractTrading = () => {
   const validatePermissions = () => {
     if (!user?.permissions) return false;
 
-    const selectedContract = contracts.find(c => c.contract_code === selected);
+    const selectedContract = contracts.find((c) => c.contract_code === selected);
     if (!selectedContract) return false;
 
     let result;
@@ -136,12 +160,11 @@ export const ContractTrading = () => {
   // 验证交易限额
   const validateTradeLimit = () => {
     const marginAmount = calculateMarginAmount();
-    const todayContractOrders = orders
-      .filter(order => {
-        const orderDate = new Date(order.open_time).toDateString();
-        const today = new Date().toDateString();
-        return orderDate === today;
-      });
+    const todayContractOrders = orders.filter((order) => {
+      const orderDate = new Date(order.open_time).toDateString();
+      const today = new Date().toDateString();
+      return orderDate === today;
+    });
     const result = validateTradeLimits(user, marginAmount, todayContractOrders, 'contract');
     if (!result.isValid) {
       setMsg(result.message);
@@ -161,24 +184,24 @@ export const ContractTrading = () => {
       setMsg('仅用户可下单');
       return;
     }
-    
+
     if (!validatePermissions()) return;
-    
-    if (!selected) { 
-      setMsg('请选择合约'); 
-      return; 
+
+    if (!selected) {
+      setMsg('请选择合约');
+      return;
     }
-    if (!orderPrice || orderPrice <= 0) { 
-      setMsg('请输入有效价格'); 
-      return; 
+    if (!orderPrice || orderPrice <= 0) {
+      setMsg('请输入有效价格');
+      return;
     }
-    if (!orderAmount || orderAmount <= 0) { 
-      setMsg('请输入有效数量'); 
-      return; 
+    if (!orderAmount || orderAmount <= 0) {
+      setMsg('请输入有效数量');
+      return;
     }
 
     // 验证杠杆范围
-    const selectedContract = contracts.find(c => c.contract_code === selected);
+    const selectedContract = contracts.find((c) => c.contract_code === selected);
     if (selectedContract) {
       if (selectedContract.lever_min && lever < selectedContract.lever_min) {
         setMsg(`杠杆倍数不能小于 ${selectedContract.lever_min}`);
@@ -199,7 +222,7 @@ export const ContractTrading = () => {
       const orderNo = `CON${Date.now()}`;
       const openTime = new Date().toISOString();
       const marginAmount = calculateMarginAmount();
-      
+
       if (!supabaseEnabled) {
         setMsg('下单成功（本地演示）');
         // 添加到本地订单列表
@@ -218,9 +241,9 @@ export const ContractTrading = () => {
           take_profit: takeProfit || undefined,
           order_status: 'holding',
           open_time: openTime,
-          profit_amount: 0
+          profit_amount: 0,
         };
-        setOrders(prev => [newOrder, ...prev]);
+        setOrders((prev) => [newOrder, ...prev]);
       } else {
         const { error } = await supabase.from('contract_orders').insert({
           order_no: orderNo,
@@ -236,13 +259,13 @@ export const ContractTrading = () => {
           take_profit: takeProfit || null,
           order_status: 'holding',
           open_time: openTime,
-          profit_amount: 0
+          profit_amount: 0,
         });
         if (error) throw error;
         setMsg('下单成功');
         loadOrders(); // 重新加载订单历史
       }
-      
+
       // 重置表单
       setOrderPrice(0);
       setOrderAmount(0);
@@ -267,19 +290,27 @@ export const ContractTrading = () => {
 
   const getOrderStatusText = (status) => {
     switch (status) {
-      case 'holding': return '持仓中';
-      case 'closed': return '已平仓';
-      case 'cancelled': return '已取消';
-      default: return status;
+      case 'holding':
+        return '持仓中';
+      case 'closed':
+        return '已平仓';
+      case 'cancelled':
+        return '已取消';
+      default:
+        return status;
     }
   };
 
   const getOrderStatusColor = (status) => {
     switch (status) {
-      case 'holding': return 'text-blue-600';
-      case 'closed': return 'text-gray-600';
-      case 'cancelled': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'holding':
+        return 'text-blue-600';
+      case 'closed':
+        return 'text-gray-600';
+      case 'cancelled':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
@@ -333,150 +364,165 @@ export const ContractTrading = () => {
       {/* 交易表单 */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h3 className="text-lg font-medium mb-4">下单交易</h3>
-        
+
         {/* 第一行：基本信息 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">选择合约</label>
-            <select 
-              value={selected} 
-              onChange={e => setSelected(e.target.value)} 
+            <select
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">请选择合约</option>
-              {contracts.map(c => (
+              {contracts.map((c) => (
                 <option key={c.id} value={c.contract_code}>
                   {c.contract_code} - {c.contract_name} ({c.market})
                 </option>
               ))}
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">订单类型</label>
-            <select 
-              value={orderType} 
-              onChange={e => setOrderType(e.target.value)} 
+            <select
+              value={orderType}
+              onChange={(e) => setOrderType(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="market">市价单</option>
               <option value="limit">限价单</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">交易方向</label>
-            <select 
-              value={direction} 
-              onChange={e => setDirection(e.target.value)} 
+            <select
+              value={direction}
+              onChange={(e) => setDirection(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="buy">买入 (做多)</option>
               <option value="sell">卖出 (做空)</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">杠杆倍数</label>
-            <input 
-              type="number" 
-              value={lever || ''} 
-              onChange={e => setLever(parseInt(e.target.value))} 
-              placeholder="杠杆倍数" 
+            <input
+              type="number"
+              value={lever || ''}
+              onChange={(e) => setLever(parseInt(e.target.value))}
+              placeholder="杠杆倍数"
               min="1"
               max="100"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
-        
+
         {/* 第二行：价格和数量 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">价格</label>
-            <input 
-              type="number" 
-              value={orderPrice || ''} 
-              onChange={e => setOrderPrice(parseFloat(e.target.value))} 
-              placeholder="订单价格" 
+            <input
+              type="number"
+              value={orderPrice || ''}
+              onChange={(e) => setOrderPrice(parseFloat(e.target.value))}
+              placeholder="订单价格"
               step="0.01"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">数量</label>
-            <input 
-              type="number" 
-              value={orderAmount || ''} 
-              onChange={e => setOrderAmount(parseFloat(e.target.value))} 
-              placeholder="订单数量" 
+            <input
+              type="number"
+              value={orderAmount || ''}
+              onChange={(e) => setOrderAmount(parseFloat(e.target.value))}
+              placeholder="订单数量"
               step="0.01"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">止损价格 (可选)</label>
-            <input 
-              type="number" 
-              value={stopLoss || ''} 
-              onChange={e => setStopLoss(parseFloat(e.target.value))} 
-              placeholder="止损价格" 
+            <input
+              type="number"
+              value={stopLoss || ''}
+              onChange={(e) => setStopLoss(parseFloat(e.target.value))}
+              placeholder="止损价格"
               step="0.01"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">止盈价格 (可选)</label>
-            <input 
-              type="number" 
-              value={takeProfit || ''} 
-              onChange={e => setTakeProfit(parseFloat(e.target.value))} 
-              placeholder="止盈价格" 
+            <input
+              type="number"
+              value={takeProfit || ''}
+              onChange={(e) => setTakeProfit(parseFloat(e.target.value))}
+              placeholder="止盈价格"
               step="0.01"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
-        
+
         {/* 计算信息和下单按钮 */}
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-600">
             {orderPrice && orderAmount && lever ? (
               <div className="space-y-1">
-                <div><span className="font-medium">合约价值：</span>{formatCurrency(orderPrice * orderAmount)}</div>
-                <div><span className="font-medium">所需保证金：</span>{formatCurrency(calculateMarginAmount())}</div>
+                <div>
+                  <span className="font-medium">合约价值：</span>
+                  {formatCurrency(orderPrice * orderAmount)}
+                </div>
+                <div>
+                  <span className="font-medium">所需保证金：</span>
+                  {formatCurrency(calculateMarginAmount())}
+                </div>
               </div>
             ) : (
               <div className="text-gray-400">请填写价格、数量和杠杆倍数</div>
             )}
           </div>
-          
-          <button 
-            disabled={loading || !orderPrice || !orderAmount || !lever || !selected} 
-            onClick={placeOrder} 
+
+          <button
+            disabled={loading || !orderPrice || !orderAmount || !lever || !selected}
+            onClick={placeOrder}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
           >
             {loading ? '下单中...' : '下单'}
           </button>
         </div>
-        
+
         {/* 显示选中合约的详细信息 */}
         {selected && (
           <div className="mt-4 p-3 bg-gray-50 rounded-lg">
             {(() => {
-              const selectedContract = contracts.find(c => c.contract_code === selected);
+              const selectedContract = contracts.find((c) => c.contract_code === selected);
               return selectedContract ? (
                 <div className="text-sm text-gray-600">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div><span className="font-medium">市场：</span>{selectedContract.market}</div>
+                    <div>
+                      <span className="font-medium">市场：</span>
+                      {selectedContract.market}
+                    </div>
                     {selectedContract.lever_min && selectedContract.lever_max && (
-                      <div><span className="font-medium">杠杆范围：</span>{selectedContract.lever_min}-{selectedContract.lever_max}倍</div>
+                      <div>
+                        <span className="font-medium">杠杆范围：</span>
+                        {selectedContract.lever_min}-{selectedContract.lever_max}倍
+                      </div>
                     )}
                     {selectedContract.margin_ratio && (
-                      <div><span className="font-medium">保证金比例：</span>{selectedContract.margin_ratio}%</div>
+                      <div>
+                        <span className="font-medium">保证金比例：</span>
+                        {selectedContract.margin_ratio}%
+                      </div>
                     )}
                   </div>
                 </div>
@@ -496,30 +542,62 @@ export const ContractTrading = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">订单号</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">合约</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">方向</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开仓价</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">数量</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">杠杆</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">保证金</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">当前价</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">浮动盈亏</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">止损</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">止盈</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开仓时间</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">平仓时间</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    订单号
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    合约
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    方向
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    开仓价
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    数量
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    杠杆
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    保证金
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    当前价
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    浮动盈亏
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    止损
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    止盈
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    状态
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    开仓时间
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    平仓时间
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    操作
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan={15} className="px-6 py-4 text-center text-gray-500">暂无交易记录</td>
+                    <td colSpan={15} className="px-6 py-4 text-center text-gray-500">
+                      暂无交易记录
+                    </td>
                   </tr>
                 ) : (
-                  orders.map(order => (
+                  orders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 hidden md:table-cell">
                         {order.order_no}
@@ -528,9 +606,13 @@ export const ContractTrading = () => {
                         {order.contract_code}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          order.direction === 'buy' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            order.direction === 'buy'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
                           {order.direction === 'buy' ? '买涨' : '卖跌'}
                         </span>
                       </td>
@@ -550,7 +632,15 @@ export const ContractTrading = () => {
                         {order.current_price?.toFixed(2) || '--'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={order.pnl > 0 ? 'text-green-600' : order.pnl < 0 ? 'text-red-600' : 'text-gray-600'}>
+                        <span
+                          className={
+                            order.pnl > 0
+                              ? 'text-green-600'
+                              : order.pnl < 0
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                          }
+                        >
                           {order.pnl !== undefined ? formatCurrency(order.pnl) : '--'}
                         </span>
                       </td>

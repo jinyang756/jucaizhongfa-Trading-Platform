@@ -1,5 +1,5 @@
 import { supabase, supabaseEnabled } from '../utils/supabase';
-import type { LoginCredentials, AuthUser, LoginResponse } from '../types/auth';
+import type { LoginCredentials, AuthUser, LoginResponse } from '../auth';
 import bcrypt from 'bcryptjs';
 
 export class AuthService {
@@ -12,7 +12,7 @@ export class AuthService {
           const authUser: AuthUser = {
             id: 1,
             username: 'admin001',
-            userType: 'admin'
+            userType: 'admin',
           };
           localStorage.setItem('auth_user', JSON.stringify(authUser));
           localStorage.setItem('auth_token', `admin_${authUser.id}_${Date.now()}`);
@@ -39,7 +39,7 @@ export class AuthService {
       const authUser: AuthUser = {
         id: admin.id,
         username: admin.username,
-        userType: 'admin'
+        userType: 'admin',
       };
 
       // 保存登录状态到localStorage
@@ -141,7 +141,7 @@ export class AuthService {
     try {
       const userStr = localStorage.getItem('auth_user');
       const token = localStorage.getItem('auth_token');
-      
+
       if (!userStr || !token) {
         return null;
       }
@@ -197,7 +197,7 @@ export class AuthService {
           const updatedUser: AuthUser = {
             id: admin.id,
             username: admin.username,
-            userType: 'admin'
+            userType: 'admin',
           };
           localStorage.setItem('auth_user', JSON.stringify(updatedUser));
           return updatedUser;
@@ -240,4 +240,3 @@ export class AuthService {
     return null;
   }
 }
-

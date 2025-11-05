@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../store/useAuth.js';
 import { useNavigate } from 'react-router-dom';
 // import type { LoginCredentials } from '../types/auth';
-import { config } from '../config/env';
+import { config } from '../utils/env';
 import { showToast } from '../utils/showToast';
 import backgroundImage from '../assets/jucai.jpg';
 import LoginFooter from '../components/LoginFooter';
@@ -22,14 +22,14 @@ const Login = () => {
   const [userType, setUserType] = useState('user');
   const [credentials, setCredentials] = useState({
     username: '',
-    password: ''
+    password: '',
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCredentials(prev => ({
+    setCredentials((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -60,7 +60,7 @@ const Login = () => {
 
   const handleUserTypeChange = (type) => {
     setUserType(type);
-    setCredentials(prev => ({ ...prev, password: '' }));
+    setCredentials((prev) => ({ ...prev, password: '' }));
   };
 
   useEffect(() => {
@@ -72,19 +72,19 @@ const Login = () => {
   return (
     <>
       <div className="relative min-h-screen flex items-center justify-center flex-col">
-        <div 
+        <div
           className="absolute inset-0"
-          style={{ 
-            backgroundImage: `url(${backgroundImage})`, 
+          style={{
+            backgroundImage: `url(${backgroundImage})`,
             opacity: 30,
             backgroundSize: 'cover',
-            backgroundPosition: 'center'
+            backgroundPosition: 'center',
           }}
         />
-    
+
         {/* 粒子渐变层 */}
         <div className="absolute inset-0 animate-pulse-slow bg-[radial-gradient(circle_at_20%_30%,rgba(99,102,241,0.15),transparent_60%),radial-gradient(circle_at_80%_70%,rgba(236,72,153,0.15),transparent_70%)]"></div>
-    
+
         {/* 登录卡片 */}
         <div className="relative z-10 w-11/12 max-w-sm bg-[rgba(15,23,42,0.75)] rounded-2xl p-8 border border-indigo-500/30 backdrop-blur-xl shadow-2xl text-slate-200 animate-fade-in hover:-translate-y-1 hover:shadow-indigo-500/30 hover:shadow-lg transition-all">
           <div className="text-center mb-8">
@@ -93,7 +93,7 @@ const Login = () => {
             </h1>
             <p className="text-sm text-slate-400 mt-1">专业 · 安全 · 智能的一站式金融系统</p>
           </div>
-    
+
           {/* 用户类型切换 */}
           <div className="flex mb-6 bg-slate-800 rounded-lg p-1">
             <button
@@ -121,7 +121,7 @@ const Login = () => {
               管理员登录
             </button>
           </div>
-    
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="relative">
               <i className="far fa-user absolute left-3 top-3 text-slate-400"></i>
@@ -147,7 +147,7 @@ const Login = () => {
                 className="w-full pl-10 pr-4 py-2.5 rounded-md bg-[rgba(15,23,42,0.6)] border border-indigo-500/30 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 transition-all"
               />
             </div>
-    
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -163,15 +163,25 @@ const Login = () => {
               )}
             </button>
           </form>
-    
+
           {/* 合规与信任信息 */}
           <div className="border-t border-indigo-500/20 mt-6 pt-4 text-xs text-slate-400 space-y-2">
-            <p className="flex items-center justify-center text-amber-300 font-semibold"><i className="far fa-shield-alt text-amber-400 mr-2"></i> 资金由<span className="mx-1 text-amber-300 font-semibold">中国银行</span>存管，安全可靠</p>
-            <p className="flex items-center justify-center"><i className="far fa-certificate text-amber-400 mr-2"></i> 证券投资咨询资质编号：ZX20240018</p>
-            <p className="flex items-center justify-center"><i className="far fa-lock text-amber-400 mr-2"></i> 多重加密技术保障数据安全</p>
-            <p className="flex items-center justify-center"><i className="far fa-check-circle text-amber-400 mr-2"></i> 严格遵守金融监管政策</p>
+            <p className="flex items-center justify-center text-amber-300 font-semibold">
+              <i className="far fa-shield-alt text-amber-400 mr-2"></i> 资金由
+              <span className="mx-1 text-amber-300 font-semibold">中国银行</span>存管，安全可靠
+            </p>
+            <p className="flex items-center justify-center">
+              <i className="far fa-certificate text-amber-400 mr-2"></i>{' '}
+              证券投资咨询资质编号：ZX20240018
+            </p>
+            <p className="flex items-center justify-center">
+              <i className="far fa-lock text-amber-400 mr-2"></i> 多重加密技术保障数据安全
+            </p>
+            <p className="flex items-center justify-center">
+              <i className="far fa-check-circle text-amber-400 mr-2"></i> 严格遵守金融监管政策
+            </p>
           </div>
-  
+
           {/* ✅ Vite 开发环境测试账号提示 */}
           {config.isDev && (
             <div className="mt-4 p-3 bg-slate-800 border border-indigo-500/30 rounded-lg">
@@ -186,6 +196,6 @@ const Login = () => {
       <LoginFooter />
     </>
   );
-}
+};
 
 export default Login;

@@ -1,4 +1,4 @@
-import { AuthUser, UserPermissions, UserLimits } from '../types/auth';
+import { AuthUser } from '../auth';
 
 interface AuthState {
   user: AuthUser | null;
@@ -7,4 +7,6 @@ interface AuthState {
   logout: () => void;
 }
 
-export declare const useAuth: import("zustand").UseBoundStore<import("zustand").StoreApi<AuthState>>;
+export declare const useAuth: import('zustand').UseBoundStore<
+  import('zustand').StoreApi<AuthState>
+>;

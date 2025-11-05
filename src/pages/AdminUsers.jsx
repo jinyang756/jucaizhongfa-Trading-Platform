@@ -26,22 +26,48 @@ export const AdminUsers = () => {
   };
 
   // 处理关闭模态框
-   const handleCloseModal = () => {
-     setIsModalOpen(false);
-     setSelectedUser(null);
-     setModalType(null);
-   };
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+    setModalType(null);
+  };
 
-   const fetchUsers = async () => {
+  const fetchUsers = async () => {
     setLoading(true);
     try {
       if (!supabaseEnabled) {
         // 本地演示数据
         setUsers([
-          { id: 1001, username: 'testuser01', related_admin: 'admin001', current_balance: 10000, status: 'active',
-            permissions: { fundPermission: true, optionPermission: false, shContractPermission: true, hkContractPermission: false, singleTradeMax: 1000, dailyTradeMax: 5000 } },
-          { id: 1002, username: 'testuser02', related_admin: 'admin001', current_balance: 5000, status: 'active',
-            permissions: { fundPermission: false, optionPermission: true, shContractPermission: false, hkContractPermission: true, singleTradeMax: 2000, dailyTradeMax: 10000 } }
+          {
+            id: 1001,
+            username: 'testuser01',
+            related_admin: 'admin001',
+            current_balance: 10000,
+            status: 'active',
+            permissions: {
+              fundPermission: true,
+              optionPermission: false,
+              shContractPermission: true,
+              hkContractPermission: false,
+              singleTradeMax: 1000,
+              dailyTradeMax: 5000,
+            },
+          },
+          {
+            id: 1002,
+            username: 'testuser02',
+            related_admin: 'admin001',
+            current_balance: 5000,
+            status: 'active',
+            permissions: {
+              fundPermission: false,
+              optionPermission: true,
+              shContractPermission: false,
+              hkContractPermission: true,
+              singleTradeMax: 2000,
+              dailyTradeMax: 10000,
+            },
+          },
         ]);
       } else {
         const query = supabase
@@ -50,13 +76,18 @@ export const AdminUsers = () => {
           .order('id', { ascending: true });
         const { data, error } = await query;
         if (error) throw error;
-        setUsers((data || []).map(u => ({
-          id: u.id,
-          username: u.username,
-          related_admin: u.related_admin,
-          current_balance: typeof u.current_balance === 'number' ? u.current_balance : parseFloat(u.current_balance),
-          status: u.status
-        })));
+        setUsers(
+          (data || []).map((u) => ({
+            id: u.id,
+            username: u.username,
+            related_admin: u.related_admin,
+            current_balance:
+              typeof u.current_balance === 'number'
+                ? u.current_balance
+                : parseFloat(u.current_balance),
+            status: u.status,
+          })),
+        );
       }
     } catch (err) {
       console.error(err);
@@ -71,9 +102,12 @@ export const AdminUsers = () => {
   }, []);
 
   const applyChange = async (target, type, amount) => {
-    const { isValid, errors } = validateForm({ amount }, {
-      amount: { rules: [required, isNumber, min(0.01)], label: '金额' }
-    });
+    const { isValid, errors } = validateForm(
+      { amount },
+      {
+        amount: { rules: [required, isNumber, min(0.01)], label: '金额' },
+      },
+    );
     if (!isValid) {
       showToast(errors.amount, 'error');
       return;
@@ -91,7 +125,9 @@ export const AdminUsers = () => {
       }
       if (!supabaseEnabled) {
         // 本地演示直接更新内存
-        setUsers(prev => prev.map(u => u.id === target.id ? { ...u, current_balance: newBalance } : u));
+        setUsers((prev) =>
+          prev.map((u) => (u.id === target.id ? { ...u, current_balance: newBalance } : u)),
+        );
         showToast(`${type === 'deposit' ? '上分' : '下分'}成功（本地演示）`, 'success');
       } else {
         const { error: updateError } = await supabase
@@ -101,15 +137,13 @@ export const AdminUsers = () => {
         if (updateError) throw updateError;
 
         // 记录日志
-        const { error: logError } = await supabase
-          .from('fund_logs')
-          .insert({
-            user_id: target.id,
-            operate_type: type,
-            amount,
-            related_admin: user.username,
-            created_at: new Date().toISOString()
-          });
+        const { error: logError } = await supabase.from('fund_logs').insert({
+          user_id: target.id,
+          operate_type: type,
+          amount,
+          related_admin: user.username,
+          created_at: new Date().toISOString(),
+        });
         if (logError) throw logError;
         showToast(`${type === 'deposit' ? '上分' : '下分'}成功`, 'success');
         await fetchUsers();
@@ -123,18 +157,22 @@ export const AdminUsers = () => {
     }
   };
 
-  const filtered = users.filter(u =>
-    !keyword.trim() || u.username.toLowerCase().includes(keyword.toLowerCase())
+  const filtered = users.filter(
+    (u) => !keyword.trim() || u.username.toLowerCase().includes(keyword.toLowerCase()),
   );
 
   const handleExport = async () => {
-    await exportToExcel(filtered, [
-      { key: 'id', header: '用户ID' },
-      { key: 'username', header: '用户名' },
-      { key: 'related_admin', header: '关联管理员' },
-      { key: 'current_balance', header: '当前余额', transform: (v) => Number(v || 0).toFixed(2) },
-      { key: 'status', header: '状态' },
-    ], { filename: '用户列表.xlsx', sheetName: 'Users' });
+    await exportToExcel(
+      filtered,
+      [
+        { key: 'id', header: '用户ID' },
+        { key: 'username', header: '用户名' },
+        { key: 'related_admin', header: '关联管理员' },
+        { key: 'current_balance', header: '当前余额', transform: (v) => Number(v || 0).toFixed(2) },
+        { key: 'status', header: '状态' },
+      ],
+      { filename: '用户列表.xlsx', sheetName: 'Users' },
+    );
   };
 
   return (
@@ -144,7 +182,7 @@ export const AdminUsers = () => {
         <div className="flex gap-2">
           <input
             value={keyword}
-            onChange={e => setKeyword(e.target.value)}
+            onChange={(e) => setKeyword(e.target.value)}
             placeholder="搜索用户名"
             className="px-3 py-2 border rounded"
           />
@@ -152,7 +190,9 @@ export const AdminUsers = () => {
           <button
             onClick={handleExport}
             className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-          >导出Excel</button>
+          >
+            导出Excel
+          </button>
         </div>
       </div>
       {/* 统一使用Toast，移除旧消息展示 */}
@@ -169,7 +209,7 @@ export const AdminUsers = () => {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(u => (
+            {filtered.map((u) => (
               <tr key={u.id} className="border-t">
                 <td className="p-3 hidden md:table-cell">{u.id}</td>
                 <td className="p-3">{u.username}</td>
@@ -198,7 +238,9 @@ export const AdminUsers = () => {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td className="p-3" colSpan={6}>无数据</td>
+                <td className="p-3" colSpan={6}>
+                  无数据
+                </td>
               </tr>
             )}
           </tbody>

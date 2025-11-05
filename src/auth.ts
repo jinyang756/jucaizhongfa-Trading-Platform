@@ -33,7 +33,10 @@ export interface AuthUser {
 export interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (credentials: LoginCredentials, userType: 'admin' | 'user') => Promise<{ success: boolean; message?: string }>;
+  login: (
+    credentials: LoginCredentials,
+    userType: 'admin' | 'user',
+  ) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
   permissions?: UserPermissions;
@@ -45,4 +48,3 @@ export interface LoginResponse {
   user?: AuthUser;
   message?: string;
 }
-

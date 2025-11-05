@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { supabase } from '../utils/supabase';
 import { format, addMonths, subMonths } from 'date-fns';
 
@@ -35,11 +44,11 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
   async function fetchFundPerformance() {
     try {
       setLoading(true);
-      
+
       // 计算时间范围
       const endDate = new Date();
       let startDate: Date;
-      
+
       switch (timeRange) {
         case '1M':
           startDate = subMonths(endDate, 1);
@@ -66,8 +75,8 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
       if (data) {
         // 处理数据，按月聚合
         const monthlyData: Record<string, { price: number; count: number }> = {};
-        
-        data.forEach(item => {
+
+        data.forEach((item) => {
           const month = format(new Date(item.invest_time), 'yyyy-MM');
           if (!monthlyData[month]) {
             monthlyData[month] = { price: 0, count: 0 };
@@ -79,19 +88,19 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
         // 生成图表数据
         const chartData: FundPerformanceData[] = [];
         let currentDate = startDate;
-        
+
         while (currentDate <= endDate) {
           const month = format(currentDate, 'yyyy-MM');
           const avgPrice = monthlyData[month]
             ? (monthlyData[month].price / monthlyData[month].count).toFixed(2)
             : '0';
-          
+
           chartData.push({
             date: format(currentDate, 'MMM'),
             price: parseFloat(avgPrice),
-            benchmark: parseFloat(avgPrice) * (0.8 + Math.random() * 0.4) // 模拟基准收益
+            benchmark: parseFloat(avgPrice) * (0.8 + Math.random() * 0.4), // 模拟基准收益
           });
-          
+
           currentDate = addMonths(currentDate, 1);
         }
 
@@ -124,7 +133,7 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">基金业绩表现</h3>
         <div className="flex space-x-2">
-          {(['1M', '3M', '6M', '1Y'] as const).map(range => (
+          {(['1M', '3M', '6M', '1Y'] as const).map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
@@ -151,10 +160,7 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
             <XAxis dataKey="date" axisLine={{ stroke: '#e5e7eb' }} />
-            <YAxis
-              axisLine={{ stroke: '#e5e7eb' }}
-              tickFormatter={(value) => `${value}%`}
-            />
+            <YAxis axisLine={{ stroke: '#e5e7eb' }} tickFormatter={(value) => `${value}%`} />
             <Tooltip
               cursor={isMobile ? false : true}
               active={isMobile ? activeTooltip : undefined}

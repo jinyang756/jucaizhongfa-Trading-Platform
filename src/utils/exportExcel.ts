@@ -10,7 +10,7 @@ export interface ExportColumn<T> {
 export async function exportToExcel<T = any>(
   rows: T[],
   columns: ExportColumn<T>[],
-  options?: { filename?: string; sheetName?: string }
+  options?: { filename?: string; sheetName?: string },
 ) {
   const filename = options?.filename || '导出.xlsx';
   const sheetName = options?.sheetName || 'Sheet1';
@@ -40,4 +40,3 @@ export async function exportToExcel<T = any>(
     console.error('导出失败，请确认已安装 xlsx 依赖', e);
   }
 }
-

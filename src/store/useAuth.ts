@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: number;
   username: string;
-  userType: string;
+  userType: 'admin' | 'user';
   currentBalance: number;
   permissions: {
     fund: boolean;
@@ -23,7 +23,10 @@ interface User {
 interface AuthState {
   user: User | null;
   isLoggedIn: boolean;
-  login: (credentials: { username: string; password: string }, userType: string) => { success: boolean; message?: string };
+  login: (
+    credentials: { username: string; password: string },
+    userType: string,
+  ) => { success: boolean; message?: string };
   logout: () => void;
 }
 
@@ -32,18 +35,18 @@ export const useAuth = create<AuthState>()(
     (set) => ({
       user: null,
       isLoggedIn: false,
-      
+
       // 模拟登录逻辑
       login: (credentials, userType) => {
         console.log('Attempting login with credentials:', credentials, 'and userType:', userType);
         const { username, password } = credentials;
         if (userType === 'admin' && username === 'admin001' && password === 'jczf@2025') {
-          set({ 
-            user: { 
-              id: 1, 
-              username: 'admin001', 
+          set({
+            user: {
+              id: 1,
+              username: 'admin001',
               userType: 'admin',
-              currentBalance: 100000.00,
+              currentBalance: 100000.0,
               permissions: {
                 fund: true,
                 option: true,
@@ -55,18 +58,18 @@ export const useAuth = create<AuthState>()(
                 singleTradeMax: 50000,
                 dailyTradeMax: 200000,
                 minTradeAmount: 100,
-              }
-            }, 
-            isLoggedIn: true 
+              },
+            },
+            isLoggedIn: true,
           });
           return { success: true };
         } else if (userType === 'user' && username === 'testuser01' && password === '8a3k7z9x') {
-          set({ 
-            user: { 
-              id: 2, 
-              username: 'testuser01', 
+          set({
+            user: {
+              id: 2,
+              username: 'testuser01',
               userType: 'user',
-              currentBalance: 50000.00,
+              currentBalance: 50000.0,
               permissions: {
                 fund: true,
                 option: false,
@@ -78,20 +81,20 @@ export const useAuth = create<AuthState>()(
                 singleTradeMax: 10000,
                 dailyTradeMax: 50000,
                 minTradeAmount: 50,
-              }
-            }, 
-            isLoggedIn: true 
+              },
+            },
+            isLoggedIn: true,
           });
           return { success: true };
         }
         return { success: false, message: '用户名或密码错误' };
       },
-      
+
       logout: () => set({ user: null, isLoggedIn: false }),
     }),
     {
       name: 'quantumx-auth-storage', // 本地存储名称
       partialize: (state) => ({ user: state.user, isLoggedIn: state.isLoggedIn }),
-    }
-  )
+    },
+  ),
 );

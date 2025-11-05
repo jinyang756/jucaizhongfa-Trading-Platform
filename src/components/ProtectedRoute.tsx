@@ -11,12 +11,11 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredUserType,
-  redirectTo = '/login'
+  redirectTo = '/login',
 }) => {
   const isLoggedIn = useAuth((state) => state.isLoggedIn);
   const user = useAuth((state) => state.user);
   const location = useLocation();
-
 
   // 未登录重定向到登录页
   if (!isLoggedIn || !user) {
@@ -46,7 +45,6 @@ interface PublicRouteProps {
 export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   const isLoggedIn = useAuth((state) => state.isLoggedIn);
   const user = useAuth((state) => state.user);
-
 
   // 已登录用户重定向到对应首页
   if (isLoggedIn && user) {

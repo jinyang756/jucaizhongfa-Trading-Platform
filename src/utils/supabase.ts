@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { config } from '../config/env';
+import { config } from './env';
 
 // 从环境变量获取Supabase配置
 const supabaseUrl = config.supabase.url;

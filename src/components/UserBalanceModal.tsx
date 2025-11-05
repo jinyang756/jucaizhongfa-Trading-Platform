@@ -11,7 +11,11 @@ interface UserBalanceModalProps {
 }
 
 const UserBalanceModal: React.FC<UserBalanceModalProps> = ({
-  isOpen, onClose, user, type, onConfirm
+  isOpen,
+  onClose,
+  user,
+  type,
+  onConfirm,
 }) => {
   const [amount, setAmount] = useState<number>(0);
   const [amountError, setAmountError] = useState<string>('');
@@ -25,9 +29,12 @@ const UserBalanceModal: React.FC<UserBalanceModalProps> = ({
   }, [isOpen]);
 
   const handleConfirm = () => {
-    const { isValid, errors } = validateForm({ amount }, {
-      amount: { rules: [required, isNumber, min(0.01)], label: '金额' }
-    });
+    const { isValid, errors } = validateForm(
+      { amount },
+      {
+        amount: { rules: [required, isNumber, min(0.01)], label: '金额' },
+      },
+    );
 
     if (!isValid) {
       setAmountError(errors.amount || '');
@@ -48,12 +55,14 @@ const UserBalanceModal: React.FC<UserBalanceModalProps> = ({
           {type === 'deposit' ? '上分' : '下分'}操作 - {user.username}
         </h2>
         <div className="mb-4">
-          <label htmlFor="amount" className="block text-sm font-medium text-gray-700">金额</label>
+          <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+            金额
+          </label>
           <input
             type="number"
             id="amount"
             value={amount || ''}
-            onChange={e => setAmount(parseFloat(e.target.value))}
+            onChange={(e) => setAmount(parseFloat(e.target.value))}
             className={`mt-1 block w-full px-3 py-2 border ${amountError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
             placeholder="输入金额"
           />
