@@ -1,9 +1,12 @@
-import { defineConfig } from "cypress";
+import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    setupNodeEvents(on, config) {
+    setupNodeEvents(_on, _config) {
       // implement node event listeners here
+      // _on and _config are intentionally unused
+      void _on;
+      void _config;
     },
   },
 });

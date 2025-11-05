@@ -16,17 +16,17 @@ export const checkConnection = async (): Promise<boolean> => {
 // 通用CRUD操作
 export class SupabaseService {
   // 通用查询方法
-  static async getAll<T>(
+  static async fetchAll<T>(
     table: string,
     columns: string = '*',
     options?: {
-      filters?: Record<string, any>;
+      filters?: Record<string, unknown>;
       orderBy?: string;
       orderDirection?: 'asc' | 'desc';
       limit?: number;
       offset?: number;
     },
-  ): Promise<{ data: T[] | null; error: any }> {
+  ): Promise<{ data: T[] | null; error: Error | null }> {
     if (!supabaseEnabled) {
       console.warn(`Supabase未启用，无法从${table}获取数据`);
       return { data: null, error: new Error('Supabase未启用') };
@@ -62,7 +62,7 @@ export class SupabaseService {
       return { data: data as T[], error };
     } catch (err) {
       console.error(`从${table}获取数据失败:`, err);
-      return { data: null, error: err };
+      return { data: null, error: err as Error };
     }
   }
 
@@ -71,7 +71,7 @@ export class SupabaseService {
     table: string,
     id: number,
     columns: string = '*',
-  ): Promise<{ data: T | null; error: any }> {
+  ): Promise<{ data: T | null; error: Error | null }> {
     if (!supabaseEnabled) {
       console.warn(`Supabase未启用，无法从${table}获取ID=${id}的数据`);
       return { data: null, error: new Error('Supabase未启用') };
@@ -83,12 +83,15 @@ export class SupabaseService {
       return { data: data as T, error };
     } catch (err) {
       console.error(`从${table}获取ID=${id}的数据失败:`, err);
-      return { data: null, error: err };
+      return { data: null, error: err as Error };
     }
   }
 
   // 通用创建方法
-  static async create<T>(table: string, data: Partial<T>): Promise<{ data: T | null; error: any }> {
+  static async create<T>(
+    table: string,
+    data: Partial<T>,
+  ): Promise<{ data: T | null; error: Error | null }> {
     if (!supabaseEnabled) {
       console.warn(`Supabase未启用，无法向${table}插入数据`);
       return { data: null, error: new Error('Supabase未启用') };
@@ -100,7 +103,7 @@ export class SupabaseService {
       return { data: result?.[0] as T, error };
     } catch (err) {
       console.error(`向${table}插入数据失败:`, err);
-      return { data: null, error: err };
+      return { data: null, error: err as Error };
     }
   }
 
@@ -109,7 +112,7 @@ export class SupabaseService {
     table: string,
     id: number,
     data: Partial<T>,
-  ): Promise<{ data: T | null; error: any }> {
+  ): Promise<{ data: T | null; error: Error | null }> {
     if (!supabaseEnabled) {
       console.warn(`Supabase未启用，无法更新${table}中ID=${id}的数据`);
       return { data: null, error: new Error('Supabase未启用') };
@@ -121,12 +124,12 @@ export class SupabaseService {
       return { data: result?.[0] as T, error };
     } catch (err) {
       console.error(`更新${table}中ID=${id}的数据失败:`, err);
-      return { data: null, error: err };
+      return { data: null, error: err as Error };
     }
   }
 
   // 通用删除方法
-  static async delete(table: string, id: number): Promise<{ error: any }> {
+  static async delete(table: string, id: number): Promise<{ error: Error | null }> {
     if (!supabaseEnabled) {
       console.warn(`Supabase未启用，无法删除${table}中ID=${id}的数据`);
       return { error: new Error('Supabase未启用') };
@@ -138,7 +141,7 @@ export class SupabaseService {
       return { error };
     } catch (err) {
       console.error(`删除${table}中ID=${id}的数据失败:`, err);
-      return { error: err };
+      return { error: err as Error };
     }
   }
 }

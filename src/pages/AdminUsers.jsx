@@ -1,260 +1,289 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../store/useAuth.js';
-import { supabase, supabaseEnabled } from '../utils/supabase';
-import { exportToExcel } from '../utils/exportExcel';
-import { useToast } from '../components/Toast';
-import { isNumber, min, validateForm, required } from '../utils/validation';
-import UserBalanceModal from '../components/UserBalanceModal'; // 导入新的模态框组件
+import { supabase, supabaseEnabled } from '../utils/supabase.js';
+import { exportToExcel } from '../utils/exportExcel.ts';
+import { useToast } from '../hooks/useToast'; // Import useToast
+import { validateUserPermissions } from '../utils/tradeValidation.js';
 
 export const AdminUsers = () => {
-  const { user } = useAuth();
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [keyword, setKeyword] = useState('');
+  const { user: currentUser } = useAuth();
   const { showToast } = useToast();
+  const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [balanceAdjustment, setBalanceAdjustment] = useState({ userId: null, amount: 0 });
 
-  // 新增状态用于控制模态框
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [modalType, setModalType] = useState(null);
-
-  // 处理打开模态框
-  const handleOpenModal = (user, type) => {
-    setSelectedUser(user);
-    setModalType(type);
-    setIsModalOpen(true);
-  };
-
-  // 处理关闭模态框
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedUser(null);
-    setModalType(null);
-  };
-
-  const fetchUsers = async () => {
+  // 加载会员列表
+  const loadUsers = async () => {
     setLoading(true);
     try {
       if (!supabaseEnabled) {
-        // 本地演示数据
+        // 模拟数据
         setUsers([
           {
-            id: 1001,
-            username: 'testuser01',
-            related_admin: 'admin001',
-            current_balance: 10000,
-            status: 'active',
-            permissions: {
-              fundPermission: true,
-              optionPermission: false,
-              shContractPermission: true,
-              hkContractPermission: false,
-              singleTradeMax: 1000,
-              dailyTradeMax: 5000,
-            },
+            id: 1,
+            username: 'testuser1',
+            related_admin: 'admin1',
+            current_balance: 100000,
+            user_type: 'user',
           },
           {
-            id: 1002,
-            username: 'testuser02',
-            related_admin: 'admin001',
-            current_balance: 5000,
-            status: 'active',
-            permissions: {
-              fundPermission: false,
-              optionPermission: true,
-              shContractPermission: false,
-              hkContractPermission: true,
-              singleTradeMax: 2000,
-              dailyTradeMax: 10000,
-            },
+            id: 2,
+            username: 'testuser2',
+            related_admin: 'admin1',
+            current_balance: 50000,
+            user_type: 'user',
+          },
+          {
+            id: 3,
+            username: 'testuser3',
+            related_admin: 'admin2',
+            current_balance: 75000,
+            user_type: 'user',
           },
         ]);
       } else {
-        const query = supabase
+        const { data, error } = await supabase
           .from('users')
-          .select('id, username, related_admin, current_balance, status, permissions') // 增加 permissions 字段
-          .order('id', { ascending: true });
-        const { data, error } = await query;
+          .select('id, username, related_admin, current_balance, user_type')
+          .order('id');
         if (error) throw error;
-        setUsers(
-          (data || []).map((u) => ({
-            id: u.id,
-            username: u.username,
-            related_admin: u.related_admin,
-            current_balance:
-              typeof u.current_balance === 'number'
-                ? u.current_balance
-                : parseFloat(u.current_balance),
-            status: u.status,
-          })),
-        );
+        setUsers(data || []);
       }
-    } catch (err) {
-      console.error(err);
-      showToast('加载用户列表失败', 'error');
+    } catch (e) {
+      console.error(e);
+      showToast('加载会员列表失败', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    loadUsers();
   }, []);
 
-  const applyChange = async (target, type, amount) => {
-    const { isValid, errors } = validateForm(
-      { amount },
-      {
-        amount: { rules: [required, isNumber, min(0.01)], label: '金额' },
-      },
-    );
-    if (!isValid) {
-      showToast(errors.amount, 'error');
-      return;
-    }
-    if (!user || user.userType !== 'admin') {
+  // 上下分功能
+  const adjustBalance = async () => {
+    if (!currentUser || currentUser.userType !== 'admin') {
       showToast('只有管理员可以进行上下分', 'warning');
       return;
     }
-    setLoading(true);
-    try {
-      let newBalance = (target.current_balance || 0) + (type === 'deposit' ? amount : -amount);
-      if (newBalance < 0) {
-        showToast('提现金额超过当前余额', 'warning');
-        return;
-      }
-      if (!supabaseEnabled) {
-        // 本地演示直接更新内存
-        setUsers((prev) =>
-          prev.map((u) => (u.id === target.id ? { ...u, current_balance: newBalance } : u)),
-        );
-        showToast(`${type === 'deposit' ? '上分' : '下分'}成功（本地演示）`, 'success');
-      } else {
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ current_balance: newBalance })
-          .eq('id', target.id);
-        if (updateError) throw updateError;
 
-        // 记录日志
-        const { error: logError } = await supabase.from('fund_logs').insert({
-          user_id: target.id,
-          operate_type: type,
-          amount,
-          related_admin: user.username,
-          created_at: new Date().toISOString(),
+    if (!balanceAdjustment.userId || !balanceAdjustment.amount) {
+      showToast('请选择会员和输入调整金额', 'warning');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      if (!supabaseEnabled) {
+        // 模拟操作
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === balanceAdjustment.userId
+              ? {
+                  ...user,
+                  current_balance: user.current_balance + parseFloat(balanceAdjustment.amount),
+                }
+              : user,
+          ),
+        );
+        showToast('余额调整成功（本地演示）', 'success');
+      } else {
+        // 实际更新数据库
+        const { data, error } = await supabase.rpc('adjust_user_balance', {
+          user_id: balanceAdjustment.userId,
+          adjustment_amount: parseFloat(balanceAdjustment.amount),
         });
-        if (logError) throw logError;
-        showToast(`${type === 'deposit' ? '上分' : '下分'}成功`, 'success');
-        await fetchUsers();
+
+        if (error) throw error;
+        showToast('余额调整成功', 'success');
+        loadUsers(); // 重新加载数据
       }
-      handleCloseModal(); // 操作成功后关闭模态框
-    } catch (err) {
-      console.error(err);
-      showToast(`${type === 'deposit' ? '上分' : '下分'}失败`, 'error');
+    } catch (e) {
+      console.error(e);
+      showToast('余额调整失败', 'error');
     } finally {
       setLoading(false);
+      setBalanceAdjustment({ userId: null, amount: 0 });
     }
   };
 
-  const filtered = users.filter(
-    (u) => !keyword.trim() || u.username.toLowerCase().includes(keyword.toLowerCase()),
+  // 筛选会员
+  const filteredUsers = users.filter((user) =>
+    user.username.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const handleExport = async () => {
-    await exportToExcel(
-      filtered,
+  // 导出为Excel
+  const handleExport = () => {
+    exportToExcel(
+      filteredUsers,
       [
-        { key: 'id', header: '用户ID' },
-        { key: 'username', header: '用户名' },
+        { key: 'id', header: '会员ID' },
+        { key: 'username', header: '会员名' },
         { key: 'related_admin', header: '关联管理员' },
-        { key: 'current_balance', header: '当前余额', transform: (v) => Number(v || 0).toFixed(2) },
-        { key: 'status', header: '状态' },
+        { key: 'current_balance', header: '当前余额' },
+        { key: 'user_type', header: '用户类型' },
       ],
-      { filename: '用户列表.xlsx', sheetName: 'Users' },
+      { filename: '会员列表.xlsx', sheetName: 'Users' },
     );
   };
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">用户管理（上下分）</h1>
-        <div className="flex gap-2">
-          <input
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder="搜索用户名"
-            className="px-3 py-2 border rounded"
-          />
-          {/* 移除直接的金额输入框和按钮，因为将通过模态框处理 */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <h1 className="text-xl font-semibold">会员管理（上下分）</h1>
+        <div className="flex flex-col sm:flex-row sm:space-x-4 sm:items-center mt-4 md:mt-0">
+          <div className="relative mb-4 sm:mb-0">
+            <input
+              type="text"
+              placeholder="搜索会员名"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
           <button
             onClick={handleExport}
-            className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center"
           >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
             导出Excel
           </button>
         </div>
       </div>
-      {/* 统一使用Toast，移除旧消息展示 */}
-      <div className="bg-white rounded shadow">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="p-3 hidden md:table-cell">ID</th>
-              <th className="p-3">用户名</th>
-              <th className="p-3 hidden md:table-cell">管理员</th>
-              <th className="p-3">余额</th>
-              <th className="p-3">状态</th>
-              <th className="p-3">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((u) => (
-              <tr key={u.id} className="border-t">
-                <td className="p-3 hidden md:table-cell">{u.id}</td>
-                <td className="p-3">{u.username}</td>
-                <td className="p-3 hidden md:table-cell">{u.related_admin || '-'}</td>
-                <td className="p-3">{(u.current_balance || 0).toFixed(2)}</td>
-                <td className="p-3">{u.status || '-'}</td>
-                <td className="p-3">
-                  <div className="flex gap-2">
-                    <button
-                      disabled={loading}
-                      className="px-3 py-1 rounded bg-green-600 text-white disabled:opacity-50"
-                      onClick={() => handleOpenModal(u, 'deposit')}
-                    >
-                      上分
-                    </button>
-                    <button
-                      disabled={loading}
-                      className="px-3 py-1 rounded bg-red-600 text-white disabled:opacity-50"
-                      onClick={() => handleOpenModal(u, 'withdraw')}
-                    >
-                      下分
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td className="p-3" colSpan={6}>
-                  无数据
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+
+      {/* 上下分表单 */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 className="text-lg font-semibold mb-4">余额调整</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">选择会员</label>
+            <select
+              value={balanceAdjustment.userId || ''}
+              onChange={(e) =>
+                setBalanceAdjustment({
+                  ...balanceAdjustment,
+                  userId: parseInt(e.target.value) || null,
+                })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">请选择会员</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.username} (余额: ¥{user.current_balance.toLocaleString()})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">调整金额</label>
+            <input
+              type="number"
+              value={balanceAdjustment.amount}
+              onChange={(e) =>
+                setBalanceAdjustment({ ...balanceAdjustment, amount: e.target.value })
+              }
+              placeholder="输入调整金额"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={adjustBalance}
+              disabled={loading}
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {loading ? '处理中...' : '确认调整'}
+            </button>
+          </div>
+        </div>
       </div>
-      {selectedUser && modalType && (
-        <UserBalanceModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          user={selectedUser}
-          type={modalType}
-          onConfirm={applyChange}
-        />
-      )}
+
+      {/* 会员列表 */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  会员ID
+                </th>
+                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  会员名
+                </th>
+                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  管理员
+                </th>
+                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  当前余额
+                </th>
+                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  用户类型
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredUsers.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50">
+                  <td className="p-3 text-sm text-gray-900">{user.id}</td>
+                  <td className="p-3 text-sm text-gray-900">{user.username}</td>
+                  <td className="p-3 text-sm text-gray-900 hidden md:table-cell">
+                    {user.related_admin}
+                  </td>
+                  <td className="p-3 text-sm text-gray-900">
+                    ¥{user.current_balance.toLocaleString()}
+                  </td>
+                  <td className="p-3 text-sm text-gray-900">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        user.user_type === 'admin'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
+                      {user.user_type === 'admin' ? '管理员' : '普通会员'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {filteredUsers.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            {searchTerm ? '未找到匹配的会员' : '暂无会员数据'}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -140,9 +140,9 @@ jucaizhongfa-Trading-Platform/
 │   │   ├── Home.tsx        # 首页 / Home page
 │   │   ├── Trade.tsx       # 交易页 / Trading page
 │   │   ├── Profile.tsx     # 个人中心 / Profile page
-│   │   └── AdminDashboard.tsx # 管理员仪表盘 (可选) / Admin Dashboard (Optional)
+│   │   └── AdminDashboard.tsx # 基金管理人仪表盘 (可选) / Fund Manager Dashboard (Optional)
 │   ├── store/              # Zustand 状态管理 / Zustand state management
-│   │   ├── useAuth.ts      # 用户认证 / User authentication
+│   │   ├── useAuth.ts      # 会员认证 / Member authentication
 │   │   └── useTradeData.ts # 交易数据 / Trading data
 │   ├── utils/              # 工具函数 / Utility functions (e.g., authService, supabase, tradeValidation)
 │   ├── styles/             # 全局样式 / Global styles
@@ -392,7 +392,7 @@ This project follows the [Conventional Commits](https://www.conventionalcommits.
 Example:
 
 ```
-feat: add user authentication module
+feat: add member authentication module
 fix: resolve login redirect issue
 docs: update contributing guide
 ```
@@ -408,14 +408,14 @@ If you encounter any problems during the contribution process or have any questi
 - **邮箱**：AthenDrakomin@proton.me / **Email**: AthenDrakomin@proton.me
 
 再次感谢您的贡献！
-Thank you again for your contributions！
+Thank you again for your contributions!
 
 ---
 
 ## 📋 待办事项（Roadmap） | Roadmap
 
 - [ ] 接入真实行情数据（Tushare API） / Integrate real-time market data (Tushare API)
-- [ ] 集成 Firebase / Supabase 用户认证 / Integrate Firebase / Supabase user authentication
+- [ ] 集成 Firebase / Supabase 会员认证 / Integrate Firebase / Supabase member authentication
 - [ ] 实现微信支付模拟 / Implement WeChat Pay simulation
 - [ ] 增加 AI 投顾对话功能 / Add AI investment advisor chat function
 - [ ] 多语言支持（国际版） / Multi-language support (international version)
@@ -424,6 +424,31 @@ Thank you again for your contributions！
 ---
 
 ## 📝 更新日志 | Changelog
+
+### 1.0.3 (2025-11-05)
+
+#### 🐛 Bug 修复 | Bug Fixes
+
+- 修复了 `src/pages/MemberManagement.tsx` 中 `InputNumber` 组件 `parser` 函数的类型问题。 / Fixed type issue with `InputNumber` component `parser` function in `src/pages/MemberManagement.tsx`.
+
+#### ✅ 工程化改进 | Engineering Improvements
+
+- 完善了 TypeScript 类型检查，解决了所有 TypeScript 类型错误。 / Improved TypeScript type checking, resolved all TypeScript type errors.
+
+### 1.0.2 (2025-11-05)
+
+#### 🐛 Bug 修复 | Bug Fixes
+
+- 修复了 `src/pages/DataIntegration.tsx` 中 `'entry'` 未使用的问题。 / Fixed unused `'entry'` variable in `src/pages/DataIntegration.tsx`.
+- 修复了 `src/pages/AdminDashboard.tsx` 中未使用的 `React` 导入问题。 / Fixed unused `React` import in `src/pages/AdminDashboard.tsx`.
+- 修复了 `src/pages/MemberManagement.tsx` 中 `InputNumber` 组件 `parser` 函数的类型问题。 / Fixed type issue with `InputNumber` component `parser` function in `src/pages/MemberManagement.tsx`.
+- 修复了 `src/pages/AdminOptions.tsx` 中 `debounce` 函数参数类型不匹配的问题。 / Fixed parameter type mismatch issue with `debounce` function in `src/pages/AdminOptions.tsx`.
+- 修复了多个文件中的 React Hook 依赖警告问题。 / Fixed React Hook dependency warning issues in multiple files.
+
+#### ✅ 工程化改进 | Engineering Improvements
+
+- 完善了 TypeScript 类型检查，提高了代码质量。 / Improved TypeScript type checking, enhanced code quality.
+- 优化了 React Hook 使用，避免不必要的重新渲染。 / Optimized React Hook usage, avoided unnecessary re-renders.
 
 ### 1.0.1 (2025-11-05)
 

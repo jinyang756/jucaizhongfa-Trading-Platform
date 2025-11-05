@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   AreaChart,
   Area,
@@ -12,6 +12,7 @@ import {
 import { supabase } from '../utils/supabase';
 import { format, addMonths, subMonths } from 'date-fns';
 
+// 定义基金业绩数据接口
 interface FundPerformanceData {
   date: string;
   price: number;
@@ -37,11 +38,7 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    fetchFundPerformance();
-  }, [fundId, timeRange]);
-
-  async function fetchFundPerformance() {
+  const fetchFundPerformance = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -111,11 +108,21 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [fundId, timeRange]);
+
+  useEffect(() => {
+    fetchFundPerformance();
+  }, [fetchFundPerformance]);
 
   // Custom Tooltip event handlers
-  const handleChartClick = (data: any) => {
-    if (isMobile && data && data.activePayload) {
+  const handleChartClick = (data: unknown) => {
+    if (
+      isMobile &&
+      data &&
+      typeof data === 'object' &&
+      'activePayload' in data &&
+      data.activePayload
+    ) {
       setActiveTooltip(true);
     } else if (isMobile) {
       setActiveTooltip(false);

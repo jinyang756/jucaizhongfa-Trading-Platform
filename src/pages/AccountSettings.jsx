@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/useToast'; // Import useToast
 import { useAuth } from '../store/useAuth.js';
-import { useToast } from '../components/Toast'; // Import useToast
 
 const PREF_KEY = 'user_preferences';
 
@@ -63,7 +64,7 @@ export default function AccountSettings() {
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">用户名</label>
+            <label className="block text-sm font-medium text-gray-700">会员名</label>
             <p className="mt-1 text-lg text-gray-900">{profile.username}</p>
           </div>
           <div>
@@ -178,15 +179,15 @@ export default function AccountSettings() {
         <h2 className="text-lg font-medium mb-3">基础信息</h2>
         <div className="space-y-2 text-sm">
           <div>
-            <span className="text-gray-600">用户ID：</span>
+            <span className="text-gray-600">会员ID：</span>
             {user?.id || '-'}
           </div>
           <div>
-            <span className="text-gray-600">用户名：</span>
+            <span className="text-gray-600">会员名：</span>
             {user?.username || user?.email || '-'}
           </div>
           <div>
-            <span className="text-gray-600">关联管理员：</span>
+            <span className="text-gray-600">关联基金管理人：</span>
             {user?.relatedAdmin || '-'}
           </div>
           <div>

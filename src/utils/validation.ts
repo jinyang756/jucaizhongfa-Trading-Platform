@@ -7,7 +7,7 @@ export interface ValidationResult {
 }
 
 // 校验规则类型
-export type ValidationRule = (value: any, label?: string) => ValidationResult;
+export type ValidationRule = (value: unknown, label?: string) => ValidationResult;
 
 // 创建校验结果
 const createResult = (isValid: boolean, message: string = ''): ValidationResult => ({
@@ -16,7 +16,7 @@ const createResult = (isValid: boolean, message: string = ''): ValidationResult 
 });
 
 // 必填项校验
-export const required = (value: any, label: string = '该字段'): ValidationResult => {
+export const required = (value: unknown, label: string = '该字段'): ValidationResult => {
   const isEmpty = value === undefined || value === null || value === '';
   return createResult(!isEmpty, `${label}不能为空`);
 };
@@ -42,7 +42,7 @@ export const maxLength =
   };
 
 // 数字校验
-export const isNumber = (value: any, label: string = '该字段'): ValidationResult => {
+export const isNumber = (value: unknown, label: string = '该字段'): ValidationResult => {
   if (value === undefined || value === null || value === '') {
     return createResult(true);
   }
@@ -53,7 +53,7 @@ export const isNumber = (value: any, label: string = '该字段'): ValidationRes
 // 最小值校验
 export const min =
   (minValue: number) =>
-  (value: any, label: string = '该字段'): ValidationResult => {
+  (value: unknown, label: string = '该字段'): ValidationResult => {
     if (value === undefined || value === null || value === '') {
       return createResult(true);
     }
@@ -64,7 +64,7 @@ export const min =
 // 最大值校验
 export const max =
   (maxValue: number) =>
-  (value: any, label: string = '该字段'): ValidationResult => {
+  (value: unknown, label: string = '该字段'): ValidationResult => {
     if (value === undefined || value === null || value === '') {
       return createResult(true);
     }
@@ -111,7 +111,11 @@ export const pattern =
   };
 
 // 组合多个校验规则
-export const validate = (value: any, rules: ValidationRule[], label?: string): ValidationResult => {
+export const validate = (
+  value: unknown,
+  rules: ValidationRule[],
+  label?: string,
+): ValidationResult => {
   for (const rule of rules) {
     const result = rule(value, label);
     if (!result.isValid) {
@@ -123,14 +127,14 @@ export const validate = (value: any, rules: ValidationRule[], label?: string): V
 
 // 校验表单对象
 export const validateForm = (
-  formData: Record<string, any>,
+  formData: Record<string, unknown>,
   validationRules: Record<string, { rules: ValidationRule[]; label?: string }>,
 ): { isValid: boolean; errors: Record<string, string> } => {
   const errors: Record<string, string> = {};
   let isValid = true;
 
   for (const field in validationRules) {
-    if (validationRules.hasOwnProperty(field)) {
+    if (Object.prototype.hasOwnProperty.call(validationRules, field)) {
       const { rules, label } = validationRules[field];
       const result = validate(formData[field], rules, label);
 

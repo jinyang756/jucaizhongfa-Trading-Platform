@@ -132,12 +132,13 @@ const contractProducts = [
 ];
 
 // 使用服务密钥创建服务端客户端（优先使用服务密钥）
-const adminUrl = (process.env.VITE_SUPABASE_URL || (import.meta as any)?.env?.VITE_SUPABASE_URL) as
+const adminUrl = (process.env.VITE_SUPABASE_URL ||
+  (import.meta as { env?: Record<string, string> })?.env?.VITE_SUPABASE_URL) as string | undefined;
+const adminKey = (process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+  (import.meta as { env?: Record<string, string> })?.env?.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+  (import.meta as { env?: Record<string, string> })?.env?.VITE_SUPABASE_ANON_KEY) as
   | string
   | undefined;
-const adminKey = (process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
-  (import.meta as any)?.env?.VITE_SUPABASE_SERVICE_ROLE_KEY ||
-  (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY) as string | undefined;
 if (!adminUrl || !adminKey) {
   throw new Error(
     '缺少Supabase连接配置：请在 .env 中设置 VITE_SUPABASE_URL 和 VITE_SUPABASE_SERVICE_ROLE_KEY',
@@ -196,11 +197,14 @@ async function generateInitialData() {
         create_admin: 'admin001',
       };
 
-      let { error } = await client.from('funds').insert(baseInsert);
+      const { error } = await client.from('funds').insert(baseInsert);
 
       if (error && !error.message.includes('duplicate key')) {
         // 如果因 fund_code 非空约束失败，则补充一个随机基金代码重试
-        if ((error as any).code === '23502' && (error as any).message?.includes('fund_code')) {
+        if (
+          (error as { code?: string; message?: string }).code === '23502' &&
+          (error as { code?: string; message?: string }).message?.includes('fund_code')
+        ) {
           const fundCode = `F${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
           const { error: retryError } = await client
             .from('funds')

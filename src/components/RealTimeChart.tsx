@@ -76,8 +76,14 @@ export default function RealTimeChart({ symbol = 'F0001' }: { symbol?: string })
   }, [symbol]); // Add symbol to dependency array
 
   // Custom Tooltip event handlers
-  const handleChartClick = (data: any) => {
-    if (isMobile && data && data.activePayload) {
+  const handleChartClick = (data: unknown) => {
+    if (
+      isMobile &&
+      data &&
+      typeof data === 'object' &&
+      'activePayload' in data &&
+      data.activePayload
+    ) {
       setActiveTooltip(true);
     } else if (isMobile) {
       setActiveTooltip(false);

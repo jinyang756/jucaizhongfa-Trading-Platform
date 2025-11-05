@@ -106,8 +106,8 @@ export const TransactionHistory = () => {
         ];
         setOrders(demo);
       }
-    } catch (e: any) {
-      setError(e?.message || '加载交易记录失败');
+    } catch (e: unknown) {
+      setError((e as { message?: string })?.message || '加载交易记录失败');
     } finally {
       setLoading(false);
     }

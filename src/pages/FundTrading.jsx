@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../store/useAuth.js';
-import { supabase, supabaseEnabled } from '../utils/supabase';
-import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
-import { useToast } from '../components/Toast';
-import { startDataSimulation, stopDataSimulation } from '../utils/mockDataService';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/useToast'; // Import useToast
 import RealTimeChart from '../components/RealTimeChart';
+import { formatCurrency } from '../utils/helpers';
+import { mockFundProducts } from '../utils/mockProducts';
 
 const AICalloutCard = () => (
   <div className="bg-gradient-to-r from-indigo-900/70 to-purple-900/70 p-3 rounded-lg border border-indigo-500/50 mb-4 shadow-xl">
@@ -178,7 +177,7 @@ export const FundTrading = () => {
 
   const placeOrder = async () => {
     if (!user || user.userType !== 'user') {
-      setMsg('仅用户可下单');
+      setMsg('仅会员可下单');
       return;
     }
 
@@ -255,10 +254,6 @@ export const FundTrading = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatCurrency = (amount) => {
-    return `¥${amount.toLocaleString()}`;
   };
 
   const formatDateTime = (dateString) => {

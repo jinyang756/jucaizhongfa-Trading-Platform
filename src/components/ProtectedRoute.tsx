@@ -24,11 +24,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // 检查用户类型权限
   if (requiredUserType && user.userType !== requiredUserType) {
-    // 如果是管理员访问用户页面，重定向到管理员首页
+    // 如果是管理员访问会员页面，重定向到管理员首页
     if (user.userType === 'admin') {
       return <Navigate to="/manager" replace />;
     }
-    // 如果是用户访问管理员页面，重定向到用户首页
+    // 如果是会员访问管理员页面，重定向到会员首页
     if (user.userType === 'user') {
       return <Navigate to="/dashboard" replace />;
     }
@@ -37,7 +37,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   return <>{children}</>;
 };
 
-// 公共路由组件（已登录用户不能访问，如登录页）
+// 公共路由组件（已登录会员不能访问，如登录页）
 interface PublicRouteProps {
   children: React.ReactNode;
 }
@@ -46,7 +46,7 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   const isLoggedIn = useAuth((state) => state.isLoggedIn);
   const user = useAuth((state) => state.user);
 
-  // 已登录用户重定向到对应首页
+  // 已登录会员重定向到对应首页
   if (isLoggedIn && user) {
     if (user.userType === 'admin') {
       return <Navigate to="/manager" replace />;

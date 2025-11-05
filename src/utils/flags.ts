@@ -9,7 +9,9 @@ import {
   type FlagValues,
 } from '../../generated/hypertune';
 
-const identify: Identify<Context> = dedupe(async ({}) => {
+const identify: Identify<Context> = dedupe(async (_context) => {
+  // _context is intentionally unused but required by the Identify type signature
+  void _context;
   return {
     environment:
       process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'

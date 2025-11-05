@@ -25,8 +25,19 @@ import { useAuth } from './store/useAuth'; // Authentication store
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // Protected route component
 import { BottomNavigationBar } from './components/BottomNavigationBar.tsx'; // Bottom navigation bar
 
+// 新增的页面组件
+import BlockTrading from './pages/BlockTrading.jsx'; // 大宗交易
+import IPOSubscription from './pages/IPOSubscription.jsx'; // 新股申购
+
+// 基金管理人相关页面组件
+import ManagerDashboard from './pages/ManagerDashboard.tsx'; // 基金管理人首页
+import MemberManagement from './pages/MemberManagement.tsx'; // 会员管理
+import TradeManagement from './pages/TradeManagement.tsx'; // 交易管理
+import DataIntegration from './pages/DataIntegration.tsx'; // 数据集成
+import SystemSettings from './pages/SystemSettings.tsx'; // 系统设置
+
 const LazyAdminDashboard = lazy(() =>
-  import('./pages/AdminDashboard.tsx').then((module) => ({ default: module.AdminDashboard })),
+  import('./pages/AdminDashboard.tsx').then((module) => ({ default: module.default })),
 );
 
 // 包装主布局和导航的组件
@@ -62,6 +73,19 @@ const MainLayout: React.FC = () => {
   );
 };
 
+// 基金管理人布局组件
+const ManagerLayout: React.FC = () => {
+  return (
+    <>
+      <div className="flex-grow pt-16 pb-16">
+        {' '}
+        {/* Add padding-top and bottom to prevent content from being hidden behind the fixed header and footer */}
+        <Outlet /> {/* 路由出口 */}
+      </div>
+    </>
+  );
+};
+
 function App() {
   const userType = useAuth((state) => state.user?.userType);
 
@@ -88,6 +112,8 @@ function App() {
           <Route path="/funds" element={<FundTrading />} />
           <Route path="/contracts" element={<ContractTrading />} />
           <Route path="/options" element={<OptionTrading />} />
+          <Route path="/block-trading" element={<BlockTrading />} />
+          <Route path="/ipo-subscription" element={<IPOSubscription />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile-page" element={<ProfilePage />} />
           <Route path="/settings" element={<AccountSettings />} />
@@ -105,6 +131,24 @@ function App() {
             </>
           )}
         </Route>
+
+        {/* 基金管理人路由 */}
+        <Route
+          path="/manager"
+          element={
+            <ProtectedRoute>
+              <ManagerLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/manager/dashboard" replace />} />
+          <Route path="/manager/dashboard" element={<ManagerDashboard />} />
+          <Route path="/manager/users" element={<MemberManagement />} />
+          <Route path="/manager/trades" element={<TradeManagement />} />
+          <Route path="/manager/data" element={<DataIntegration />} />
+          <Route path="/manager/settings" element={<SystemSettings />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       {/* </Router> */}

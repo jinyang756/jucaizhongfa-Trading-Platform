@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { useAuth } from '../store/useAuth.js';
 
@@ -23,7 +23,7 @@ export const Positions = () => {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all'); // 'all', 'fund', 'option', 'contract'
 
-  const loadPositions = async () => {
+  const loadPositions = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setError('');
@@ -151,11 +151,11 @@ export const Positions = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadPositions();
-  }, [user, filter]);
+  }, [loadPositions, filter]);
 
   const filteredPositions =
     filter === 'all' ? positions : positions.filter((p) => p.type === filter);

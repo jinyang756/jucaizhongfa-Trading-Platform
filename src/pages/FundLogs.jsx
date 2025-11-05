@@ -84,7 +84,7 @@ export const FundLogs = () => {
               <th className="p-3">操作时间</th>
               <th className="p-3">类型</th>
               <th className="p-3">金额</th>
-              <th className="p-3 hidden md:table-cell">管理员</th>
+              <th className="p-3 hidden md:table-cell">基金管理人</th>
               <th className="p-3 hidden md:table-cell">备注</th>
             </tr>
           </thead>

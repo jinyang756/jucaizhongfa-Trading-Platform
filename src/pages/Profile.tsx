@@ -12,19 +12,20 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../store/useAuth';
+import TopNavigationBar from '../components/TopNavigationBar';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  // 用户基本信息
+  // 会员基本信息
   const userInfo = {
     username: user?.username || 'DemoUser',
     userType: user?.userType || 'user',
     totalBalance: user?.currentBalance || 100000,
   };
 
-  // 用户权限信息
+  // 会员权限信息
   const permissions = [
     { name: '基金交易', enabled: user?.permissions?.fund, icon: <WalletOutlined /> },
     { name: '期权交易', enabled: user?.permissions?.option, icon: <TrophyOutlined /> },
@@ -34,8 +35,14 @@ const Profile: React.FC = () => {
 
   // 交易限制信息
   const limits = [
-    { name: '单笔最大交易', value: `¥${user?.limits?.singleTradeMax?.toLocaleString() || '10,000'}` },
-    { name: '每日最大交易', value: `¥${user?.limits?.dailyTradeMax?.toLocaleString() || '50,000'}` },
+    {
+      name: '单笔最大交易',
+      value: `¥${user?.limits?.singleTradeMax?.toLocaleString() || '10,000'}`,
+    },
+    {
+      name: '每日最大交易',
+      value: `¥${user?.limits?.dailyTradeMax?.toLocaleString() || '50,000'}`,
+    },
     { name: '最小交易金额', value: `¥${user?.limits?.minTradeAmount?.toLocaleString() || '100'}` },
   ];
 
@@ -90,10 +97,10 @@ const Profile: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">个人中心</h1>
+    <div className="p-6 pt-20">
+      <TopNavigationBar title="个人中心" />
 
-      {/* 用户基本信息 */}
+      {/* 会员基本信息 */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <div className="flex items-center mb-6">
           <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center mr-4">
@@ -104,7 +111,7 @@ const Profile: React.FC = () => {
             <div className="flex items-center">
               <Badge status={userInfo.userType === 'admin' ? 'processing' : 'default'} />
               <span className="ml-2 text-gray-500">
-                {userInfo.userType === 'admin' ? '管理员' : '普通用户'}
+                {userInfo.userType === 'admin' ? '管理员' : '普通会员'}
               </span>
             </div>
           </div>
@@ -121,7 +128,9 @@ const Profile: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="text-gray-500 text-sm mb-1">账户余额</div>
-            <div className="text-2xl font-bold text-blue-600">¥{userInfo.totalBalance.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              ¥{userInfo.totalBalance.toLocaleString()}
+            </div>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="text-gray-500 text-sm mb-1">累计收益</div>
@@ -140,12 +149,18 @@ const Profile: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4">交易权限</h2>
           <div className="space-y-3">
             {permissions.map((permission, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
                 <div className="flex items-center">
                   <div className="text-blue-500 mr-3">{permission.icon}</div>
                   <span>{permission.name}</span>
                 </div>
-                <Badge status={permission.enabled ? 'success' : 'default'} text={permission.enabled ? '已开通' : '未开通'} />
+                <Badge
+                  status={permission.enabled ? 'success' : 'default'}
+                  text={permission.enabled ? '已开通' : '未开通'}
+                />
               </div>
             ))}
           </div>

@@ -7,9 +7,11 @@ import {
   FileTextOutlined,
   RiseOutlined,
   FallOutlined,
+  ShoppingOutlined,
+  BankOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../store/useAuth';
-
+import TopNavigationBar from '../components/TopNavigationBar';
 const Trade: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -37,6 +39,20 @@ const Trade: React.FC = () => {
       path: '/contracts',
       permission: user?.permissions?.shContract || user?.permissions?.hkContract,
     },
+    {
+      title: '大宗交易',
+      description: '大额撮合交易',
+      icon: <BankOutlined style={{ fontSize: '24px' }} />,
+      path: '/block-trading',
+      permission: user?.permissions?.block,
+    },
+    {
+      title: '新购申购',
+      description: '新股认购服务',
+      icon: <ShoppingOutlined style={{ fontSize: '24px' }} />,
+      path: '/ipo-subscription',
+      permission: user?.permissions?.ipo,
+    },
   ];
 
   // 市场数据
@@ -56,8 +72,8 @@ const Trade: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">交易大厅</h1>
+    <div className="p-6 pt-20">
+      <TopNavigationBar title="交易大厅" />
 
       {/* 资产概览 */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -96,13 +112,16 @@ const Trade: React.FC = () => {
           <Col xs={12} sm={6}>
             <div className="flex flex-col justify-center h-full">
               <div className="text-sm text-gray-500">累计收益率</div>
-              <div className={`text-lg font-semibold ${assetOverview.profitRate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {assetOverview.profitRate >= 0 ? '+' : ''}{assetOverview.profitRate}%
+              <div
+                className={`text-lg font-semibold ${assetOverview.profitRate >= 0 ? 'text-green-600' : 'text-red-600'}`}
+              >
+                {assetOverview.profitRate >= 0 ? '+' : ''}
+                {assetOverview.profitRate}%
               </div>
-              <Progress 
-                percent={Math.abs(assetOverview.profitRate)} 
-                status={assetOverview.profitRate >= 0 ? 'success' : 'exception'} 
-                showInfo={false} 
+              <Progress
+                percent={Math.abs(assetOverview.profitRate)}
+                status={assetOverview.profitRate >= 0 ? 'success' : 'exception'}
+                showInfo={false}
                 strokeColor={assetOverview.profitRate >= 0 ? '#52c41a' : '#ff4d4f'}
               />
             </div>
@@ -143,17 +162,11 @@ const Trade: React.FC = () => {
                 onClick={() => trade.permission && navigate(trade.path)}
               >
                 <div className="text-blue-500 mb-3 flex justify-center">{trade.icon}</div>
-                <Card.Meta 
-                  title={trade.title} 
-                  description={trade.description} 
-                  className="mb-3" 
-                />
+                <Card.Meta title={trade.title} description={trade.description} className="mb-3" />
                 <div className="mt-2">
                   <span
                     className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                      trade.permission
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                      trade.permission ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}
                   >
                     {trade.permission ? '已开通' : '未开通'}
@@ -165,30 +178,31 @@ const Trade: React.FC = () => {
         </Row>
 
         {/* 权限提示 */}
-        {!user?.permissions?.fund && !user?.permissions?.option && !user?.permissions?.shContract && !user?.permissions?.hkContract && (
-          <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-yellow-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  您当前未开通任何交易权限，请联系管理员开通权限后再进行交易。
-                </p>
+        {!user?.permissions?.fund &&
+          !user?.permissions?.option &&
+          !user?.permissions?.shContract &&
+          !user?.permissions?.hkContract &&
+          !user?.permissions?.block &&
+          !user?.permissions?.ipo && (
+            <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    您当前未开通任何交易权限，请联系管理员开通权限后再进行交易。
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

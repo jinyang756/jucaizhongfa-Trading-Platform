@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, supabaseEnabled } from '../utils/supabase';
-import { useToast } from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 export function useSupabase() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
@@ -31,12 +31,13 @@ export function useSupabase() {
 
   // 通用错误处理
   const handleError = useCallback(
-    (error: any, fallbackMessage: string = '操作失败') => {
+    (error: unknown, fallbackMessage: string = '操作失败') => {
       console.error(error);
 
       // 处理Supabase特定错误
-      if (error?.code) {
-        switch (error.code) {
+      if (error && typeof error === 'object' && 'code' in error) {
+        const err = error as { code: string; message?: string };
+        switch (err.code) {
           case '23505': // 唯一约束冲突
             showToast('数据已存在，请勿重复添加', 'error');
             break;
@@ -63,7 +64,7 @@ export function useSupabase() {
             showToast('数据库连接失败，请检查网络', 'error');
             break;
           default:
-            showToast(`${fallbackMessage}: ${error.message || '未知错误'}`, 'error');
+            showToast(`${fallbackMessage}: ${err.message || '未知错误'}`, 'error');
         }
       } else {
         showToast(fallbackMessage, 'error');

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 export type ContractRow = {
   id?: number;
   contract_code: string;
@@ -10,9 +10,9 @@ export type ContractRow = {
 // ... existing code ...
 
 import { useContractsApi } from '../api/contracts';
-import { validateForm, required, maxLength } from '../utils/validation';
+import { validateForm, required, maxLength, type ValidationRule } from '../utils/validation';
 import { exportToExcel } from '../utils/exportExcel';
-import { useToast } from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 export const AdminContracts: React.FC = () => {
   const [form, setForm] = useState<ContractRow>({
@@ -34,23 +34,32 @@ export const AdminContracts: React.FC = () => {
     deleteContract,
   } = useContractsApi();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     await getAllContracts();
     if (error) {
-      showToast(typeof error === 'string' ? error : (error as any)?.message || '加载失败', 'error');
+      showToast(
+        typeof error === 'string' ? error : (error as { message?: string })?.message || '加载失败',
+        'error',
+      );
     }
-  };
+  }, [getAllContracts, error, showToast]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const create = async () => {
     // 表单校验
-    const validationRules = {
-      contract_code: { rules: [required, maxLength(10)], label: '合约代码' },
-      contract_name: { rules: [required, maxLength(50)], label: '合约名称' },
-      market: { rules: [required], label: '市场' },
+    const validationRules: Record<string, { rules: ValidationRule[]; label?: string }> = {
+      contract_code: {
+        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
+        label: '合约代码',
+      },
+      contract_name: {
+        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
+        label: '合约名称',
+      },
+      market: { rules: [required as ValidationRule], label: '市场' },
     };
     const { isValid, errors } = validateForm(form, validationRules);
     setFormErrors(errors);
@@ -64,25 +73,34 @@ export const AdminContracts: React.FC = () => {
       setForm({ contract_code: '', contract_name: '', market: 'SH' });
       await load();
     } else if (error) {
-      showToast(typeof error === 'string' ? error : (error as any)?.message || '创建失败', 'error');
+      showToast(
+        typeof error === 'string' ? error : (error as { message?: string })?.message || '创建失败',
+        'error',
+      );
     }
   };
 
   const update = async (id: number, updatedData: Partial<ContractRow>) => {
     // 局部字段校验
-    const dataToValidate: Record<string, any> = {};
-    const rules: any = {};
+    const dataToValidate: Record<string, unknown> = {};
+    const rules: Record<string, { rules: ValidationRule[]; label?: string }> = {};
     if (updatedData.contract_code !== undefined) {
       dataToValidate.contract_code = updatedData.contract_code ?? '';
-      rules.contract_code = { rules: [required, maxLength(10)], label: '合约代码' };
+      rules.contract_code = {
+        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
+        label: '合约代码',
+      };
     }
     if (updatedData.contract_name !== undefined) {
       dataToValidate.contract_name = updatedData.contract_name ?? '';
-      rules.contract_name = { rules: [required, maxLength(50)], label: '合约名称' };
+      rules.contract_name = {
+        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
+        label: '合约名称',
+      };
     }
     if (updatedData.market !== undefined) {
       dataToValidate.market = updatedData.market ?? '';
-      rules.market = { rules: [required], label: '市场' };
+      rules.market = { rules: [required as ValidationRule], label: '市场' };
     }
     if (Object.keys(rules).length > 0) {
       const { isValid, errors } = validateForm(dataToValidate, rules);
@@ -97,7 +115,10 @@ export const AdminContracts: React.FC = () => {
       setEditingId(null);
       await load();
     } else if (error) {
-      showToast(typeof error === 'string' ? error : (error as any)?.message || '更新失败', 'error');
+      showToast(
+        typeof error === 'string' ? error : (error as { message?: string })?.message || '更新失败',
+        'error',
+      );
     }
   };
 
@@ -108,7 +129,10 @@ export const AdminContracts: React.FC = () => {
       setShowDeleteConfirm(null);
       await load();
     } else if (error) {
-      showToast(typeof error === 'string' ? error : (error as any)?.message || '删除失败', 'error');
+      showToast(
+        typeof error === 'string' ? error : (error as { message?: string })?.message || '删除失败',
+        'error',
+      );
     }
   };
 

@@ -268,9 +268,11 @@ export const UserDashboard = () => {
               onClick={() => {
                 const hasAnyContractPermission =
                   user?.permissions?.shContract || user?.permissions?.hkContract;
-                hasAnyContractPermission
-                  ? navigateToPage('/trade/contracts')
-                  : alert('您还未开通合约交易权限');
+                if (hasAnyContractPermission) {
+                  navigateToPage('/trade/contracts');
+                } else {
+                  alert('您还未开通合约交易权限');
+                }
               }}
             >
               <div className="p-6">

@@ -17,7 +17,7 @@ const MarketDashboard: React.FC = () => {
           <Card title="市场概览" variant="borderless">
             <p>总市值: $100,000,000</p>
             <p>24小时交易量: $10,000,000</p>
-            <p>活跃用户: 10,000</p>
+            <p>活跃会员: 10,000</p>
           </Card>
         </Col>
         <Col span={12}>

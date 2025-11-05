@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { exportToExcel } from '../utils/exportExcel';
-import { useToast } from '../components/Toast';
-import { validateForm, required, maxLength } from '../utils/validation';
-import { debounce } from '../utils/helpers';
+import { useToast } from '../hooks/useToast';
+import { validateForm, required, maxLength, type ValidationRule } from '../utils/validation';
+import { debounce } from 'throttle-debounce';
 
 interface OptionRow {
   id?: number;
@@ -22,19 +22,31 @@ export const AdminOptions: React.FC = () => {
   const { showToast } = useToast();
 
   // 防抖更新函数
-  const debouncedUpdate = debounce(async (id: number, updatedData: Partial<OptionRow>) => {
+  const debouncedUpdate = debounce(500, async (id: unknown, updatedData: unknown) => {
+    // 类型检查
+    if (typeof id !== 'number' || typeof updatedData !== 'object' || updatedData === null) {
+      return;
+    }
+
     // 局部字段校验
-    if (updatedData.option_code || updatedData.option_name) {
+    const partialData = updatedData as Partial<OptionRow>;
+    if (partialData.option_code || partialData.option_name) {
       const dataToValidate = {
-        option_code: updatedData.option_code ?? '',
-        option_name: updatedData.option_name ?? '',
+        option_code: partialData.option_code ?? '',
+        option_name: partialData.option_name ?? '',
       };
-      const rules: any = {};
-      if (updatedData.option_code !== undefined) {
-        rules.option_code = { rules: [required, maxLength(10)], label: '期权代码' };
+      const rules: Record<string, { rules: ValidationRule[]; label?: string }> = {};
+      if (partialData.option_code !== undefined) {
+        rules.option_code = {
+          rules: [required as ValidationRule, maxLength(10) as ValidationRule],
+          label: '期权代码',
+        };
       }
-      if (updatedData.option_name !== undefined) {
-        rules.option_name = { rules: [required, maxLength(50)], label: '期权名称' };
+      if (partialData.option_name !== undefined) {
+        rules.option_name = {
+          rules: [required as ValidationRule, maxLength(50) as ValidationRule],
+          label: '期权名称',
+        };
       }
       const { isValid, errors } = validateForm(dataToValidate, rules);
       if (!isValid) {
@@ -45,24 +57,24 @@ export const AdminOptions: React.FC = () => {
     setLoading(true);
     try {
       if (!supabaseEnabled) {
-        setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, ...updatedData } : o)));
+        setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, ...partialData } : o)));
         showToast('更新成功（本地演示）', 'success');
       } else {
-        const { error } = await supabase.from('options').update(updatedData).eq('id', id);
+        const { error } = await supabase.from('options').update(partialData).eq('id', id);
         if (error) throw error;
         showToast('更新成功', 'success');
         await load();
       }
       setEditingId(null);
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showToast('更新失败', 'error');
     } finally {
       setLoading(false);
     }
-  }, 500); // 500ms 防抖
+  });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       if (!supabaseEnabled) {
@@ -72,25 +84,34 @@ export const AdminOptions: React.FC = () => {
         if (error) throw error;
         setOptions(data || []);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showToast('加载失败', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [setOptions, showToast]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const create = async () => {
     // 表单校验
-    const validationRules = {
-      option_code: { rules: [required, maxLength(10)], label: '期权代码' },
-      option_name: { rules: [required, maxLength(50)], label: '期权名称' },
+    const validationRules: Record<string, { rules: ValidationRule[]; label?: string }> = {
+      option_code: {
+        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
+        label: '期权代码',
+      },
+      option_name: {
+        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
+        label: '期权名称',
+      },
     };
-    const { isValid, errors } = validateForm(form, validationRules);
+    const { isValid, errors } = validateForm(
+      form as unknown as Record<string, unknown>,
+      validationRules,
+    );
     setFormErrors(errors);
     if (!isValid) {
       showToast(Object.values(errors)[0], 'error');
@@ -110,7 +131,7 @@ export const AdminOptions: React.FC = () => {
         await load();
       }
       setForm({ option_code: '', option_name: '' });
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showToast('创建失败', 'error');
     } finally {
@@ -131,7 +152,7 @@ export const AdminOptions: React.FC = () => {
         await load();
       }
       setShowDeleteConfirm(null);
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showToast('删除失败', 'error');
     } finally {

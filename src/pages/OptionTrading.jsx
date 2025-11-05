@@ -1,56 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../store/useAuth.js';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/useToast'; // Import useToast
+import RealTimeChart from '../components/RealTimeChart';
+import { formatCurrency } from '../utils/helpers';
+import { mockOptionProducts } from '../utils/mockProducts';
+import { useAuth } from '../store/useAuth';
 import { supabase, supabaseEnabled } from '../utils/supabase';
-import { useToast } from '../components/Toast';
+import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
 
 export const OptionTrading = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState('');
-  const [amount, setAmount] = useState(0);
-  const [predict, setPredict] = useState('up');
   const [msg, setMsg] = useState('');
+  const [orderPrice, setOrderPrice] = useState(0);
+  const [orderAmount, setOrderAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  // 加载期权产品
   const loadOptions = async () => {
     setLoading(true);
     setMsg('');
     try {
       if (!supabaseEnabled) {
-        setOptions([
-          {
-            id: 1,
-            option_code: 'OPT001',
-            option_name: '1分钟涨跌期权',
-            cycle: 1,
-            yield_rate: 75,
-            min_invest: 100,
-          },
-          {
-            id: 2,
-            option_code: 'OPT002',
-            option_name: '5分钟涨跌期权',
-            cycle: 5,
-            yield_rate: 78,
-            min_invest: 100,
-          },
-          {
-            id: 3,
-            option_code: 'OPT003',
-            option_name: '10分钟涨跌期权',
-            cycle: 10,
-            yield_rate: 80,
-            min_invest: 100,
-          },
-        ]);
+        setOptions(mockOptionProducts);
       } else {
         const { data, error } = await supabase
           .from('options')
-          .select('id, option_code, option_name, cycle, yield_rate, min_invest')
+          .select('id, option_code, option_name, underlying_asset, option_type, strike_price, expiry_date, min_amount')
           .order('id');
         if (error) throw error;
         setOptions(data || []);
@@ -76,24 +55,28 @@ export const OptionTrading = () => {
             order_no: 'OPT20241201001',
             user_id: user.id,
             option_id: 1,
-            predict: 'up',
-            invest_amount: 500,
-            profit_status: 'win',
-            profit_amount: 375,
-            start_time: new Date(Date.now() - 3600000).toISOString(),
-            end_time: new Date(Date.now() - 3540000).toISOString(),
+            option_code: 'OP0001',
+            order_price: 150,
+            order_amount: 10,
+            premium: 1500,
+            order_status: 'holding',
+            order_type: 'buy',
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            profit_amount: 250,
           },
           {
             id: 2,
             order_no: 'OPT20241201002',
             user_id: user.id,
             option_id: 2,
-            predict: 'down',
-            invest_amount: 300,
-            profit_status: 'lose',
-            profit_amount: -300,
-            start_time: new Date(Date.now() - 7200000).toISOString(),
-            end_time: new Date(Date.now() - 6900000).toISOString(),
+            option_code: 'OP0002',
+            order_price: 80,
+            order_amount: 5,
+            premium: 400,
+            order_status: 'expired',
+            order_type: 'buy',
+            created_at: new Date(Date.now() - 172800000).toISOString(),
+            profit_amount: -400,
           },
         ]);
       } else {
@@ -101,7 +84,7 @@ export const OptionTrading = () => {
           .from('option_orders')
           .select('*')
           .eq('user_id', user.id)
-          .order('start_time', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(20);
         if (error) throw error;
         setOrders(data || []);
@@ -117,69 +100,68 @@ export const OptionTrading = () => {
     loadOrders();
   }, [user]);
 
+  // 验证交易权限
+  const validatePermissions = () => {
+    const result = validateUserPermissions(user, 'option');
+    if (!result.isValid) {
+      showToast(result.message, 'error');
+    }
+    return result.isValid;
+  };
+
   // 验证交易限额
-  const validateTradeLimit = (tradeAmount) => {
-    if (!user?.limits) return false;
-
-    // 检查单笔交易限额
-    if (tradeAmount > user.limits.singleTradeMax) {
-      setMsg(`交易金额超过单笔限额 ¥${user.limits.singleTradeMax.toLocaleString()}`);
-      return false;
+  const validateTradeLimit = () => {
+    const premium = orderPrice * orderAmount;
+    const todayOptionOrders = orders.filter((order) => {
+      const orderDate = new Date(order.created_at).toDateString();
+      const today = new Date().toDateString();
+      return orderDate === today && order.order_type === 'buy';
+    });
+    const result = validateTradeLimits(user, premium, todayOptionOrders, 'option');
+    if (!result.isValid) {
+      setMsg(result.message);
     }
-
-    // 检查今日交易总额（简化版本，实际应该查询今日所有交易）
-    const todayTotal = orders
-      .filter((order) => {
-        const orderDate = new Date(order.start_time).toDateString();
-        const today = new Date().toDateString();
-        return orderDate === today;
-      })
-      .reduce((sum, order) => sum + order.invest_amount, 0);
-
-    if (todayTotal + tradeAmount > user.limits.dailyTradeMax) {
-      setMsg(`今日交易总额将超过限额 ¥${user.limits.dailyTradeMax.toLocaleString()}`);
-      return false;
-    }
-
-    return true;
+    return result.isValid;
   };
 
   // 下单
   const placeOrder = async () => {
     if (!user || user.userType !== 'user') {
-      setMsg('仅用户可下单');
+      setMsg('仅会员可下单');
       return;
     }
-    if (!user.permissions?.option) {
-      setMsg('您还未开通二元期权权限');
-      return;
-    }
+
+    if (!validatePermissions()) return;
+
     if (!selected) {
       setMsg('请选择期权');
       return;
     }
-    if (!amount || amount <= 0) {
-      setMsg('请输入有效金额');
+    if (!orderPrice || orderPrice <= 0) {
+      setMsg('请输入有效价格');
+      return;
+    }
+    if (!orderAmount || orderAmount <= 0) {
+      setMsg('请输入有效数量');
+      return;
+    }
+
+    // 验证最低交易数量
+    const selectedOption = options.find((o) => o.option_code === selected);
+    if (selectedOption?.min_amount && orderAmount < selectedOption.min_amount) {
+      setMsg(`交易数量不能低于最低数量 ${selectedOption.min_amount}`);
       return;
     }
 
     // 验证交易限额
-    if (!validateTradeLimit(amount)) {
-      return;
-    }
-
-    // 检查最小投资额
-    const selectedOption = options.find((o) => o.option_code === selected);
-    if (selectedOption?.min_invest && amount < selectedOption.min_invest) {
-      setMsg(`最小投资金额为 ¥${selectedOption.min_invest}`);
-      return;
-    }
+    if (!validateTradeLimit()) return;
 
     setLoading(true);
     setMsg('');
     try {
       const orderNo = `OPT${Date.now()}`;
-      const startTime = new Date().toISOString();
+      const currentTime = new Date().toISOString();
+      const premium = orderPrice * orderAmount;
 
       if (!supabaseEnabled) {
         setMsg('下单成功（本地演示）');
@@ -189,292 +171,225 @@ export const OptionTrading = () => {
           order_no: orderNo,
           user_id: user.id,
           option_id: selectedOption?.id || 1,
-          predict,
-          invest_amount: amount,
-          profit_status: 'pending',
-          profit_amount: 0,
-          start_time: startTime,
+          option_code: selected,
+          order_price: orderPrice,
+          order_amount: orderAmount,
+          premium: premium,
+          order_status: 'holding',
+          order_type: 'buy',
+          created_at: currentTime,
         };
-        setOrders((prev) => [newOrder, ...prev]);
+        setOrders([newOrder, ...orders]);
       } else {
-        const { error } = await supabase.from('option_orders').insert({
+        const { data, error } = await supabase.from('option_orders').insert({
           order_no: orderNo,
           user_id: user.id,
-          option_id: selectedOption?.id,
-          predict,
-          invest_amount: amount,
-          profit_status: 'pending',
-          profit_amount: 0,
-          start_time: startTime,
+          option_id: selectedOption?.id || 1,
+          order_price: orderPrice,
+          order_amount: orderAmount,
+          premium: premium,
+          order_status: 'holding',
+          order_type: 'buy',
         });
+
         if (error) throw error;
-        showToast('下单成功', 'success');
-        loadOrders(); // 重新加载订单历史
+        setMsg('下单成功');
+        loadOrders(); // 重新加载订单
       }
-      setAmount(0);
-      setSelected('');
     } catch (e) {
       console.error(e);
-      showToast('下单失败', 'error');
+      setMsg('下单失败');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatCurrency = (amount) => {
-    return `¥${amount.toLocaleString()}`;
-  };
-
-  const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString('zh-CN');
-  };
-
-  const getProfitStatusText = (status) => {
-    switch (status) {
-      case 'win':
-        return '盈利';
-      case 'lose':
-        return '亏损';
-      case 'pending':
-        return '进行中';
-      default:
-        return status;
-    }
-  };
-
-  const getProfitStatusColor = (status) => {
-    switch (status) {
-      case 'win':
-        return 'text-green-600';
-      case 'lose':
-        return 'text-red-600';
-      case 'pending':
-        return 'text-yellow-600';
-      default:
-        return 'text-gray-600';
-    }
+  // 计算权利金
+  const calculatePremium = () => {
+    return orderPrice * orderAmount;
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold">二元期权交易</h1>
-        <button
-          onClick={() => setShowHistory(!showHistory)}
-          className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-        >
-          {showHistory ? '隐藏历史' : '查看历史'}
-        </button>
-      </div>
+    <div className="p-4 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">期权交易</h1>
 
-      {msg && <div className="mb-3 text-sm text-gray-700">{msg}</div>}
+      {msg && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{msg}</div>}
 
-      {/* 交易限额信息 */}
-      {user?.limits && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">交易限额</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-blue-600">单笔限额：</span>
-              <span className="font-medium">{formatCurrency(user.limits.singleTradeMax)}</span>
-            </div>
-            <div>
-              <span className="text-blue-600">日交易限额：</span>
-              <span className="font-medium">{formatCurrency(user.limits.dailyTradeMax)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 交易表单 */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 className="text-lg font-medium mb-4">下单交易</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      {/* 期权选择和下单表单 */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">期权下单</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">选择期权</label>
             <select
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">请选择期权</option>
-              {options.map((o) => (
-                <option key={o.id} value={o.option_code}>
-                  {o.option_code} - {o.option_name}
-                  {o.yield_rate && ` (${o.yield_rate}%)`}
+              {options.map((option) => (
+                <option key={option.id} value={option.option_code}>
+                  {option.option_name} ({option.option_code})
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">投资金额</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">价格</label>
             <input
               type="number"
-              value={amount || ''}
-              onChange={(e) => setAmount(parseFloat(e.target.value))}
-              placeholder="投资金额"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={orderPrice}
+              onChange={(e) => setOrderPrice(parseFloat(e.target.value))}
+              placeholder="期权价格"
+              step="0.01"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">预测方向</label>
-            <select
-              value={predict}
-              onChange={(e) => setPredict(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="up">看涨 ↗</option>
-              <option value="down">看跌 ↘</option>
-            </select>
+            <label className="block text-sm font-medium text-gray-700 mb-2">数量</label>
+            <input
+              type="number"
+              value={orderAmount}
+              onChange={(e) => setOrderAmount(parseInt(e.target.value))}
+              placeholder="期权数量"
+              step="1"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
-          <button
-            disabled={loading}
-            onClick={placeOrder}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
-          >
-            {loading ? '下单中...' : '下单'}
-          </button>
+          <div className="flex items-end">
+            <button
+              onClick={placeOrder}
+              disabled={loading}
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {loading ? '下单中...' : '买入期权'}
+            </button>
+          </div>
         </div>
 
-        {/* 显示选中期权的详细信息 */}
         {selected && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            {(() => {
-              const selectedOption = options.find((o) => o.option_code === selected);
-              return selectedOption ? (
-                <div className="text-sm text-gray-600">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {selectedOption.cycle && (
-                      <div>
-                        <span className="font-medium">周期：</span>
-                        {selectedOption.cycle}分钟
-                      </div>
-                    )}
-                    {selectedOption.yield_rate && (
-                      <div>
-                        <span className="font-medium">收益率：</span>
-                        {selectedOption.yield_rate}%
-                      </div>
-                    )}
-                    {selectedOption.min_invest && (
-                      <div>
-                        <span className="font-medium">最小投资：</span>
-                        {formatCurrency(selectedOption.min_invest)}
-                      </div>
-                    )}
-                    {amount > 0 && selectedOption.yield_rate && (
-                      <div>
-                        <span className="font-medium">预期收益：</span>
-                        {formatCurrency((amount * selectedOption.yield_rate) / 100)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null;
-            })()}
+          <div className="mt-4 p-3 bg-gray-50 rounded-md">
+            <div className="text-sm text-gray-600">
+              <p>权利金: {formatCurrency(calculatePremium())}</p>
+              <p>期权详情: {options.find((o) => o.option_code === selected)?.option_name}</p>
+            </div>
           </div>
         )}
       </div>
 
+      {/* 实时行情图表 */}
+      {selected && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">实时行情</h2>
+          <RealTimeChart symbol={selected} />
+        </div>
+      )}
+
+      {/* AI 决策助理 */}
+      <div className="bg-gradient-to-r from-indigo-900/70 to-purple-900/70 p-3 rounded-lg border border-indigo-500/50 mb-6 shadow-xl">
+        <div className="flex items-center justify-between">
+          <h4 className="text-md font-bold text-yellow-300 flex items-center">
+            <i className="fas fa-robot mr-2 pulse"></i> AI 决策助理
+          </h4>
+          <span className="text-xs text-green-400">信号准确率: 76.2%</span>
+        </div>
+        <p className="mt-1 text-sm text-gray-200">
+          【上证50看涨期权 OP0001】 → **技术形态良好，建议买入**。请关注下方AI风控止盈线。
+        </p>
+      </div>
+
       {/* 订单历史 */}
-      {showHistory && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-medium">交易历史</h3>
-          </div>
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">订单历史</h2>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-sm text-blue-500 hover:text-blue-700"
+          >
+            {showHistory ? '隐藏' : '显示'}
+          </button>
+        </div>
+
+        {showHistory && (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     订单号
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                    预测
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    期权
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                    投资金额
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    价格
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    数量
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    权利金
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     状态
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/5">
-                    盈亏
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    开始时间
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    结束时间
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    收益
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                      暂无交易记录
+                {orders.map((order) => (
+                  <tr key={order.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.order_no}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.option_code}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatCurrency(order.order_price)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.order_amount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatCurrency(order.premium)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          order.order_status === 'holding'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : order.order_status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {order.order_status === 'holding' ? '持仓' : order.order_status === 'completed' ? '已完成' : '已过期'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <span className={order.profit_amount >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        {order.profit_amount >= 0 ? '+' : ''}
+                        {formatCurrency(order.profit_amount)}
+                      </span>
                     </td>
                   </tr>
-                ) : (
-                  orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 hidden md:table-cell">
-                        {order.order_no}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            order.predict === 'up'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {order.predict === 'up' ? '看涨 ↗' : '看跌 ↘'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
-                        {formatCurrency(order.invest_amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm w-1/8">
-                        <span className={getProfitStatusColor(order.profit_status)}>
-                          {getProfitStatusText(order.profit_status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm w-3/5">
-                        <span
-                          className={
-                            order.profit_amount > 0
-                              ? 'text-green-600'
-                              : order.profit_amount < 0
-                                ? 'text-red-600'
-                                : 'text-gray-600'
-                          }
-                        >
-                          {order.profit_amount !== 0 ? formatCurrency(order.profit_amount) : '--'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
-                        {formatDateTime(order.start_time)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
-                        {order.end_time ? formatDateTime(order.end_time) : '--'}
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+
+        {!showHistory && (
+          <div className="text-center py-4 text-gray-500">
+            点击"显示"查看订单历史
+          </div>
+        )}
+      </div>
 
       <div className="mt-4 text-sm text-gray-500">
-        <p>• 二元期权为高风险投资产品，请谨慎投资</p>
-        <p>• 交易结果基于市场价格变动，盈亏自负</p>
+        <p>• 期权交易具有高风险，请充分了解期权特性后再进行交易</p>
+        <p>• 期权价格会根据标的资产价格波动而变化</p>
+        <p>• 期权到期日为最后交易日，请及时平仓或行权</p>
       </div>
     </div>
   );

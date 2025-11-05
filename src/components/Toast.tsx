@@ -32,8 +32,3 @@ export const ToastProvider: React.FC = () => {
     toastContainer,
   );
 };
-
-export const useToast = () => {
-  const { showToast } = useToastStore();
-  return { showToast };
-};

@@ -3,11 +3,11 @@ import type { WorkBook } from 'xlsx';
 export interface ExportColumn<T> {
   key: keyof T | string;
   header: string;
-  transform?: (value: any, row: T) => any;
+  transform?: (value: unknown, row: T) => unknown;
 }
 
 // 动态引入 xlsx，避免在未安装时导致构建失败
-export async function exportToExcel<T = any>(
+export async function exportToExcel<T = Record<string, unknown>>(
   rows: T[],
   columns: ExportColumn<T>[],
   options?: { filename?: string; sheetName?: string },
@@ -23,10 +23,10 @@ export async function exportToExcel<T = any>(
   try {
     const XLSX = await import('xlsx');
 
-    const data = rows.map((row: any) => {
-      const obj: Record<string, any> = {};
+    const data = rows.map((row) => {
+      const obj: Record<string, unknown> = {};
       for (const col of columns) {
-        const val = typeof col.key === 'string' ? row[col.key] : row[col.key as keyof T];
+        const val = typeof col.key === 'string' ? row[col.key as keyof T] : row[col.key];
         obj[col.header] = col.transform ? col.transform(val, row) : val;
       }
       return obj;

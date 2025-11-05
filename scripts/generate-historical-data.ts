@@ -25,24 +25,26 @@ function loadEnv(envPath = path.resolve(process.cwd(), '.env')) {
 
 loadEnv();
 import { format, addDays, subDays, eachDayOfInterval } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
+// 移除未使用的导入
+// import { v4 as uuidv4 } from 'uuid';
 import { getRandom, getRandomInt, generateOrderNo } from '../src/utils/helpers';
 
 // 平台启动日期
 const PLATFORM_START_DATE =
   process.env.VITE_PLATFORM_START_DATE ||
-  (import.meta as any)?.env?.VITE_PLATFORM_START_DATE ||
+  (import.meta as { env?: Record<string, string> })?.env?.VITE_PLATFORM_START_DATE ||
   '2025-08-01';
 const startDate = new Date(PLATFORM_START_DATE);
 const endDate = subDays(new Date(), 1); // 昨天
 
 // 服务端客户端（使用服务密钥优先）
-const adminUrl = (process.env.VITE_SUPABASE_URL || (import.meta as any)?.env?.VITE_SUPABASE_URL) as
+const adminUrl = (process.env.VITE_SUPABASE_URL ||
+  (import.meta as { env?: Record<string, string> })?.env?.VITE_SUPABASE_URL) as string | undefined;
+const adminKey = (process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+  (import.meta as { env?: Record<string, string> })?.env?.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+  (import.meta as { env?: Record<string, string> })?.env?.VITE_SUPABASE_ANON_KEY) as
   | string
   | undefined;
-const adminKey = (process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
-  (import.meta as any)?.env?.VITE_SUPABASE_SERVICE_ROLE_KEY ||
-  (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY) as string | undefined;
 if (!adminUrl || !adminKey) {
   throw new Error(
     '缺少Supabase连接配置：请在 .env 中设置 VITE_SUPABASE_URL 和 VITE_SUPABASE_SERVICE_ROLE_KEY',
@@ -237,7 +239,7 @@ async function generateHistoricalData() {
         // 随机更新用户余额
         if (Math.random() > 0.8) {
           const newBalance = getRandom(5000, 50000);
-          await supabase.from('users').update({ current_balance: newBalance }).eq('id', user.id);
+          await client.from('users').update({ current_balance: newBalance }).eq('id', user.id);
         }
       }
     }

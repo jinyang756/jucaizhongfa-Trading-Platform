@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useAuth } from '../store/useAuth.js';
-import { supabase, supabaseEnabled } from '../utils/supabase';
-import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
-import { useToast } from '../components/Toast';
-import { validateForm, required, isNumber, min } from '../utils/validation';
-
-const RealTimeChart = React.lazy(() => import('../components/RealTimeChart'));
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/useToast'; // Import useToast
+import RealTimeChart from '../components/RealTimeChart';
+import { formatCurrency } from '../utils/helpers';
+import { mockContractProducts } from '../utils/mockProducts';
 
 export const ContractTrading = () => {
   const { user } = useAuth();
@@ -181,7 +179,7 @@ export const ContractTrading = () => {
   // 下单
   const placeOrder = async () => {
     if (!user || user.userType !== 'user') {
-      setMsg('仅用户可下单');
+      setMsg('仅会员可下单');
       return;
     }
 

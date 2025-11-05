@@ -11,16 +11,24 @@ export type FundRow = {
   created_at: string;
 };
 
+// 定义过滤器类型
+interface FundFilters {
+  [key: string]: string | number | boolean;
+}
+
+// 定义选项类型
+interface FundOptions {
+  filters?: FundFilters;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
 export const useFundsApi = () => {
   const { data, loading, error, fetchData } = useFetch<FundRow[]>([]);
 
-  const getAllFunds = async (options?: {
-    filters?: Record<string, any>;
-    orderBy?: string;
-    orderDirection?: 'asc' | 'desc';
-    limit?: number;
-    offset?: number;
-  }) => {
+  const getAllFunds = async (options?: FundOptions) => {
     return fetchData(async () => {
       if (!supabaseEnabled) {
         // Mock data for funds

@@ -8,16 +8,24 @@ export type ContractRow = {
   market: string;
 };
 
+// 定义过滤器类型
+interface ContractFilters {
+  [key: string]: string | number | boolean;
+}
+
+// 定义选项类型
+interface ContractOptions {
+  filters?: ContractFilters;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
 export const useContractsApi = () => {
   const { data, loading, error, fetchData } = useFetch<ContractRow[]>([]);
 
-  const getAllContracts = async (options?: {
-    filters?: Record<string, any>;
-    orderBy?: string;
-    orderDirection?: 'asc' | 'desc';
-    limit?: number;
-    offset?: number;
-  }) => {
+  const getAllContracts = async (options?: ContractOptions) => {
     return fetchData(async () => {
       if (!supabaseEnabled) {
         // Mock data for contracts

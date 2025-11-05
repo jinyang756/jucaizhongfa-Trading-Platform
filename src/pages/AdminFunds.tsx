@@ -10,9 +10,9 @@ export interface FundRow {
   created_at?: string;
 }
 
-import { validateForm, required, maxLength } from '../utils/validation';
+import { validateForm, required, maxLength, type ValidationRule } from '../utils/validation';
 import { exportToExcel } from '../utils/exportExcel';
-import { useToast } from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 import { useFundsApi } from '../api/funds';
 
 const AdminFunds = () => {
@@ -39,17 +39,26 @@ const AdminFunds = () => {
 
   useEffect(() => {
     getAllFunds();
-  }, []);
+  }, [getAllFunds]);
 
   const create = async () => {
-    const validationRules = {
-      fund_code: { rules: [required, maxLength(10)], label: '基金代码' },
-      fund_name: { rules: [required, maxLength(50)], label: '基金名称' },
-      fund_type: { rules: [required], label: '基金类型' },
-      initial_value: { rules: [required], label: '初始价值' },
+    const validationRules: Record<string, { rules: ValidationRule[]; label?: string }> = {
+      fund_code: {
+        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
+        label: '基金代码',
+      },
+      fund_name: {
+        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
+        label: '基金名称',
+      },
+      fund_type: { rules: [required as ValidationRule], label: '基金类型' },
+      initial_value: { rules: [required as ValidationRule], label: '初始价值' },
     };
 
-    const { isValid, errors } = validateForm(form, validationRules);
+    const { isValid, errors } = validateForm(
+      form as unknown as Record<string, unknown>,
+      validationRules,
+    );
     setFormErrors(errors);
 
     if (!isValid) {
@@ -68,7 +77,7 @@ const AdminFunds = () => {
         current_value: 0,
       });
       getAllFunds(); // Refresh the list
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
       showToast('创建失败', 'error');
     }
@@ -82,18 +91,26 @@ const AdminFunds = () => {
       initial_value: updatedData.initial_value || 0,
     };
 
-    const validationRules: Partial<Record<keyof FundRow, any>> = {};
+    const validationRules: Partial<
+      Record<keyof FundRow, { rules: ValidationRule[]; label?: string }>
+    > = {};
     if (updatedData.fund_code) {
-      validationRules.fund_code = { rules: [required, maxLength(10)], label: '基金代码' };
+      validationRules.fund_code = {
+        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
+        label: '基金代码',
+      };
     }
     if (updatedData.fund_name) {
-      validationRules.fund_name = { rules: [required, maxLength(50)], label: '基金名称' };
+      validationRules.fund_name = {
+        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
+        label: '基金名称',
+      };
     }
     if (updatedData.fund_type) {
-      validationRules.fund_type = { rules: [required], label: '基金类型' };
+      validationRules.fund_type = { rules: [required as ValidationRule], label: '基金类型' };
     }
     if (updatedData.initial_value) {
-      validationRules.initial_value = { rules: [required], label: '初始价值' };
+      validationRules.initial_value = { rules: [required as ValidationRule], label: '初始价值' };
     }
 
     const { isValid, errors } = validateForm(dataToValidate, validationRules);
@@ -107,7 +124,7 @@ const AdminFunds = () => {
       showToast('更新成功', 'success');
       setEditingId(null);
       getAllFunds(); // Refresh the list
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
       showToast('更新失败', 'error');
     }
@@ -118,7 +135,7 @@ const AdminFunds = () => {
       await deleteFundApi(id);
       showToast('删除成功', 'success');
       getAllFunds(); // Refresh the list
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
       showToast('删除失败', 'error');
     }
@@ -190,7 +207,8 @@ const AdminFunds = () => {
       </div>
       {error && (
         <div className="text-red-500 mb-4">
-          加载基金失败: {typeof error === 'string' ? error : (error as any).message}
+          加载基金失败:{' '}
+          {typeof error === 'string' ? error : (error as { message?: string }).message}
         </div>
       )}
       <div className="bg-white rounded shadow">
@@ -221,7 +239,7 @@ const AdminFunds = () => {
                 </td>
               </tr>
             ) : (
-              (funds || []).map((f: FundRow) => (
+              (funds || []).map((f) => (
                 <tr key={f.id} className="border-t">
                   <td className="p-3 hidden md:table-cell">{f.id}</td>
                   <td className="p-3">

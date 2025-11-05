@@ -12,6 +12,8 @@ export interface User {
     contract: boolean;
     shContract: boolean;
     hkContract: boolean;
+    block: boolean; // 大宗交易权限
+    ipo: boolean; // 新股申购权限
   };
   limits: {
     singleTradeMax: number;
@@ -53,6 +55,8 @@ export const useAuth = create<AuthState>()(
                 contract: true,
                 shContract: true,
                 hkContract: true,
+                block: true, // 大宗交易权限
+                ipo: true, // 新股申购权限
               },
               limits: {
                 singleTradeMax: 50000,
@@ -76,6 +80,8 @@ export const useAuth = create<AuthState>()(
                 contract: true,
                 shContract: false,
                 hkContract: true,
+                block: true, // 大宗交易权限
+                ipo: true, // 新股申购权限
               },
               limits: {
                 singleTradeMax: 10000,

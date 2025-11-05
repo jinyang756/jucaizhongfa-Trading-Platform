@@ -1,7 +1,7 @@
 -- 聚财众发基金交易平台数据库表结构
 -- 请在Supabase SQL编辑器中执行以下SQL语句
 
--- 管理员表
+-- 基金管理人表
 CREATE TABLE IF NOT EXISTS admins (
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 用户表
+-- 会员表
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
@@ -149,8 +149,8 @@ CREATE INDEX IF NOT EXISTS idx_notifications_create_time ON notifications(create
 -- 插入一些示例数据（可选）
 -- 注意：实际使用时建议通过数据生成脚本来创建数据
 
-COMMENT ON TABLE admins IS '管理员账户表';
-COMMENT ON TABLE users IS '用户账户表';
+COMMENT ON TABLE admins IS '基金管理人账户表';
+COMMENT ON TABLE users IS '会员账户表';
 COMMENT ON TABLE fund_logs IS '资金变动日志表';
 COMMENT ON TABLE funds IS '基金产品表';
 COMMENT ON TABLE options IS '二元期权产品表';

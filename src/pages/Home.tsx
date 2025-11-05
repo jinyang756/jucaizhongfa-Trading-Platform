@@ -9,6 +9,7 @@ import {
   WalletOutlined,
   BarChartOutlined,
 } from '@ant-design/icons';
+import TopNavigationBar from '../components/TopNavigationBar';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -64,8 +65,13 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">欢迎来到聚财众发量化交易平台</h1>
+    <div className="p-6 pt-20">
+      <TopNavigationBar
+        title="聚财众发量化交易平台"
+        showBackButton={false}
+        showHomeButton={false}
+      />
+
       <p className="mb-6 text-gray-600">这是一个面向中国中产投资者的移动端优先金融科技平台。</p>
 
       {/* 主要功能区域 */}

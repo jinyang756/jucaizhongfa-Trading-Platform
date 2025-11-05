@@ -1,15 +1,36 @@
 import { create } from 'zustand';
 
+// 定义持仓类型
+interface Position {
+  id: string;
+  symbol: string;
+  quantity: number;
+  averagePrice: number;
+  currentPrice: number;
+  profit: number;
+}
+
+// 定义交易记录类型
+interface Transaction {
+  id: string;
+  symbol: string;
+  type: 'buy' | 'sell';
+  quantity: number;
+  price: number;
+  timestamp: Date;
+  fee: number;
+}
+
 interface TradeDataState {
   // 添加交易数据状态的类型定义
   portfolioValue: number;
   dailyProfit: number;
-  positions: any[];
-  transactions: any[];
+  positions: Position[];
+  transactions: Transaction[];
   updatePortfolioValue: (value: number) => void;
   updateDailyProfit: (profit: number) => void;
-  addPosition: (position: any) => void;
-  addTransaction: (transaction: any) => void;
+  addPosition: (position: Position) => void;
+  addTransaction: (transaction: Transaction) => void;
 }
 
 export const useTradeData = create<TradeDataState>((set) => ({

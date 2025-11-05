@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { isNumber, min, required, validateForm } from '../utils/validation';
-import { useToast } from './Toast';
+import { useToast } from '../hooks/useToast';
+
+// 定义用户接口
+interface User {
+  id: number;
+  username: string;
+  current_balance: number;
+  // 可以根据实际情况添加更多字段
+}
 
 interface UserBalanceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any; // 用户的类型，可以根据实际情况定义更具体的接口
+  user: User; // 用户的类型，可以根据实际情况定义更具体的接口
   type: 'deposit' | 'withdraw';
-  onConfirm: (user: any, type: 'deposit' | 'withdraw', amount: number) => void;
+  onConfirm: (user: User, type: 'deposit' | 'withdraw', amount: number) => void;
 }
 
 const UserBalanceModal: React.FC<UserBalanceModalProps> = ({
