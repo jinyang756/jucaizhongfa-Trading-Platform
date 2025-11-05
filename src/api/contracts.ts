@@ -55,36 +55,36 @@ export const useContractsApi = () => {
   };
 
   const getContractById = async (id: number) => {
-    return fetchData(async () => {
+    return fetchData(async (): Promise<ContractRow[] | null> => {
       if (!supabaseEnabled) {
         // Mock data for single contract
-        return { id: 1, contract_code: 'SH0001', contract_name: '演示合约', market: 'SH' };
+        return [{ id: 1, contract_code: 'SH0001', contract_name: '演示合约', market: 'SH' }];
       }
       const { data, error } = await supabase.from('contracts').select('*').eq('id', id).single();
       if (error) throw error;
-      return data as ContractRow;
+      return data ? [data] : null;
     });
   };
 
   const createContract = async (contract: Partial<ContractRow>) => {
-    return fetchData(async () => {
+    return fetchData(async (): Promise<ContractRow[] | null> => {
       if (!supabaseEnabled) {
-        return { id: Date.now(), ...contract } as ContractRow;
+        return [{ id: Date.now(), ...contract }] as ContractRow[]; // Changed to return array
       }
       const { data, error } = await supabase.from('contracts').insert(contract).select();
       if (error) throw error;
-      return data?.[0] as ContractRow;
+      return data || null; // Changed to return array or null
     });
   };
 
   const updateContract = async (id: number, contract: Partial<ContractRow>) => {
-    return fetchData(async () => {
+    return fetchData(async (): Promise<ContractRow[] | null> => {
       if (!supabaseEnabled) {
-        return { id, ...contract } as ContractRow;
+        return [{ id, ...contract }] as ContractRow[]; // Changed to return array
       }
       const { data, error } = await supabase.from('contracts').update(contract).eq('id', id).select();
       if (error) throw error;
-      return data?.[0] as ContractRow;
+      return data || null; // Changed to return array or null
     });
   };
 

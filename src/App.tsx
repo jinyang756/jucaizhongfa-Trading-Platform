@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
 import LoginPage from './pages/Login.jsx';
 import TradeDashboard from './pages/TradeDashboard.jsx';
@@ -6,7 +6,6 @@ import FundTrading from './pages/FundTrading.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import AccountSettings from './pages/AccountSettings.jsx';
 import AdminContracts from './pages/AdminContracts.jsx';
-import { AdminDashboard } from './pages/AdminDashboard.tsx';
 import AdminFunds from './pages/AdminFunds.jsx';
 import AdminOptions from './pages/AdminOptions.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
@@ -18,7 +17,6 @@ import Positions from './pages/Positions.tsx';
 import TransactionHistory from './pages/TransactionHistory.tsx';
 import { UserDashboard } from './pages/UserDashboard.jsx';
 import { useAuth } from './store/useAuth.js';
-import type { AuthUser } from './types/auth';
 
 const LazyAdminDashboard = lazy(() => import('./pages/AdminDashboard.tsx').then(module => ({ default: module.AdminDashboard })));
 
@@ -34,23 +32,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // 包装主布局和导航的组件
 const MainLayout: React.FC = () => {
     const { user, logout } = useAuth((state) => ({ user: state.user, logout: state.logout }));
-    const [scrolled, setScrolled] = useState(false);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            if (window.scrollY > 0) {
-                setScrolled(true);
-            } else {
-                setScrolled(false);
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll);
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
 
     return (
         <>

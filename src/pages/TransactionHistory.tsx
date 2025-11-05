@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../store/useAuth.js';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { format } from 'date-fns';

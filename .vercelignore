@@ -1,0 +1,7 @@
+.husky/
+cypress/
+playwright-report/
+scripts/
+README.md
+commitlint.config.js
+eslint.config.js

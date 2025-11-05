@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import { useAuth } from '../store/useAuth.js';
-import { useToast } from '../components/Toast';
-import RealTimeChart from '../components/RealTimeChart';
 
 interface Position {
-  id: string;
+  id: string | number;
   type: 'fund' | 'option' | 'contract';
   code: string;
   name: string;
@@ -20,7 +18,6 @@ interface Position {
 
 export const Positions = () => {
   const { user } = useAuth();
-  const { showToast } = useToast();
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -96,7 +93,7 @@ export const Positions = () => {
           .eq('order_status', 'holding');
         if (contractError) throw contractError;
 
-        const allPositions = [];
+        const allPositions: Position[] = [];
 
         fundOrders.forEach(order => {
           allPositions.push({
@@ -162,21 +159,21 @@ export const Positions = () => {
 
   const filteredPositions = filter === 'all' ? positions : positions.filter(p => p.type === filter);
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number) => {
     return `¥${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  const formatPercentage = (ratio) => {
+  const formatPercentage = (ratio: number) => {
     return `${(ratio * 100).toFixed(2)}%`;
   };
 
-  const getProfitLossColor = (value) => {
+  const getProfitLossColor = (value: number) => {
     if (value > 0) return 'text-green-500';
     if (value < 0) return 'text-red-500';
     return 'text-gray-500';
   };
 
-  const getPositionTypeColor = (type) => {
+  const getPositionTypeColor = (type: 'fund' | 'option' | 'contract') => {
     switch (type) {
       case 'fund': return 'bg-blue-100 text-blue-800';
       case 'option': return 'bg-purple-100 text-purple-800';

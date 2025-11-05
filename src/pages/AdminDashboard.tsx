@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useAuth } from '../store/useAuth.js';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ export const AdminDashboard = () => {
     logout();
   };
 
-  const navigateToPage = (path) => {
+  const navigateToPage = (path: string) => {
     navigate(path);
   };
 

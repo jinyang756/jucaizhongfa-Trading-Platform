@@ -62,33 +62,34 @@ export const useFundsApi = () => {
     return fetchData(async () => {
       if (!supabaseEnabled) {
         // Mock data for single fund
-        return { id: 1, fund_name: '股票基金A', fund_code: 'F001', fund_type: '股票型', initial_value: 10000, current_value: 12000, created_at: '2023-01-01' };
+        const mockFund = { id: 1, fund_name: '股票基金A', fund_code: 'F001', fund_type: '股票型', initial_value: 10000, current_value: 12000, created_at: '2023-01-01' };
+        return [mockFund];
       }
       const { data, error } = await supabase.from('funds').select('*').eq('id', id).single();
       if (error) throw error;
-      return data as FundRow;
+      return data ? [data] : null;
     });
   };
 
   const createFund = async (fund: Partial<FundRow>) => {
     return fetchData(async () => {
       if (!supabaseEnabled) {
-        return { id: Date.now(), ...fund } as FundRow;
+        return [{ id: Date.now(), ...fund } as FundRow];
       }
       const { data, error } = await supabase.from('funds').insert(fund).select();
       if (error) throw error;
-      return data?.[0] as FundRow;
+      return data || null;
     });
   };
 
   const updateFund = async (id: number, fund: Partial<FundRow>) => {
     return fetchData(async () => {
       if (!supabaseEnabled) {
-        return { id, ...fund } as FundRow;
+        return [{ id, ...fund } as FundRow];
       }
       const { data, error } = await supabase.from('funds').update(fund).eq('id', id).select();
       if (error) throw error;
-      return data?.[0] as FundRow;
+      return data || null;
     });
   };
 

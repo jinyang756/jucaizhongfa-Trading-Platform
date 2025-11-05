@@ -1,12 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase, supabaseEnabled } from '../utils/supabase';
+import { useState, useCallback } from 'react';
 import { useToastStore } from '../store/useToastStore';
-
-interface FetchOptions {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: any;
-}
 
 interface UseFetchResult<T> {
   data: T | null;
