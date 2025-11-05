@@ -27,7 +27,7 @@ export const BottomNavigationBar: React.FC = () => {
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 md:hidden">
       <div className="flex justify-around h-16">
         <NavItem
-          to="/dashboard"
+          to="/home"
           icon={
             <svg
               xmlns="http://www.w3.org/2000/svg"

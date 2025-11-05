@@ -1,9 +1,9 @@
 ---
-## 🚀 聚财众发量化交易平台 | QuantumX Pro Trading Platform
+## 🚀 聚财众发量化交易平台 | Accumulate wealth Pro Trading Platform
 
 <div align="center">
 
-![Platform Banner](https://via.placeholder.com/1200x300/0a0e27/6366f1?text=Jucaizhongfa+Trading+Platform)
+![聚财众发|JUCAIZHONGFA]
 
 **专业 · 安全 · 智能 的一站式金融交易系统**
 
