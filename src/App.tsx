@@ -20,16 +20,18 @@ import TransactionHistory from './pages/TransactionHistory.tsx';
 import MyDashboard from './pages/MyDashboard.tsx'; // 导入 MyDashboard
 import { useAuth } from './store/useAuth.js';
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // 导入 ProtectedRoute
+import { BottomNavigationBar } from './components/BottomNavigationBar.tsx'; // 导入 BottomNavigationBar
 
 const LazyAdminDashboard = lazy(() => import('./pages/AdminDashboard.tsx').then(module => ({ default: module.AdminDashboard })));
 
 // 包装主布局和导航的组件
 const MainLayout: React.FC = () => {
-    const { user, logout } = useAuth((state) => ({ user: state.user, logout: state.logout }));
+    const user = useAuth((state) => state.user);
+    const logout = useAuth((state) => state.logout);
 
     return (
         <>
-            <nav className="some-fixed-class">
+            {/* <nav className="some-fixed-class">
                 <div className="flex items-center space-x-4">
                     <Link to="/" className="hover:text-gray-300">首页</Link>
                     <Link to="/trade" className="hover:text-gray-300">交易</Link>
@@ -47,14 +49,11 @@ const MainLayout: React.FC = () => {
                         </button>
                     )}
                 </div>
-            </nav>
+            </nav> */}
             <div className="flex-grow pt-16"> {/* Add padding-top to prevent content from being hidden behind the fixed header */}
                 <Outlet /> {/* 路由出口 */}
             </div>
-            {/* 底部导航条（移动端） - Placeholder for now */}
-            <footer className="bg-gray-800 p-4 text-white text-center">
-                © 2023 QuantumX Trading Platform
-            </footer>
+            <BottomNavigationBar />
         </>
     );
 };

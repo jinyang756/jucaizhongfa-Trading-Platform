@@ -10,4 +10,7 @@ export default defineConfig({
   experimental: {
     enableNativePlugin: false,
   },
+  build: {
+    chunkSizeWarningLimit: 1000,
+  },
 })
