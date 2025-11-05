@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../store/useAuth';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import TopNavigationBar from '../components/TopNavigationBar';
+import { useSweetAlert } from '../hooks/useSweetAlert';
 import {
   SearchOutlined,
   PlusOutlined,
   EditOutlined,
   EyeOutlined,
   DownloadOutlined,
-  FilterOutlined,
 } from '@ant-design/icons';
 import {
   Card,
@@ -22,7 +22,6 @@ import {
   Form,
   Select,
   InputNumber,
-  message,
   Space,
   Checkbox,
 } from 'antd';
@@ -47,8 +46,29 @@ interface Member {
   risk_score: number;
 }
 
+// 定义用户类型
+interface UserType {
+  id: number;
+  username: string;
+  email?: string;
+  phone?: string;
+  related_admin: string;
+  current_balance: number;
+  status: string;
+  member_level: string;
+  created_at: string;
+  last_login?: string;
+  fund_permission: boolean;
+  option_permission: boolean;
+  contract_permission: boolean;
+  total_trades: number;
+  total_investment: number;
+  risk_score: number;
+}
+
 const MemberManagement: React.FC = () => {
   const { user: currentUser } = useAuth();
+  const { success, error, info } = useSweetAlert();
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
@@ -126,24 +146,24 @@ const MemberManagement: React.FC = () => {
         setFilteredMembers(mockMembers);
       } else {
         // 从数据库获取数据
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase
           .from('users')
           .select('*')
           .eq('related_admin', currentUser?.username || '')
           .order('id');
 
-        if (error) throw error;
+        if (fetchError) throw fetchError;
 
         // 修复类型问题
-        const formattedMembers: Member[] = (data || []).map((user) => ({
+        const formattedMembers: Member[] = (data || []).map((user: UserType) => ({
           id: user.id,
           username: user.username,
           email: user.email,
           phone: user.phone,
           related_admin: user.related_admin,
           current_balance: user.current_balance || 0,
-          status: user.status || 'active',
-          member_level: user.member_level || 'bronze',
+          status: (user.status as 'active' | 'inactive' | 'frozen') || 'active',
+          member_level: (user.member_level as 'bronze' | 'silver' | 'gold' | 'platinum') || 'bronze',
           register_date: user.created_at
             ? new Date(user.created_at).toISOString().split('T')[0]
             : '',
@@ -161,11 +181,11 @@ const MemberManagement: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
-      message.error('加载会员数据失败');
+      error('加载失败', '加载会员数据失败');
     } finally {
       setLoading(false);
     }
-  }, [currentUser?.username]);
+  }, [currentUser?.username, error]);
 
   useEffect(() => {
     loadMembers();
@@ -198,83 +218,73 @@ const MemberManagement: React.FC = () => {
       title: '用户名',
       dataIndex: 'username',
       key: 'username',
-      render: (text) => <strong>{text}</strong>,
+    },
+    {
+      title: '邮箱',
+      dataIndex: 'email',
+      key: 'email',
     },
     {
       title: '当前余额',
       dataIndex: 'current_balance',
       key: 'current_balance',
-      render: (balance) => `¥${balance.toLocaleString()}`,
-    },
-    {
-      title: '会员等级',
-      dataIndex: 'member_level',
-      key: 'member_level',
-      width: 120,
-      render: (level: Member['member_level']) => {
-        const levelMap: Record<Member['member_level'], { color: string; text: string }> = {
-          bronze: { color: 'gray', text: '青铜' },
-          silver: { color: 'silver', text: '白银' },
-          gold: { color: 'gold', text: '黄金' },
-          platinum: { color: 'purple', text: '铂金' },
-        };
-        const levelInfo = levelMap[level] || levelMap.bronze;
-        return <Tag color={levelInfo.color}>{levelInfo.text}</Tag>;
-      },
+      render: (balance: number) => `¥${balance.toLocaleString()}`,
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      width: 100,
-      render: (status: Member['status']) => {
-        const statusMap: Record<Member['status'], { color: string; text: string }> = {
-          active: { color: 'green', text: '正常' },
-          inactive: { color: 'gray', text: '未激活' },
+      render: (status: string) => {
+        const statusMap = {
+          active: { color: 'green', text: '活跃' },
+          inactive: { color: 'gray', text: '非活跃' },
           frozen: { color: 'red', text: '冻结' },
         };
-        const statusInfo = statusMap[status] || statusMap.active;
+        const statusInfo = statusMap[status as keyof typeof statusMap] || {
+          color: 'default',
+          text: status,
+        };
         return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
       },
     },
     {
-      title: '注册日期',
-      dataIndex: 'register_date',
-      key: 'register_date',
-    },
-    {
-      title: '权限',
-      key: 'permissions',
-      render: (_, record) => (
-        <Space size="small">
-          {record.fund_permission && <Tag color="blue">基金</Tag>}
-          {record.option_permission && <Tag color="green">期权</Tag>}
-          {record.contract_permission && <Tag color="orange">合约</Tag>}
-        </Space>
-      ),
+      title: '会员等级',
+      dataIndex: 'member_level',
+      key: 'member_level',
+      render: (level: string) => {
+        const levelMap = {
+          bronze: { color: 'volcano', text: '青铜' },
+          silver: { color: 'silver', text: '白银' },
+          gold: { color: 'gold', text: '黄金' },
+          platinum: { color: 'cyan', text: '铂金' },
+        };
+        const levelInfo = levelMap[level as keyof typeof levelMap] || {
+          color: 'default',
+          text: level,
+        };
+        return <Tag color={levelInfo.color}>{levelInfo.text}</Tag>;
+      },
     },
     {
       title: '操作',
       key: 'action',
-      fixed: 'right',
       width: 150,
       render: (_, record) => (
-        <Space size="small">
+        <Space size="middle">
           <Button
-            type="link"
-            size="small"
+            type="primary"
             icon={<EyeOutlined />}
+            size="small"
             onClick={() => {
               setSelectedMember(record);
-              setIsModalVisible(true);
             }}
           >
             查看
           </Button>
           <Button
-            type="link"
-            size="small"
+            type="default"
             icon={<EditOutlined />}
+            size="small"
             onClick={() => {
               setEditingMember(record);
               form.setFieldsValue(record);
@@ -288,327 +298,388 @@ const MemberManagement: React.FC = () => {
     },
   ];
 
-  // 处理表单提交
-  const handleFormSubmit = async (values: Record<string, unknown>) => {
+  // 处理会员信息更新
+  const handleUpdateMember = async (values: Member) => {
     try {
-      if (editingMember) {
-        // 更新会员信息
-        if (supabaseEnabled) {
-          const { error } = await supabase
-            .from('users')
-            .update({
-              username: values.username,
-              current_balance: values.current_balance,
-              status: values.status,
-              fund_permission: values.fund_permission,
-              option_permission: values.option_permission,
-              contract_permission: values.contract_permission,
-            })
-            .eq('id', editingMember.id);
+      if (!supabaseEnabled) {
+        // 模拟更新
+        const updatedMembers = members.map((member) =>
+          member.id === editingMember?.id ? { ...member, ...values } : member,
+        );
+        setMembers(updatedMembers);
+        setFilteredMembers(updatedMembers);
+        success('更新成功', '会员信息更新成功');
+      } else {
+        // 实际更新数据库
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            username: values.username,
+            email: values.email,
+            phone: values.phone,
+            current_balance: values.current_balance,
+            status: values.status,
+            member_level: values.member_level,
+            fund_permission: values.fund_permission,
+            option_permission: values.option_permission,
+            contract_permission: values.contract_permission,
+          })
+          .eq('id', editingMember?.id);
 
-          if (error) throw error;
-        }
+        if (updateError) throw updateError;
 
-        message.success('会员信息更新成功');
-        setIsModalVisible(false);
-        setEditingMember(null);
-        form.resetFields();
-        loadMembers();
+        // 重新加载数据
+        await loadMembers();
+        success('更新成功', '会员信息更新成功');
       }
+      setIsModalVisible(false);
     } catch (e) {
       console.error(e);
-      message.error('操作失败');
+      error('操作失败', '更新会员信息时出现错误');
     }
   };
 
-  // 处理注册表单提交
-  const handleRegisterSubmit = async (values: Record<string, unknown>) => {
+  // 处理会员注册
+  const handleRegisterMember = async (values: Member) => {
     try {
-      if (supabaseEnabled) {
-        const { error } = await supabase.from('users').insert({
+      if (!supabaseEnabled) {
+        // 模拟注册
+        const newMember: Member = {
+          id: members.length + 1,
           username: values.username,
-          password_hash: 'hashed_password', // 实际应该加密密码
+          email: values.email,
+          phone: values.phone,
           related_admin: currentUser?.username || '',
-          current_balance: values.initial_balance || 0,
-          status: 'active',
-          fund_permission: values.fund_permission || false,
-          option_permission: values.option_permission || false,
-          contract_permission: values.contract_permission || false,
-        });
+          current_balance: values.current_balance,
+          status: values.status,
+          member_level: values.member_level,
+          register_date: new Date().toISOString().split('T')[0],
+          fund_permission: values.fund_permission,
+          option_permission: values.option_permission,
+          contract_permission: values.contract_permission,
+          total_trades: 0,
+          total_investment: 0,
+          risk_score: 0,
+        };
+        const updatedMembers = [...members, newMember];
+        setMembers(updatedMembers);
+        setFilteredMembers(updatedMembers);
+        success('注册成功', '会员注册成功');
+      } else {
+        // 实际注册到数据库
+        const { error: insertError } = await supabase.from('users').insert([
+          {
+            username: values.username,
+            email: values.email,
+            phone: values.phone,
+            related_admin: currentUser?.username,
+            current_balance: values.current_balance,
+            status: values.status,
+            member_level: values.member_level,
+            fund_permission: values.fund_permission,
+            option_permission: values.option_permission,
+            contract_permission: values.contract_permission,
+          },
+        ]);
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+
+        // 重新加载数据
+        await loadMembers();
+        success('注册成功', '会员注册成功');
       }
-
-      message.success('会员注册成功');
       setIsRegisterModalVisible(false);
       registerForm.resetFields();
-      loadMembers();
     } catch (e) {
       console.error(e);
-      message.error('注册失败');
+      error('注册失败', '注册会员时出现错误');
     }
   };
 
   // 导出数据
-  const exportData = () => {
-    // 实现导出功能
-    message.info('导出功能待实现');
+  const handleExport = async () => {
+    info('提示', '导出功能待实现');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* 顶部导航栏 */}
-      <TopNavigationBar title="会员管理" showBackButton={true} showHomeButton={true} />
-
-      <div className="pt-16 px-4">
-        {/* 筛选和操作区域 */}
-        <Card className="mb-6 shadow-sm">
-          <Row gutter={[16, 16]} align="middle">
-            <Col xs={24} sm={12} md={8}>
-              <Input
-                placeholder="搜索会员名、邮箱或手机号"
-                prefix={<SearchOutlined />}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-            </Col>
-            <Col xs={24} sm={12} md={8}>
+    <div className="p-6 pt-20">
+      <TopNavigationBar title="会员管理" />
+      <Card className="shadow-lg">
+        <Row gutter={[16, 16]} className="mb-4">
+          <Col xs={24} md={8}>
+            <Input
+              placeholder="搜索用户名、邮箱或手机号"
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </Col>
+          <Col xs={24} md={16} className="text-right">
+            <Space>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => {
-                  registerForm.resetFields();
-                  setIsRegisterModalVisible(true);
-                }}
+                onClick={() => setIsRegisterModalVisible(true)}
               >
-                注册新会员
+                注册会员
               </Button>
-            </Col>
-            <Col xs={24} sm={24} md={8} className="text-right">
-              <Space>
-                <Button icon={<DownloadOutlined />} onClick={exportData}>
-                  导出数据
-                </Button>
-                <Button icon={<FilterOutlined />}>筛选</Button>
-              </Space>
-            </Col>
-          </Row>
-        </Card>
-
-        {/* 会员数据统计 */}
-        <Row gutter={[16, 16]} className="mb-6">
-          <Col span={6}>
-            <Card className="shadow-sm">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-500">{members.length}</div>
-                <div className="text-gray-500">总会员数</div>
-              </div>
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card className="shadow-sm">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">
-                  {members.filter((m) => m.status === 'active').length}
-                </div>
-                <div className="text-gray-500">活跃会员</div>
-              </div>
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card className="shadow-sm">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">
-                  {members.filter((m) => m.status === 'frozen').length}
-                </div>
-                <div className="text-gray-500">冻结会员</div>
-              </div>
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card className="shadow-sm">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-500">
-                  {members.reduce((sum, m) => sum + m.current_balance, 0).toLocaleString()}
-                </div>
-                <div className="text-gray-500">总资金</div>
-              </div>
-            </Card>
+              <Button icon={<DownloadOutlined />} onClick={handleExport}>
+                导出数据
+              </Button>
+            </Space>
           </Col>
         </Row>
 
-        {/* 会员列表 */}
-        <Card className="shadow-sm">
-          <Table
-            dataSource={filteredMembers}
-            columns={columns}
-            loading={loading}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-            }}
-            scroll={{ x: 1200 }}
-          />
-        </Card>
-      </div>
+        <Table
+          columns={columns}
+          dataSource={filteredMembers}
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+          rowKey="id"
+        />
 
-      {/* 查看/编辑会员信息模态框 */}
-      <Modal
-        title={editingMember ? '编辑会员信息' : '会员详情'}
-        visible={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          setEditingMember(null);
-          form.resetFields();
-        }}
-        footer={
-          editingMember
-            ? [
-                <Button
-                  key="back"
-                  onClick={() => {
-                    setIsModalVisible(false);
-                    setEditingMember(null);
-                    form.resetFields();
-                  }}
-                >
-                  取消
-                </Button>,
-                <Button key="submit" type="primary" onClick={() => form.submit()}>
-                  保存
-                </Button>,
-              ]
-            : [
-                <Button
-                  key="close"
-                  onClick={() => {
-                    setIsModalVisible(false);
-                    setEditingMember(null);
-                    form.resetFields();
-                  }}
-                >
-                  关闭
-                </Button>,
-              ]
-        }
-      >
-        {selectedMember && (
+        {/* 会员详情模态框 */}
+        <Modal
+          title="会员详情"
+          open={!!selectedMember}
+          onCancel={() => setSelectedMember(null)}
+          footer={null}
+          width={600}
+        >
+          {selectedMember && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-500">会员ID</p>
+                <p className="font-semibold">{selectedMember.id}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">用户名</p>
+                <p className="font-semibold">{selectedMember.username}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">邮箱</p>
+                <p className="font-semibold">{selectedMember.email || '-'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">手机号</p>
+                <p className="font-semibold">{selectedMember.phone || '-'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">当前余额</p>
+                <p className="font-semibold">¥{selectedMember.current_balance.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">状态</p>
+                <p className="font-semibold">
+                  <Tag
+                    color={
+                      selectedMember.status === 'active'
+                        ? 'green'
+                        : selectedMember.status === 'frozen'
+                          ? 'red'
+                          : 'gray'
+                    }
+                  >
+                    {selectedMember.status === 'active'
+                      ? '活跃'
+                      : selectedMember.status === 'frozen'
+                        ? '冻结'
+                        : '非活跃'}
+                  </Tag>
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">会员等级</p>
+                <p className="font-semibold">
+                  <Tag
+                    color={
+                      selectedMember.member_level === 'gold'
+                        ? 'gold'
+                        : selectedMember.member_level === 'silver'
+                          ? 'silver'
+                          : selectedMember.member_level === 'platinum'
+                            ? 'cyan'
+                            : 'volcano'
+                    }
+                  >
+                    {selectedMember.member_level === 'gold'
+                      ? '黄金'
+                      : selectedMember.member_level === 'silver'
+                        ? '白银'
+                        : selectedMember.member_level === 'platinum'
+                          ? '铂金'
+                          : '青铜'}
+                  </Tag>
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">注册日期</p>
+                <p className="font-semibold">{selectedMember.register_date}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">最后登录</p>
+                <p className="font-semibold">{selectedMember.last_login || '-'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">总交易数</p>
+                <p className="font-semibold">{selectedMember.total_trades}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">总投资额</p>
+                <p className="font-semibold">¥{selectedMember.total_investment.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">风险评分</p>
+                <p className="font-semibold">{selectedMember.risk_score}</p>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* 编辑会员模态框 */}
+        <Modal
+          title="编辑会员信息"
+          open={isModalVisible}
+          onCancel={() => {
+            setIsModalVisible(false);
+            setEditingMember(null);
+          }}
+          onOk={() => form.submit()}
+          width={600}
+        >
           <Form
             form={form}
             layout="vertical"
-            onFinish={handleFormSubmit}
-            initialValues={editingMember || selectedMember}
+            onFinish={handleUpdateMember}
+            initialValues={editingMember || {}}
           >
-            <Form.Item name="id" label="会员ID">
-              <Input disabled />
+            <Form.Item name="id" label="会员ID" hidden>
+              <Input />
             </Form.Item>
-            <Form.Item name="username" label="用户名" rules={[{ required: true }]}>
-              <Input disabled={!editingMember} />
+            <Form.Item
+              name="username"
+              label="用户名"
+              rules={[{ required: true, message: '请输入用户名' }]}
+            >
+              <Input />
             </Form.Item>
-            <Form.Item name="current_balance" label="当前余额">
+            <Form.Item name="email" label="邮箱">
+              <Input type="email" />
+            </Form.Item>
+            <Form.Item name="phone" label="手机号">
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="current_balance"
+              label="当前余额"
+              rules={[{ required: true, message: '请输入当前余额' }]}
+            >
               <InputNumber
-                formatter={(value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/¥\s?|(,*)/g, '') as string}
                 style={{ width: '100%' }}
-                disabled={!editingMember}
+                formatter={(value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(value: string | undefined) => {
+                  if (!value) return 0;
+                  const parsed = parseFloat(value.replace(/¥\s?|(,*)/g, ''));
+                  return isNaN(parsed) ? 0 : parsed;
+                }}
+                defaultValue={0}
               />
             </Form.Item>
             <Form.Item name="status" label="状态">
-              <Select disabled={!editingMember}>
-                <Select.Option value="active">正常</Select.Option>
-                <Select.Option value="inactive">未激活</Select.Option>
+              <Select>
+                <Select.Option value="active">活跃</Select.Option>
+                <Select.Option value="inactive">非活跃</Select.Option>
                 <Select.Option value="frozen">冻结</Select.Option>
               </Select>
             </Form.Item>
+            <Form.Item name="member_level" label="会员等级">
+              <Select>
+                <Select.Option value="bronze">青铜</Select.Option>
+                <Select.Option value="silver">白银</Select.Option>
+                <Select.Option value="gold">黄金</Select.Option>
+                <Select.Option value="platinum">铂金</Select.Option>
+              </Select>
+            </Form.Item>
             <Form.Item name="fund_permission" valuePropName="checked">
-              <Checkbox disabled={!editingMember}>基金交易权限</Checkbox>
+              <Checkbox>基金交易权限</Checkbox>
             </Form.Item>
             <Form.Item name="option_permission" valuePropName="checked">
-              <Checkbox disabled={!editingMember}>期权交易权限</Checkbox>
+              <Checkbox>期权交易权限</Checkbox>
             </Form.Item>
             <Form.Item name="contract_permission" valuePropName="checked">
-              <Checkbox disabled={!editingMember}>合约交易权限</Checkbox>
+              <Checkbox>合约交易权限</Checkbox>
             </Form.Item>
           </Form>
-        )}
-      </Modal>
+        </Modal>
 
-      {/* 注册新会员模态框 */}
-      <Modal
-        title="注册新会员"
-        visible={isRegisterModalVisible}
-        onCancel={() => {
-          setIsRegisterModalVisible(false);
-          registerForm.resetFields();
-        }}
-        footer={[
-          <Button
-            key="back"
-            onClick={() => {
-              setIsRegisterModalVisible(false);
-              registerForm.resetFields();
-            }}
-          >
-            取消
-          </Button>,
-          <Button key="submit" type="primary" onClick={() => registerForm.submit()}>
-            注册
-          </Button>,
-        ]}
-      >
-        <Form form={registerForm} layout="vertical" onFinish={handleRegisterSubmit}>
-          <Form.Item
-            name="username"
-            label="用户名"
-            rules={[{ required: true, message: '请输入用户名' }]}
-          >
-            <Input placeholder="请输入用户名" />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            label="密码"
-            rules={[{ required: true, message: '请输入密码' }]}
-          >
-            <Input.Password placeholder="请输入密码" />
-          </Form.Item>
-          <Form.Item
-            name="confirm_password"
-            label="确认密码"
-            dependencies={['password']}
-            rules={[
-              { required: true, message: '请确认密码' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('password') === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('两次输入的密码不一致'));
-                },
-              }),
-            ]}
-          >
-            <Input.Password placeholder="请再次输入密码" />
-          </Form.Item>
-          <Form.Item name="initial_balance" label="初始余额">
-            <InputNumber
-              formatter={(value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value!.replace(/¥\s?|(,*)/g, '') as unknown as 0}
-              style={{ width: '100%' }}
-              defaultValue={0}
-            />
-          </Form.Item>
-          <Form.Item name="fund_permission" valuePropName="checked">
-            <Checkbox>基金交易权限</Checkbox>
-          </Form.Item>
-          <Form.Item name="option_permission" valuePropName="checked">
-            <Checkbox>期权交易权限</Checkbox>
-          </Form.Item>
-          <Form.Item name="contract_permission" valuePropName="checked">
-            <Checkbox>合约交易权限</Checkbox>
-          </Form.Item>
-        </Form>
-      </Modal>
+        {/* 注册会员模态框 */}
+        <Modal
+          title="注册新会员"
+          open={isRegisterModalVisible}
+          onCancel={() => {
+            setIsRegisterModalVisible(false);
+            registerForm.resetFields();
+          }}
+          onOk={() => registerForm.submit()}
+          width={600}
+        >
+          <Form form={registerForm} layout="vertical" onFinish={handleRegisterMember}>
+            <Form.Item
+              name="username"
+              label="用户名"
+              rules={[{ required: true, message: '请输入用户名' }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item name="email" label="邮箱">
+              <Input type="email" />
+            </Form.Item>
+            <Form.Item name="phone" label="手机号">
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="current_balance"
+              label="初始余额"
+              rules={[{ required: true, message: '请输入初始余额' }]}
+            >
+              <InputNumber
+                style={{ width: '100%' }}
+                formatter={(value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(value: string | undefined) => {
+                  if (!value) return 0;
+                  const parsed = parseFloat(value.replace(/¥\s?|(,*)/g, ''));
+                  return isNaN(parsed) ? 0 : parsed;
+                }}
+                defaultValue={0}
+              />
+            </Form.Item>
+            <Form.Item name="status" label="状态" initialValue="active">
+              <Select>
+                <Select.Option value="active">活跃</Select.Option>
+                <Select.Option value="inactive">非活跃</Select.Option>
+                <Select.Option value="frozen">冻结</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="member_level" label="会员等级" initialValue="bronze">
+              <Select>
+                <Select.Option value="bronze">青铜</Select.Option>
+                <Select.Option value="silver">白银</Select.Option>
+                <Select.Option value="gold">黄金</Select.Option>
+                <Select.Option value="platinum">铂金</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="fund_permission" valuePropName="checked" initialValue={true}>
+              <Checkbox>基金交易权限</Checkbox>
+            </Form.Item>
+            <Form.Item name="option_permission" valuePropName="checked" initialValue={false}>
+              <Checkbox>期权交易权限</Checkbox>
+            </Form.Item>
+            <Form.Item name="contract_permission" valuePropName="checked" initialValue={true}>
+              <Checkbox>合约交易权限</Checkbox>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Card>
     </div>
   );
 };

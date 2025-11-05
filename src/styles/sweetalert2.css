@@ -1,0 +1,132 @@
+/* SweetAlert2 自定义样式 - 赛博金融主题 */
+.swal2-popup {
+  background: rgba(15, 23, 42, 0.9) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.swal2-title {
+  color: #f1f5f9 !important;
+  font-weight: 600 !important;
+}
+
+.swal2-html-container {
+  color: #cbd5e1 !important;
+}
+
+.swal2-icon {
+  border: none !important;
+  margin: 1.25rem auto !important;
+}
+
+.swal2-success-ring {
+  border: 0.25em solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.swal2-success-line-tip,
+.swal2-success-line-long {
+  background-color: #10b981 !important;
+}
+
+.swal2-error {
+  border-color: #ef4444 !important;
+}
+
+.swal2-error-x {
+  color: #ef4444 !important;
+}
+
+.swal2-warning {
+  color: #f59e0b !important;
+  border-color: #f59e0b !important;
+}
+
+.swal2-info {
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+.swal2-question {
+  color: #8b5cf6 !important;
+  border-color: #8b5cf6 !important;
+}
+
+.swal2-confirm {
+  background-color: #4f46e5 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s !important;
+}
+
+.swal2-confirm:hover {
+  background-color: #4338ca !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3), 0 2px 4px -1px rgba(79, 70, 229, 0.1) !important;
+}
+
+.swal2-cancel {
+  background-color: #475569 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 600 !important;
+  margin-left: 0.5rem !important;
+  transition: all 0.2s !important;
+}
+
+.swal2-cancel:hover {
+  background-color: #334155 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 6px -1px rgba(71, 85, 105, 0.3), 0 2px 4px -1px rgba(71, 85, 105, 0.1) !important;
+}
+
+.swal2-input {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  border-radius: 0.375rem !important;
+  color: #f1f5f9 !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.swal2-input:focus {
+  outline: none !important;
+  border-color: #818cf8 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+}
+
+.swal2-loader {
+  border-color: #4f46e5 transparent #4f46e5 transparent !important;
+}
+
+/* 动画效果 */
+.swal2-show {
+  animation: swal2-show 0.3s ease-out forwards !important;
+}
+
+.swal2-hide {
+  animation: swal2-hide 0.15s ease-in forwards !important;
+}
+
+@keyframes swal2-show {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes swal2-hide {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+}

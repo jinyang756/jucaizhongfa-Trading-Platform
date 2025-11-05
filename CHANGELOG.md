@@ -1,5 +1,38 @@
 # 变更日志 | Changelog
 
+## 1.0.9 (2025-11-05)
+
+### ✨ 新增功能 | New Features
+
+- 完善 SweetAlert2 集成，添加自定义 CSS 样式以匹配赛博金融主题 / Enhanced SweetAlert2 integration with custom CSS styles to match the cyber finance theme
+- 启用 sweetalert2-react-content 支持 React 内容渲染 / Enabled sweetalert2-react-content for React content rendering support
+
+### 🐛 Bug 修复 | Bug Fixes
+
+- 修复了 `src/pages/MemberManagement.tsx` 中 `InputNumber` 组件 `parser` 函数的类型问题 / Fixed type issue with `InputNumber` component `parser` function in `src/pages/MemberManagement.tsx`
+
+## 1.0.8 (2025-11-05)
+
+### ✨ 新增功能 | New Features
+
+- 集成 SweetAlert2 弹窗库，提升用户交互体验 / Integrated SweetAlert2 modal library to enhance user interaction experience
+- 创建 useSweetAlert 自定义 Hook，支持确认对话框、成功/错误/警告/信息提示、加载提示和自定义输入框 / Created useSweetAlert custom Hook supporting confirmation dialogs, success/error/warning/info alerts, loading indicators, and custom input forms
+- 实现赛博金融主题风格的自定义弹窗样式 / Implemented custom modal styles matching the cyber finance theme
+
+## 1.0.7 (2025-11-05)
+
+### ✨ 界面优化 | UI Improvements
+
+- 重新设计了登录界面，采用图标切换方式在会员登录和基金管理人登录之间切换 / Redesigned login interface with icon toggle between member login and fund manager login
+- 默认显示会员登录界面，基金管理人登录通过右上角图标切换 / Default to member login interface, fund manager login switched via icon in top right corner
+- 优化了登录界面的整体视觉设计，提升用户体验 / Optimized overall visual design of login interface for improved user experience
+
+## 1.0.6 (2025-11-05)
+
+### ✨ 新增功能 | New Features
+
+- 更新了登录界面的角色名称，将"用户登录"和"管理员登录"改为"会员登录"和"基金管理人登录" / Updated login interface role names from "User Login" and "Admin Login" to "Member Login" and "Fund Manager Login"
+
 ## 1.0.5 (2025-11-05)
 
 ### ✨ 新增功能 | New Features
@@ -119,4 +152,4 @@
 
 ### 📝 文档 | Documentation
 
-- 完成了 `README.md` 文件的中英文双语版本。 / Completed the bilingual Chinese and English versions of the `README.md` file。
+- 完成了 `README.md` 文件的中英文双语版本。 / Completed the bilingual Chinese and English versions of the `README.md` file.

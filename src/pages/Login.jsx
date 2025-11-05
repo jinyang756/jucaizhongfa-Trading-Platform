@@ -3,7 +3,7 @@ import { useAuth } from '../store/useAuth.js';
 import { useNavigate } from 'react-router-dom';
 // import type { LoginCredentials } from '../types/auth';
 import { config } from '../utils/env';
-import { showToast } from '../utils/showToast';
+import { useSweetAlert } from '../hooks/useSweetAlert';
 import backgroundImage from '../assets/jucai.jpg';
 import LoginFooter from '../components/LoginFooter';
 
@@ -17,6 +17,7 @@ import LoginFooter from '../components/LoginFooter';
 const Login = () => {
   const navigate = useNavigate();
   const { login, sendVerificationCode } = useAuth();
+  const { error, success, info } = useSweetAlert();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState('user');
@@ -38,14 +39,14 @@ const Login = () => {
 
   const handleSendVerificationCode = async () => {
     if (!credentials.email) {
-      showToast('请输入邮箱地址', 'error');
+      error('请输入邮箱地址', '邮箱不能为空');
       return;
     }
 
     // 简单的邮箱格式验证
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(credentials.email)) {
-      showToast('请输入有效的邮箱地址', 'error');
+      error('请输入有效的邮箱地址', '邮箱格式不正确');
       return;
     }
 
@@ -53,13 +54,13 @@ const Login = () => {
     try {
       const result = await sendVerificationCode(credentials.email);
       if (result.success) {
-        showToast(result.message || '验证码已发送', 'success');
+        success('验证码已发送', '验证码已发送至您的邮箱，请查收');
       } else {
-        showToast(result.message || '发送验证码失败', 'error');
+        error('发送验证码失败', result.message || '请稍后重试');
       }
     } catch (error) {
       console.error('Send verification code error:', error);
-      showToast(`发送验证码失败: ${error.message}`, 'error');
+      error('发送验证码失败', `发送验证码时出现错误: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -69,13 +70,13 @@ const Login = () => {
     e.preventDefault();
 
     if (!credentials.username.trim() || !credentials.password.trim()) {
-      showToast('请输入用户名和密码', 'error');
+      error('请输入用户名和密码', '用户名和密码不能为空');
       return;
     }
 
     // 如果需要邮箱验证但未输入验证码
     if (requiresEmailVerification && !credentials.verificationCode.trim()) {
-      showToast('请输入邮箱验证码', 'error');
+      error('请输入邮箱验证码', '验证码不能为空');
       return;
     }
 
@@ -90,16 +91,19 @@ const Login = () => {
 
       const result = await login(loginCredentials, userType);
       if (result.success) {
-        navigate('/');
+        success('登录成功', `欢迎${userType === 'admin' ? '基金管理人' : '会员'}登录`);
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
       } else if (result.requiresEmailVerification) {
         setRequiresEmailVerification(true);
-        showToast(result.message || '需要邮箱验证', 'info');
+        info('需要邮箱验证', result.message || '请输入验证码进行验证');
       } else {
-        showToast(result.message || '登录失败，请检查用户名和密码', 'error');
+        error('登录失败', result.message || '请检查用户名和密码');
       }
     } catch (error) {
       console.error('Login error:', error);
-      showToast(`登录失败: ${error.message}`, 'error');
+      error('登录失败', `登录时出现错误: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -110,10 +114,21 @@ const Login = () => {
     setCredentials((prev) => ({ ...prev, password: '' }));
   };
 
-  const handleBindEmail = () => {
+  const handleBindEmail = async () => {
+    if (!credentials.email) {
+      error('请输入邮箱地址', '邮箱不能为空');
+      return;
+    }
+
+    // 简单的邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(credentials.email)) {
+      error('请输入有效的邮箱地址', '邮箱格式不正确');
+      return;
+    }
+
     // 在实际应用中，这里应该调用API绑定邮箱
-    // 目前我们只是在前端模拟
-    showToast('邮箱绑定功能将在生产环境中实现', 'info');
+    success('邮箱绑定成功', '邮箱绑定功能将在生产环境中实现');
   };
 
   useEffect(() => {
@@ -147,38 +162,71 @@ const Login = () => {
             <p className="text-sm text-slate-400 mt-1">专业 · 安全 · 智能的一站式金融系统</p>
           </div>
 
-          {/* 用户类型切换 */}
-          <div className="flex mb-6 bg-slate-800 rounded-lg p-1">
-            <button
-              type="button"
-              onClick={() => {
-                handleUserTypeChange('user');
-                setRequiresEmailVerification(false);
-              }}
-              disabled={isSubmitting}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                userType === 'user'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              用户登录
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                handleUserTypeChange('admin');
-                setRequiresEmailVerification(false);
-              }}
-              disabled={isSubmitting}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                userType === 'admin'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              管理员登录
-            </button>
+          {/* 用户类型切换 - 基金管理人图标按钮 */}
+          <div className="flex justify-end mb-6">
+            {userType === 'user' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  handleUserTypeChange('admin');
+                  setRequiresEmailVerification(false);
+                }}
+                disabled={isSubmitting}
+                className="p-2 rounded-full bg-indigo-900/50 hover:bg-indigo-800/70 transition-all border border-indigo-500/30 shadow-lg"
+                title="切换到基金管理人登录"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-indigo-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  handleUserTypeChange('user');
+                  setRequiresEmailVerification(false);
+                }}
+                disabled={isSubmitting}
+                className="p-2 rounded-full bg-indigo-900/50 hover:bg-indigo-800/70 transition-all border border-indigo-500/30 shadow-lg"
+                title="切换到会员登录"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-indigo-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* 登录标题 */}
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-white">
+              {userType === 'admin' ? '基金管理人登录' : '会员登录'}
+            </h2>
+            <p className="text-sm text-slate-400 mt-1">
+              {userType === 'admin' ? '基金管理人专属入口' : '会员账户登录'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -222,7 +270,8 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={handleBindEmail}
-                  className="absolute right-2 top-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-2 rounded"
+                  disabled={isSubmitting}
+                  className="absolute right-2 top-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-2 rounded disabled:opacity-50"
                 >
                   绑定
                 </button>
@@ -294,6 +343,9 @@ const Login = () => {
               <p className="text-xs text-slate-300 font-medium mb-1">🔧 开发环境测试账号：</p>
               <p className="text-xs text-slate-400 font-mono">
                 {userType === 'admin' ? 'admin001-003 / 123456' : 'testuser01 / 8a3k7z9x'}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {userType === 'admin' ? '基金管理人账号' : '会员账号'}
               </p>
             </div>
           )}
