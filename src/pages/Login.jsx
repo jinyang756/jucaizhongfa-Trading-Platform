@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 // import type { LoginCredentials } from '../types/auth';
 import { config } from '../utils/env';
 import { useSweetAlert } from '../hooks/useSweetAlert';
+import useAppSound from '../hooks/useSound';
+import { UserIcon, KeyIcon, EnvelopeIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { Input } from '../components/ui/input';
 import backgroundImage from '../assets/jucai.jpg';
 import LoginFooter from '../components/LoginFooter';
 
@@ -18,6 +21,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, sendVerificationCode } = useAuth();
   const { error, success, info } = useSweetAlert();
+  const { playLogin, playAlert, playNotification, playButtonClick, playPageTransition } = useAppSound();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState('user');
@@ -91,14 +95,17 @@ const Login = () => {
 
       const result = await login(loginCredentials, userType);
       if (result.success) {
+        playLogin();
         success('登录成功', `欢迎${userType === 'admin' ? '基金管理人' : '会员'}登录`);
         setTimeout(() => {
           navigate('/');
         }, 1500);
       } else if (result.requiresEmailVerification) {
         setRequiresEmailVerification(true);
+        playNotification();
         info('需要邮箱验证', result.message || '请输入验证码进行验证');
       } else {
+        playAlert();
         error('登录失败', result.message || '请检查用户名和密码');
       }
     } catch (error) {
@@ -135,6 +142,7 @@ const Login = () => {
     console.log('API URL:', config.apiUrl);
     console.log('App Name:', config.appName);
     console.log('Is Dev:', config.isDev);
+    playPageTransition();
   }, []);
 
   return (
@@ -168,6 +176,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => {
+                  playButtonClick();
                   handleUserTypeChange('admin');
                   setRequiresEmailVerification(false);
                 }}
@@ -175,25 +184,13 @@ const Login = () => {
                 className="p-2 rounded-full bg-indigo-900/50 hover:bg-indigo-800/70 transition-all border border-indigo-500/30 shadow-lg"
                 title="切换到基金管理人登录"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-indigo-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
-                  />
-                </svg>
+                <ArrowRightOnRectangleIcon className="h-6 w-6 text-indigo-400" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => {
+                  playButtonClick();
                   handleUserTypeChange('user');
                   setRequiresEmailVerification(false);
                 }}
@@ -201,20 +198,7 @@ const Login = () => {
                 className="p-2 rounded-full bg-indigo-900/50 hover:bg-indigo-800/70 transition-all border border-indigo-500/30 shadow-lg"
                 title="切换到会员登录"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-indigo-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
+                <UserIcon className="h-6 w-6 text-indigo-400" />
               </button>
             )}
           </div>
@@ -231,8 +215,10 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="relative">
-              <i className="far fa-user absolute left-3 top-3 text-slate-400"></i>
-              <input
+              <div className="absolute left-3 top-3 text-slate-400">
+                <UserIcon className="h-5 w-5" />
+              </div>
+              <Input
                 type="text"
                 name="username"
                 placeholder="请输入用户名"
@@ -243,8 +229,10 @@ const Login = () => {
               />
             </div>
             <div className="relative">
-              <i className="far fa-lock absolute left-3 top-3 text-slate-400"></i>
-              <input
+              <div className="absolute left-3 top-3 text-slate-400">
+                <KeyIcon className="h-5 w-5" />
+              </div>
+              <Input
                 type="password"
                 name="password"
                 placeholder="请输入密码"
@@ -258,8 +246,10 @@ const Login = () => {
             {/* 邮箱绑定输入框 */}
             {userType === 'admin' && (
               <div className="relative">
-                <i className="far fa-envelope absolute left-3 top-3 text-slate-400"></i>
-                <input
+                <div className="absolute left-3 top-3 text-slate-400">
+                  <EnvelopeIcon className="h-5 w-5" />
+                </div>
+                <Input
                   type="email"
                   name="email"
                   placeholder="绑定邮箱（可选）"
@@ -281,8 +271,10 @@ const Login = () => {
             {/* 邮箱验证码输入框 */}
             {requiresEmailVerification && (
               <div className="relative">
-                <i className="far fa-key absolute left-3 top-3 text-slate-400"></i>
-                <input
+                <div className="absolute left-3 top-3 text-slate-400">
+                  <KeyIcon className="h-5 w-5" />
+                </div>
+                <Input
                   type="text"
                   name="verificationCode"
                   placeholder="请输入邮箱验证码"

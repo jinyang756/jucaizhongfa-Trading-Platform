@@ -1,5 +1,25 @@
 # 变更日志 | Changelog
 
+## 1.0.13 (2025-11-06)
+
+### ✨ 新增功能 | New Features
+
+- 完善音效体验，添加音效设置面板，支持音效开关、音量调节和主题切换 / Enhanced sound experience with sound settings panel supporting sound toggle, volume control, and theme switching
+- 扩展 useAppSound Hook，增加数据加载、页面切换、交易确认等场景音效 / Extended useAppSound Hook with data loading, page transition, and trade confirmation sound effects
+- 在登录页面和会员管理页面中添加更多交互音效，提升用户沉浸感 / Added more interactive sound effects to login and member management pages to enhance user immersion
+- 创建 Switch、Label、Slider 等 Shadcn/ui 组件，完善组件库 / Created Switch, Label, Slider and other Shadcn/ui components to complete the component library
+- 创建基于 Radix UI Themes 的数据表格组件，支持自定义样式和响应式设计 / Created data table component based on Radix UI Themes with custom styling and responsive design support
+- 创建交易卡片和账户概览面板等复合业务组件，提升界面一致性 / Created composite business components like trade cards and account overview panels to improve interface consistency
+- 集成 Framer Motion 动画库，添加页面切换、交互反馈和数据加载动画 / Integrated Framer Motion animation library with page transition, interaction feedback, and data loading animations
+- 构建基于 React Context 的通知系统，支持多种类型通知和持久化存储 / Built notification system based on React Context supporting multiple notification types and persistent storage
+
+## 1.0.10 (2025-11-06)
+
+### ✨ 新增功能 | New Features
+
+- 集成 Heroicons 图标库，提升界面视觉效果 / Integrated Heroicons icon library to enhance UI visual effects
+- 在登录页面和会员管理页面中使用 Heroicons 替换原有图标 / Replaced existing icons with Heroicons in login and member management pages
+
 ## 1.0.9 (2025-11-05)
 
 ### ✨ 新增功能 | New Features

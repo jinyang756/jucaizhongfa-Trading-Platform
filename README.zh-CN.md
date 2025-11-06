@@ -43,12 +43,15 @@
 ### 前端核心
 
 - **框架**：React ^19.1.1, React Router DOM ^7.9.5
-- **UI 组件库**：Ant Design ^5.28.0, Ant Design Icons ^6.1.0
+- **UI 组件库**：Ant Design ^5.28.0, Ant Design Icons ^6.1.0, Heroicons, Shadcn-ui
 - **状态管理**：Zustand ^5.0.8
 - **样式处理**：Tailwind CSS ^4.1.16, PostCSS ^8.5.6
 - **图表组件**：ECharts ^6.0.0, Recharts ^3.3.0
 - **数据交互**：Supabase JS ^2.78.0
 - **工具库**：date-fns ^4.1.0, uuid ^13.0.0, xlsx ^0.18.5
+- **弹窗库**：SweetAlert2
+- **动画库**：Framer Motion
+- **音效库**：easy-sound
 
 ### 工程化与质量
 
@@ -76,7 +79,20 @@ jucaizhongfa-Trading-Platform/
 │   │   ├── TopNavigationBar.tsx        # 顶部导航栏
 │   │   ├── RealTimeChart.tsx           # 实时图表组件
 │   │   ├── ProtectedRoute.tsx          # 受保护路由
-│   │   └── Toast.tsx                   # 消息提示组件
+│   │   ├── Toast.tsx                   # 消息提示组件
+│   │   ├── ui/                         # Shadcn/ui 组件库
+│   │   │   ├── button.tsx              # 按钮组件
+│   │   │   ├── card.tsx                # 卡片组件
+│   │   │   ├── input.tsx               # 输入框组件
+│   │   │   ├── select.tsx              # 选择器组件
+│   │   │   ├── switch.tsx              # 开关组件
+│   │   │   ├── label.tsx               # 标签组件
+│   │   │   ├── slider.tsx              # 滑块组件
+│   │   │   └── index.ts                # 组件统一导出
+│   │   ├── Notification.tsx            # 通知组件
+│   │   ├── SoundSettings.tsx           # 音效设置组件
+│   │   ├── NotificationSystemExample.tsx # 通知系统示例
+│   │   └── SoundExample.tsx            # 音效示例
 │   ├── hooks/              # 自定义 Hook
 │   │   ├── useSupabase.ts              # Supabase 数据交互 Hook
 │   │   └── useToast.tsx                # 消息提示 Hook

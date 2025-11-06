@@ -3,18 +3,14 @@ import { useAuth } from '../store/useAuth';
 import { supabase, supabaseEnabled } from '../utils/supabase';
 import TopNavigationBar from '../components/TopNavigationBar';
 import { useSweetAlert } from '../hooks/useSweetAlert';
-import {
-  SearchOutlined,
-  PlusOutlined,
-  EditOutlined,
-  EyeOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons';
+import useAppSound from '../hooks/useSound';
+import { UserPlusIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
+import { SearchOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Input as ShadcnInput } from '../components/ui/input';
 import {
   Card,
   Row,
   Col,
-  Input,
   Button,
   Table,
   Tag,
@@ -69,6 +65,7 @@ interface UserType {
 const MemberManagement: React.FC = () => {
   const { user: currentUser } = useAuth();
   const { success, error, info } = useSweetAlert();
+  const { playTradeSuccess, playTradeFailed, playNotification, playAlert, playDataLoad } = useAppSound();
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
@@ -82,6 +79,7 @@ const MemberManagement: React.FC = () => {
 
   // 加载会员数据
   const loadMembers = useCallback(async () => {
+    playDataLoad();
     setLoading(true);
     try {
       if (!supabaseEnabled) {
@@ -178,14 +176,16 @@ const MemberManagement: React.FC = () => {
 
         setMembers(formattedMembers);
         setFilteredMembers(formattedMembers);
+        playNotification();
       }
     } catch (e) {
       console.error(e);
+      playAlert();
       error('加载失败', '加载会员数据失败');
     } finally {
       setLoading(false);
     }
-  }, [currentUser?.username, error]);
+  }, [currentUser?.username, error, playDataLoad]);
 
   useEffect(() => {
     loadMembers();
@@ -308,6 +308,7 @@ const MemberManagement: React.FC = () => {
         );
         setMembers(updatedMembers);
         setFilteredMembers(updatedMembers);
+        playTradeSuccess();
         success('更新成功', '会员信息更新成功');
       } else {
         // 实际更新数据库
@@ -330,11 +331,13 @@ const MemberManagement: React.FC = () => {
 
         // 重新加载数据
         await loadMembers();
+        playTradeSuccess();
         success('更新成功', '会员信息更新成功');
       }
       setIsModalVisible(false);
     } catch (e) {
       console.error(e);
+      playTradeFailed();
       error('操作失败', '更新会员信息时出现错误');
     }
   };
@@ -364,6 +367,7 @@ const MemberManagement: React.FC = () => {
         const updatedMembers = [...members, newMember];
         setMembers(updatedMembers);
         setFilteredMembers(updatedMembers);
+        playTradeSuccess();
         success('注册成功', '会员注册成功');
       } else {
         // 实际注册到数据库
@@ -386,12 +390,14 @@ const MemberManagement: React.FC = () => {
 
         // 重新加载数据
         await loadMembers();
+        playTradeSuccess();
         success('注册成功', '会员注册成功');
       }
       setIsRegisterModalVisible(false);
       registerForm.resetFields();
     } catch (e) {
       console.error(e);
+      playTradeFailed();
       error('注册失败', '注册会员时出现错误');
     }
   };
@@ -407,23 +413,28 @@ const MemberManagement: React.FC = () => {
       <Card className="shadow-lg">
         <Row gutter={[16, 16]} className="mb-4">
           <Col xs={24} md={8}>
-            <Input
-              placeholder="搜索用户名、邮箱或手机号"
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
+            <div className="relative">
+              <ShadcnInput
+                placeholder="搜索用户名、邮箱或手机号"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="pl-10"
+              />
+              <div className="absolute left-3 top-3 text-gray-400">
+                <SearchOutlined />
+              </div>
+            </div>
           </Col>
           <Col xs={24} md={16} className="text-right">
             <Space>
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
+                icon={<UserPlusIcon className="h-5 w-5" />}
                 onClick={() => setIsRegisterModalVisible(true)}
               >
                 注册会员
               </Button>
-              <Button icon={<DownloadOutlined />} onClick={handleExport}>
+              <Button icon={<DocumentArrowDownIcon className="h-5 w-5" />} onClick={handleExport}>
                 导出数据
               </Button>
             </Space>
@@ -554,20 +565,20 @@ const MemberManagement: React.FC = () => {
             initialValues={editingMember || {}}
           >
             <Form.Item name="id" label="会员ID" hidden>
-              <Input />
+              <ShadcnInput />
             </Form.Item>
             <Form.Item
               name="username"
               label="用户名"
               rules={[{ required: true, message: '请输入用户名' }]}
             >
-              <Input />
+              <ShadcnInput />
             </Form.Item>
             <Form.Item name="email" label="邮箱">
-              <Input type="email" />
+              <ShadcnInput type="email" />
             </Form.Item>
             <Form.Item name="phone" label="手机号">
-              <Input />
+              <ShadcnInput />
             </Form.Item>
             <Form.Item
               name="current_balance"
@@ -629,13 +640,13 @@ const MemberManagement: React.FC = () => {
               label="用户名"
               rules={[{ required: true, message: '请输入用户名' }]}
             >
-              <Input />
+              <ShadcnInput />
             </Form.Item>
             <Form.Item name="email" label="邮箱">
-              <Input type="email" />
+              <ShadcnInput type="email" />
             </Form.Item>
             <Form.Item name="phone" label="手机号">
-              <Input />
+              <ShadcnInput />
             </Form.Item>
             <Form.Item
               name="current_balance"

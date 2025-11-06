@@ -48,6 +48,10 @@ To provide a better reading experience, we have split the documentation into mul
 - [ README.zh-CN.md ](README.zh-CN.md) - 中文完整文档 | Chinese Full Documentation
 - [ README.en.md ](README.en.md) - 英文完整文档 | English Full Documentation
 
+### 🧩 组件文档 | Component Documentation
+
+- [ CHANGELOG.md ](CHANGELOG.md) - 项目变更日志 | Project Changelog
+
 ### 📋 开发日志 | Changelog
 
 - [ CHANGELOG.md ](CHANGELOG.md) - 项目变更日志 | Project Changelog

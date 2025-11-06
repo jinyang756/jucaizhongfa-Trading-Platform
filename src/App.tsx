@@ -2,39 +2,37 @@ import React, { lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary'; // Error boundary for handling errors
 import LoginPage from './pages/Login.jsx'; // Login page
-import TradeDashboard from './pages/TradeDashboard.jsx'; // Trade dashboard
-import FundTrading from './pages/FundTrading.jsx'; // Fund trading
-import ProfilePage from './pages/ProfilePage.jsx'; // Profile page
-import AccountSettings from './pages/AccountSettings.jsx'; // Account settings
-import AdminContracts from './pages/AdminContracts.jsx'; // Admin contracts
-import AdminFunds from './pages/AdminFunds.jsx'; // Admin funds
-import AdminOptions from './pages/AdminOptions.jsx'; // Admin options
-import AdminUsers from './pages/AdminUsers.jsx'; // Admin users
-import ContractTrading from './pages/ContractTrading.jsx'; // Contract trading
-import ErrorTest from './pages/ErrorTest.jsx'; // Error test
-import FundLogs from './pages/FundLogs.jsx'; // Fund logs
-import OptionTrading from './pages/OptionTrading.jsx'; // Option trading
-import Positions from './pages/Positions.tsx'; // Positions
-import TransactionHistory from './pages/TransactionHistory.tsx'; // Transaction history
-// import { UserDashboard } from './pages/UserDashboard.jsx'; // Removed unused import
-import MyDashboard from './pages/MyDashboard.tsx'; // My dashboard
-import Home from './pages/Home.tsx'; // Home page (standard)
-import Trade from './pages/Trade.tsx'; // Trade page (standard)
-import Profile from './pages/Profile.tsx'; // Profile page (standard)
 import { useAuth } from './store/useAuth'; // Authentication store
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // Protected route component
 import { BottomNavigationBar } from './components/BottomNavigationBar.tsx'; // Bottom navigation bar
+import SuspenseWrapper from './components/SuspenseWrapper'; // Suspense wrapper for lazy loading
+import ErrorTest from './pages/ErrorTest.jsx'; // Error test
 
-// 新增的页面组件
-import BlockTrading from './pages/BlockTrading.jsx'; // 大宗交易
-import IPOSubscription from './pages/IPOSubscription.jsx'; // 新股申购
-
-// 基金管理人相关页面组件
-import ManagerDashboard from './pages/ManagerDashboard.tsx'; // 基金管理人首页
-import MemberManagement from './pages/MemberManagement.tsx'; // 会员管理
-import TradeManagement from './pages/TradeManagement.tsx'; // 交易管理
-import DataIntegration from './pages/DataIntegration.tsx'; // 数据集成
-import SystemSettings from './pages/SystemSettings.tsx'; // 系统设置
+// 动态导入页面组件
+const TradeDashboard = lazy(() => import('./pages/TradeDashboard.jsx'));
+const FundTrading = lazy(() => import('./pages/FundTrading.jsx'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
+const AccountSettings = lazy(() => import('./pages/AccountSettings.jsx'));
+const AdminContracts = lazy(() => import('./pages/AdminContracts.jsx'));
+const AdminFunds = lazy(() => import('./pages/AdminFunds.jsx'));
+const AdminOptions = lazy(() => import('./pages/AdminOptions.jsx'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers.jsx'));
+const ContractTrading = lazy(() => import('./pages/ContractTrading.jsx'));
+const FundLogs = lazy(() => import('./pages/FundLogs.jsx'));
+const OptionTrading = lazy(() => import('./pages/OptionTrading.jsx'));
+const Positions = lazy(() => import('./pages/Positions.tsx'));
+const TransactionHistory = lazy(() => import('./pages/TransactionHistory.tsx'));
+const MyDashboard = lazy(() => import('./pages/MyDashboard.tsx'));
+const Home = lazy(() => import('./pages/Home.tsx'));
+const Trade = lazy(() => import('./pages/Trade.tsx'));
+const Profile = lazy(() => import('./pages/Profile.tsx'));
+const BlockTrading = lazy(() => import('./pages/BlockTrading.jsx'));
+const IPOSubscription = lazy(() => import('./pages/IPOSubscription.jsx'));
+const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard.tsx'));
+const MemberManagement = lazy(() => import('./pages/MemberManagement.tsx'));
+const TradeManagement = lazy(() => import('./pages/TradeManagement.tsx'));
+const DataIntegration = lazy(() => import('./pages/DataIntegration.tsx'));
+const SystemSettings = lazy(() => import('./pages/SystemSettings.tsx'));
 
 const LazyAdminDashboard = lazy(() =>
   import('./pages/AdminDashboard.tsx').then((module) => ({ default: module.default })),
@@ -44,25 +42,6 @@ const LazyAdminDashboard = lazy(() =>
 const MainLayout: React.FC = () => {
   return (
     <>
-      {/* <nav className="some-fixed-class">
-                <div className="flex items-center space-x-4">
-                    <Link to="/" className="hover:text-gray-300">首页</Link>
-                    <Link to="/trade" className="hover:text-gray-300">交易</Link>
-                    <Link to="/profile" className="hover:text-gray-300">个人中心</Link>
-                </div>
-                <div>
-                    {user ? (
-                        <span className="mr-4">欢迎, {user.username}</span>
-                    ) : (
-                        <Link to="/login" className="hover:text-gray-300">登录</Link>
-                    )}
-                    {user && (
-                        <button onClick={logout} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                            退出
-                        </button>
-                    )}
-                </div>
-            </nav> */}
       <div className="flex-grow pt-16">
         {' '}
         {/* Add padding-top to prevent content from being hidden behind the fixed header */}
@@ -91,7 +70,6 @@ function App() {
 
   return (
     <ErrorBoundary>
-      {/* <Router> */}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
@@ -103,31 +81,31 @@ function App() {
           }
         >
           <Route index element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/dashboard" element={<MyDashboard />} />
-          <Route path="/trade" element={<Trade />} />
-          <Route path="/trade-dashboard" element={<TradeDashboard />} />
-          <Route path="/positions" element={<Positions />} />
-          <Route path="/history" element={<TransactionHistory />} />
-          <Route path="/funds" element={<FundTrading />} />
-          <Route path="/contracts" element={<ContractTrading />} />
-          <Route path="/options" element={<OptionTrading />} />
-          <Route path="/block-trading" element={<BlockTrading />} />
-          <Route path="/ipo-subscription" element={<IPOSubscription />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile-page" element={<ProfilePage />} />
-          <Route path="/settings" element={<AccountSettings />} />
-          <Route path="/fund-logs/:fundId" element={<FundLogs />} />
+          <Route path="/home" element={<SuspenseWrapper><Home /></SuspenseWrapper>} />
+          <Route path="/dashboard" element={<SuspenseWrapper><MyDashboard /></SuspenseWrapper>} />
+          <Route path="/trade" element={<SuspenseWrapper><Trade /></SuspenseWrapper>} />
+          <Route path="/trade-dashboard" element={<SuspenseWrapper><TradeDashboard /></SuspenseWrapper>} />
+          <Route path="/positions" element={<SuspenseWrapper><Positions /></SuspenseWrapper>} />
+          <Route path="/history" element={<SuspenseWrapper><TransactionHistory /></SuspenseWrapper>} />
+          <Route path="/funds" element={<SuspenseWrapper><FundTrading /></SuspenseWrapper>} />
+          <Route path="/contracts" element={<SuspenseWrapper><ContractTrading /></SuspenseWrapper>} />
+          <Route path="/options" element={<SuspenseWrapper><OptionTrading /></SuspenseWrapper>} />
+          <Route path="/block-trading" element={<SuspenseWrapper><BlockTrading /></SuspenseWrapper>} />
+          <Route path="/ipo-subscription" element={<SuspenseWrapper><IPOSubscription /></SuspenseWrapper>} />
+          <Route path="/profile" element={<SuspenseWrapper><Profile /></SuspenseWrapper>} />
+          <Route path="/profile-page" element={<SuspenseWrapper><ProfilePage /></SuspenseWrapper>} />
+          <Route path="/settings" element={<SuspenseWrapper><AccountSettings /></SuspenseWrapper>} />
+          <Route path="/fund-logs/:fundId" element={<SuspenseWrapper><FundLogs /></SuspenseWrapper>} />
           <Route path="/error-test" element={<ErrorTest />} />
 
           {/* Admin Routes */}
           {userType === 'admin' && (
             <>
-              <Route path="/admin/dashboard" element={<LazyAdminDashboard />} />
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/funds" element={<AdminFunds />} />
-              <Route path="/admin/contracts" element={<AdminContracts />} />
-              <Route path="/admin/options" element={<AdminOptions />} />
+              <Route path="/admin/dashboard" element={<SuspenseWrapper><LazyAdminDashboard /></SuspenseWrapper>} />
+              <Route path="/admin/users" element={<SuspenseWrapper><AdminUsers /></SuspenseWrapper>} />
+              <Route path="/admin/funds" element={<SuspenseWrapper><AdminFunds /></SuspenseWrapper>} />
+              <Route path="/admin/contracts" element={<SuspenseWrapper><AdminContracts /></SuspenseWrapper>} />
+              <Route path="/admin/options" element={<SuspenseWrapper><AdminOptions /></SuspenseWrapper>} />
             </>
           )}
         </Route>
@@ -142,16 +120,15 @@ function App() {
           }
         >
           <Route index element={<Navigate to="/manager/dashboard" replace />} />
-          <Route path="/manager/dashboard" element={<ManagerDashboard />} />
-          <Route path="/manager/users" element={<MemberManagement />} />
-          <Route path="/manager/trades" element={<TradeManagement />} />
-          <Route path="/manager/data" element={<DataIntegration />} />
-          <Route path="/manager/settings" element={<SystemSettings />} />
+          <Route path="/manager/dashboard" element={<SuspenseWrapper><ManagerDashboard /></SuspenseWrapper>} />
+          <Route path="/manager/users" element={<SuspenseWrapper><MemberManagement /></SuspenseWrapper>} />
+          <Route path="/manager/trades" element={<SuspenseWrapper><TradeManagement /></SuspenseWrapper>} />
+          <Route path="/manager/data" element={<SuspenseWrapper><DataIntegration /></SuspenseWrapper>} />
+          <Route path="/manager/settings" element={<SuspenseWrapper><SystemSettings /></SuspenseWrapper>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-      {/* </Router> */}
     </ErrorBoundary>
   );
 }

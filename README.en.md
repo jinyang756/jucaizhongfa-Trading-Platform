@@ -43,12 +43,15 @@
 ### Frontend Core
 
 - **Framework**: React ^19.1.1, React Router DOM ^7.9.5
-- **UI Component Library**: Ant Design ^5.28.0, Ant Design Icons ^6.1.0
+- **UI Component Library**: Ant Design ^5.28.0, Ant Design Icons ^6.1.0, Heroicons, Shadcn-ui
 - **State Management**: Zustand ^5.0.8
 - **Styling**: Tailwind CSS ^4.1.16, PostCSS ^8.5.6
 - **Charting**: ECharts ^6.0.0, Recharts ^3.3.0
 - **Data Interaction**: Supabase JS ^2.78.0
 - **Utilities**: date-fns ^4.1.0, uuid ^13.0.0, xlsx ^0.18.5
+- **Modal Library**: SweetAlert2
+- **Animation Library**: Framer Motion
+- **Sound Library**: easy-sound
 
 ### Engineering & Quality
 
@@ -76,7 +79,20 @@ jucaizhongfa-Trading-Platform/
 │   │   ├── TopNavigationBar.tsx        # Top navigation bar
 │   │   ├── RealTimeChart.tsx           # Real-time chart component
 │   │   ├── ProtectedRoute.tsx          # Protected route
-│   │   └── Toast.tsx                   # Toast notification component
+│   │   ├── Toast.tsx                   # Toast notification component
+│   │   ├── ui/                         # Shadcn/ui component library
+│   │   │   ├── button.tsx              # Button component
+│   │   │   ├── card.tsx                # Card component
+│   │   │   ├── input.tsx               # Input component
+│   │   │   ├── select.tsx              # Select component
+│   │   │   ├── switch.tsx              # Switch component
+│   │   │   ├── label.tsx               # Label component
+│   │   │   ├── slider.tsx              # Slider component
+│   │   │   └── index.ts                # Component unified export
+│   │   ├── Notification.tsx            # Notification component
+│   │   ├── SoundSettings.tsx           # Sound settings component
+│   │   ├── NotificationSystemExample.tsx # Notification system example
+│   │   └── SoundExample.tsx            # Sound example
 │   ├── hooks/              # Custom Hooks
 │   │   ├── useSupabase.ts              # Supabase data interaction Hook
 │   │   └── useToast.tsx                # Toast notification Hook
