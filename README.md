@@ -281,7 +281,11 @@ npm run build
    - 导入项目：`https://github.com/jinyang756/jucaizhongfa-Trading-Platform.git` | Import project: `https://github.com/jinyang756/jucaizhongfa-Trading-Platform.git`
 
 2. **配置环境变量 | Configure Environment Variables**
-   - 在 Vercel 项目设置中添加 `.env` 中的变量 | Add variables from `.env` in Vercel project settings (e.g., `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`)
+   - 在 Vercel 项目设置中添加以下环境变量 | Add the following environment variables in Vercel project settings:
+     ```
+     VITE_SUPABASE_URL=your_supabase_project_url
+     VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+     ```
    - 确保所有必需的环境变量都已配置 | Ensure all required environment variables are configured
 
 3. **自动部署 | Automatic Deployment**
