@@ -1,549 +1,193 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../hooks/useToast'; // Import useToast
-import RealTimeChart from '../components/RealTimeChart';
-import { formatCurrency } from '../utils/helpers';
-import { mockFundProducts } from '../utils/mockProducts';
+import { useAuth } from '../store/useAuth';
+import { useSimEngineStore } from '../utils/simEngine';
 
-const AICalloutCard = () => (
-  <div className="bg-gradient-to-r from-indigo-900/70 to-purple-900/70 p-3 rounded-lg border border-indigo-500/50 mb-4 shadow-xl">
-    <div className="flex items-center justify-between">
-      <h4 className="text-md font-bold text-yellow-300 flex items-center">
-        <i className="fas fa-robot mr-2 pulse"></i> AI 决策助理
-      </h4>
-      <span className="text-xs text-green-400">信号准确率: 78.5%</span>
-    </div>
-    <p className="mt-1 text-sm text-gray-200">
-      【中国平安 45.67】 → **技术形态强劲，建议买入**。请关注下方AI风控止盈线。
-    </p>
-  </div>
-);
-
-export const FundTrading = () => {
+const FundTrading = () => {
   const { user } = useAuth();
-  const { showToast } = useToast();
-  const [funds, setFunds] = useState([]);
-  const [selected, setSelected] = useState('');
-  const [amount, setAmount] = useState(0);
-  const [msg, setMsg] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState([]);
-  const [showHistory, setShowHistory] = useState(false);
-
-  const loadFunds = async () => {
-    setLoading(true);
-    setMsg('');
-    try {
-      if (!supabaseEnabled) {
-        const mockFunds = [
-          {
-            id: 1,
-            fund_code: 'F0001',
-            fund_name: '稳健增长基金',
-            fund_type: '混合型',
-            risk_level: '中等',
-            min_amount: 1000,
-          },
-          {
-            id: 2,
-            fund_code: 'F0002',
-            fund_name: '科技创新基金',
-            fund_type: '股票型',
-            risk_level: '高',
-            min_amount: 5000,
-          },
-          {
-            id: 3,
-            fund_code: 'F0003',
-            fund_name: '货币市场基金',
-            fund_type: '货币型',
-            risk_level: '低',
-            min_amount: 100,
-          },
-        ];
-        setFunds(mockFunds);
-        startDataSimulation(mockFunds.map((f) => f.fund_code)); // Start simulation with all fund codes
-      } else {
-        const { data, error } = await supabase
-          .from('funds')
-          .select('id, fund_code, fund_name, fund_type, risk_level, min_amount')
-          .order('id');
-        if (error) throw error;
-        setFunds(data || []);
-        startDataSimulation(data.map((f) => f.fund_code)); // Start simulation with all fund codes
-      }
-    } catch (e) {
-      console.error(e);
-      setMsg('加载基金失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 加载订单历史
-  const loadOrders = async () => {
-    if (!user) return;
-
-    try {
-      if (!supabaseEnabled) {
-        // 演示数据
-        setOrders([
-          {
-            id: 1,
-            order_no: 'FND20241201001',
-            user_id: user.id,
-            fund_id: 1,
-            fund_code: 'F0001',
-            amount: 10000,
-            shares: 8547.01,
-            nav: 1.1698,
-            order_status: 'holding',
-            order_type: 'buy',
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            profit_amount: 150.5,
-          },
-          {
-            id: 2,
-            order_no: 'FND20241201002',
-            user_id: user.id,
-            fund_id: 2,
-            fund_code: 'F0002',
-            amount: 5000,
-            shares: 4166.67,
-            nav: 1.2,
-            order_status: 'holding',
-            order_type: 'buy',
-            created_at: new Date(Date.now() - 172800000).toISOString(),
-            profit_amount: -85.2,
-          },
-        ]);
-      } else {
-        const { data, error } = await supabase
-          .from('fund_orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
-        if (error) throw error;
-        setOrders(data || []);
-      }
-    } catch (e) {
-      console.error(e);
-      setMsg('加载订单历史失败');
-    }
-  };
+  const { fundProducts, fetchFundProducts, subscribeFund, redeemFund } = useSimEngineStore();
+  const navigate = useNavigate();
+  const [selectedFund, setSelectedFund] = useState(null);
+  const [tradeAmount, setTradeAmount] = useState('');
+  const [tradeType, setTradeType] = useState('buy'); // buy or sell
 
   useEffect(() => {
-    loadFunds();
-    loadOrders();
+    // 获取基金产品数据
+    fetchFundProducts();
 
-    return () => {
-      stopDataSimulation(); // Stop simulation on unmount
-    };
-  }, [user]);
+    // 设置定时器定期更新数据
+    const interval = setInterval(() => {
+      fetchFundProducts();
+    }, 10000); // 每10秒更新一次
 
-  // 验证交易权限
-  const validatePermissions = () => {
-    const result = validateUserPermissions(user, 'fund');
-    if (!result.isValid) {
-      showToast(result.message, 'error');
-    }
-    return result.isValid;
+    return () => clearInterval(interval);
+  }, [fetchFundProducts]);
+
+  const handleFundSelect = (fund) => {
+    setSelectedFund(fund);
   };
 
-  // 验证交易限额
-  const validateTradeLimit = () => {
-    const todayFundOrders = orders.filter((order) => {
-      const orderDate = new Date(order.created_at).toDateString();
-      const today = new Date().toDateString();
-      return orderDate === today && order.order_type === 'buy';
-    });
-    const result = validateTradeLimits(user, amount, todayFundOrders, 'fund');
-    if (!result.isValid) {
-      showToast(result.message, 'error');
-    }
-    return result.isValid;
-  };
-
-  // 验证基金最低投资额
-  const validateMinAmount = () => {
-    const selectedFund = funds.find((f) => f.fund_code === selected);
-    if (selectedFund?.min_amount && amount < selectedFund.min_amount) {
-      setMsg(`投资金额不能低于最低投资额 ¥${selectedFund.min_amount.toLocaleString()}`);
-      return false;
-    }
-    return true;
-  };
-
-  const placeOrder = async () => {
-    if (!user || user.userType !== 'user') {
-      setMsg('仅会员可下单');
+  const handleTrade = async () => {
+    if (!selectedFund || !tradeAmount) {
+      alert('请选择基金并输入交易金额');
       return;
     }
 
-    if (!validatePermissions()) return;
-
-    if (!selected) {
-      setMsg('请选择基金');
-      return;
-    }
-    if (!amount || amount <= 0) {
-      setMsg('请输入有效金额');
+    const amount = parseFloat(tradeAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('请输入有效的交易金额');
       return;
     }
 
-    const selectedFund = funds.find((f) => f.fund_code === selected);
-    if (!selectedFund) {
-      setMsg('未找到所选基金');
+    if (tradeType === 'buy' && amount > user.currentBalance) {
+      alert('余额不足');
       return;
     }
 
-    // 验证最低投资额
-    if (!validateMinAmount()) return;
-
-    // 验证交易限额
-    if (!validateTradeLimit()) return;
-
-    setLoading(true);
-    setMsg('');
+    // 使用 jcf-sim-engine 执行交易
     try {
-      const orderNo = `FND${Date.now()}`;
-      const currentTime = new Date().toISOString();
-
-      if (!supabaseEnabled) {
-        setMsg('下单成功（本地演示）');
-        // 添加到本地订单列表
-        const newOrder = {
-          id: Date.now(),
-          order_no: orderNo,
-          user_id: user.id,
-          fund_id: selectedFund.id,
-          fund_code: selected,
-          amount,
-          shares: amount / 1.2, // 模拟净值1.2
-          nav: 1.2,
-          order_status: 'holding',
-          order_type: 'buy',
-          created_at: currentTime,
-          profit_amount: 0,
-        };
-        setOrders((prev) => [newOrder, ...prev]);
+      let result;
+      if (tradeType === 'buy') {
+        result = await subscribeFund(user.id.toString(), selectedFund.fund_code, amount);
       } else {
-        const { error } = await supabase.from('fund_orders').insert({
-          order_no: orderNo,
-          user_id: user.id,
-          fund_code: selected,
-          amount,
-          shares: amount / 1.2, // 模拟净值
-          nav: 1.2,
-          order_status: 'holding',
-          order_type: 'buy',
-          created_at: currentTime,
-          profit_amount: 0,
-        });
-        if (error) throw error;
-        showToast('下单成功', 'success');
-        loadOrders(); // 重新加载订单历史
+        // 对于卖出，我们需要份额而不是金额，这里简化处理
+        const shares = amount / selectedFund.nav;
+        result = await redeemFund(user.id.toString(), selectedFund.fund_code, shares);
       }
 
-      setAmount(0);
-      setSelected('');
-    } catch (e) {
-      console.error(e);
-      showToast('下单失败', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString('zh-CN');
-  };
-
-  const getOrderStatusText = (status) => {
-    switch (status) {
-      case 'holding':
-        return '持仓中';
-      case 'redeemed':
-        return '已赎回';
-      case 'cancelled':
-        return '已取消';
-      default:
-        return status;
-    }
-  };
-
-  const getOrderStatusColor = (status) => {
-    switch (status) {
-      case 'holding':
-        return 'text-blue-600';
-      case 'redeemed':
-        return 'text-gray-600';
-      case 'cancelled':
-        return 'text-red-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
-
-  const getRiskLevelColor = (level) => {
-    switch (level) {
-      case '低':
-        return 'text-green-600 bg-green-100';
-      case '中等':
-        return 'text-yellow-600 bg-yellow-100';
-      case '高':
-        return 'text-red-600 bg-red-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
+      if (result) {
+        alert(
+          `${tradeType === 'buy' ? '买入' : '卖出'} ${selectedFund.fund_name} ${amount}元成功！`,
+        );
+        setTradeAmount('');
+      } else {
+        alert(`${tradeType === 'buy' ? '买入' : '卖出'}失败`);
+      }
+    } catch (error) {
+      alert(`交易失败: ${error.message}`);
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold">基金交易</h1>
-        <button
-          onClick={() => setShowHistory(!showHistory)}
-          className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-        >
-          {showHistory ? '隐藏历史' : '查看历史'}
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-4">基金交易</h1>
 
-      {msg && <div className="mb-3 text-sm text-gray-700">{msg}</div>}
-
-      {/* 交易限额信息 */}
-      {user?.permissions && user?.limits && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">交易限额</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-blue-600">单笔限额：</span>
-              <span className="font-medium">{formatCurrency(user.limits.singleTradeMax)}</span>
-            </div>
-            <div>
-              <span className="text-blue-600">日交易限额：</span>
-              <span className="font-medium">{formatCurrency(user.limits.dailyTradeMax)}</span>
-            </div>
-          </div>
-          <div className="mt-2 text-xs text-blue-600">
-            <span>基金权限：</span>
-            <span className={user.permissions.fund ? 'text-green-600' : 'text-red-600'}>
-              {user.permissions.fund ? '已开通' : '未开通'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* 交易表单 */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 className="text-lg font-medium mb-4">基金投资</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">选择基金</label>
-            <select
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">请选择基金</option>
-              {funds.map((f) => (
-                <option key={f.id} value={f.fund_code}>
-                  {f.fund_code} - {f.fund_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">投资金额</label>
-            <input
-              type="number"
-              value={amount || ''}
-              onChange={(e) => setAmount(parseFloat(e.target.value))}
-              placeholder="投资金额"
-              step="100"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* 显示选中基金的详细信息 */}
-        {selected && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            {(() => {
-              const selectedFund = funds.find((f) => f.fund_code === selected);
-              return selectedFund ? (
-                <div className="text-sm text-gray-600">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div>
-                      <span className="font-medium">基金类型：</span>
-                      {selectedFund.fund_type}
-                    </div>
-                    <div>
-                      <span className="font-medium">风险等级：</span>
-                      <span
-                        className={`inline-block px-2 py-1 text-xs rounded-full ml-1 ${getRiskLevelColor(selectedFund.risk_level || '')}`}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 左侧 - 基金列表 */}
+          <div className="lg:col-span-2">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">可交易基金</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-2">基金名称</th>
+                      <th className="text-left py-2">基金代码</th>
+                      <th className="text-left py-2">净值</th>
+                      <th className="text-left py-2">涨跌</th>
+                      <th className="text-left py-2">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fundProducts.map((fund) => (
+                      <tr
+                        key={fund.fund_code}
+                        className="border-b border-gray-700 hover:bg-gray-750"
                       >
-                        {selectedFund.risk_level}
-                      </span>
-                    </div>
-                    {selectedFund.min_amount && (
-                      <div>
-                        <span className="font-medium">最低投资：</span>
-                        {formatCurrency(selectedFund.min_amount)}
+                        <td className="py-3">{fund.fund_name}</td>
+                        <td className="py-3">{fund.fund_code}</td>
+                        <td className="py-3">¥{fund.nav.toFixed(4)}</td>
+                        <td className="py-3">
+                          <button
+                            onClick={() => handleFundSelect(fund)}
+                            className="bg-indigo-600 hover:bg-indigo-700 py-1 px-3 rounded text-sm transition-colors"
+                          >
+                            交易
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* 右侧 - 交易面板 */}
+          <div>
+            <div className="bg-gray-800 rounded-lg p-6 sticky top-4">
+              <h2 className="text-xl font-semibold mb-4">交易面板</h2>
+
+              {selectedFund ? (
+                <div className="space-y-4">
+                  <div className="bg-gray-750 p-4 rounded-lg">
+                    <h3 className="font-semibold">{selectedFund.fund_name}</h3>
+                    <p className="text-gray-400 text-sm">基金代码: {selectedFund.fund_code}</p>
+                    <p className="text-lg mt-2">净值: ¥{selectedFund.nav.toFixed(4)}</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block mb-2">交易类型</label>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setTradeType('buy')}
+                          className={`flex-1 py-2 rounded ${tradeType === 'buy' ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                        >
+                          买入
+                        </button>
+                        <button
+                          onClick={() => setTradeType('sell')}
+                          className={`flex-1 py-2 rounded ${tradeType === 'sell' ? 'bg-red-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                        >
+                          卖出
+                        </button>
                       </div>
-                    )}
+                    </div>
+
+                    <div>
+                      <label className="block mb-2">交易金额 (¥)</label>
+                      <input
+                        type="number"
+                        value={tradeAmount}
+                        onChange={(e) => setTradeAmount(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="请输入交易金额"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleTrade}
+                      className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                        tradeType === 'buy'
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      {tradeType === 'buy' ? '买入' : '卖出'}
+                    </button>
                   </div>
                 </div>
-              ) : null;
-            })()}
-          </div>
-        )}
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>请选择要交易的基金</p>
+                </div>
+              )}
 
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-500">投资基金具有市场风险，请谨慎投资</div>
-          <button
-            disabled={loading || !amount || !selected}
-            onClick={placeOrder}
-            className="w-full py-2.5 rounded-md text-white font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-indigo-900/40 transform transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? '投资中...' : '确认买入（市价）'}
-          </button>
-          <button
-            onClick={() => showToast('一键跟单功能开发中...', 'info')}
-            className="w-full mt-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <i className="fas fa-magic mr-1"></i> 一键跟单AI信号
-          </button>
-        </div>
-      </div>
-
-      {/* 实时行情图表 */}
-      {selected && (
-        <div className="mb-6">
-          <AICalloutCard />
-          {/* AI 风控建议 */}
-          <div className="bg-gradient-to-r from-red-900/70 to-orange-900/70 p-3 rounded-lg border border-red-500/50 mt-4 shadow-xl">
-            <h4 className="text-md font-bold text-red-300 flex items-center">
-              <i className="fas fa-exclamation-triangle mr-2"></i> AI 风控建议
-            </h4>
-            <p className="mt-1 text-sm text-gray-200">
-              【中国平安 45.67】 → **当前波动较大，建议设置止损线在 44.50**，止盈线在 47.00。
-            </p>
-          </div>
-          <RealTimeChart symbol={selected} />
-        </div>
-      )}
-
-      {/* 订单历史 */}
-      {showHistory && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-medium">投资历史</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    订单号
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                    基金代码
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                    金额
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    份额
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    净值
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                    状态
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                    类型
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    创建时间
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/5">
-                    盈亏金额
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
-                      暂无交易记录
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 hidden md:table-cell">
-                        {order.order_no}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
-                        {order.fund_code}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
-                        {formatCurrency(order.amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
-                        {order.shares?.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
-                        {order.nav?.toFixed(4)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm w-1/8">
-                        <span className={getOrderStatusColor(order.order_status)}>
-                          {getOrderStatusText(order.order_status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-1/8">
-                        {order.order_type === 'buy' ? '买入' : '赎回'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDateTime(order.created_at)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm w-3/5">
-                        <span
-                          className={
-                            order.profit_amount > 0
-                              ? 'text-green-600'
-                              : order.profit_amount < 0
-                                ? 'text-red-600'
-                                : 'text-gray-600'
-                          }
-                        >
-                          {order.profit_amount !== undefined
-                            ? formatCurrency(order.profit_amount)
-                            : '--'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDateTime(order.created_at)}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+              <div className="mt-6 pt-4 border-t border-gray-700">
+                <h3 className="font-semibold mb-2">账户信息</h3>
+                <p>可用余额: ¥{user.currentBalance.toFixed(2)}</p>
+                <button
+                  onClick={() => navigate('/fund-logs/1')}
+                  className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm"
+                >
+                  查看交易记录 →
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      )}
-
-      <div className="mt-4 text-sm text-gray-500">
-        <p>• 基金投资有风险，投资需谨慎</p>
-        <p>• 基金净值会根据市场情况波动</p>
-        <p>• 赎回基金可能需要1-3个工作日到账</p>
       </div>
     </div>
   );

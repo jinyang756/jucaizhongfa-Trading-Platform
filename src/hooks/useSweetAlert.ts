@@ -3,22 +3,26 @@ import Swal from 'sweetalert2';
 // 自定义样式配置，匹配赛博金融主题
 const customSwal = Swal.mixin({
   customClass: {
-    confirmButton: 'bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition-colors',
-    cancelButton: 'bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2 px-4 rounded-md transition-colors ml-2',
+    confirmButton:
+      'bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition-colors',
+    cancelButton:
+      'bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2 px-4 rounded-md transition-colors ml-2',
     popup: 'bg-[rgba(15,23,42,0.9)] backdrop-blur-xl border border-indigo-500/30 rounded-2xl',
     title: 'text-white',
     htmlContainer: 'text-slate-200',
-    icon: 'border-0'
+    icon: 'border-0',
   },
   buttonsStyling: false,
 });
 
-
-
 export const useSweetAlert = () => {
   return {
     // 确认对话框
-    confirm: async (title: string, text?: string, icon: 'warning' | 'question' | 'info' | 'success' | 'error' = 'question') => {
+    confirm: async (
+      title: string,
+      text?: string,
+      icon: 'warning' | 'question' | 'info' | 'success' | 'error' = 'question',
+    ) => {
       const result = await customSwal.fire({
         title,
         text,
@@ -95,7 +99,20 @@ export const useSweetAlert = () => {
     },
 
     // 自定义输入框
-    input: async (title: string, text?: string, inputType: 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'file' = 'text') => {
+    input: async (
+      title: string,
+      text?: string,
+      inputType:
+        | 'text'
+        | 'email'
+        | 'password'
+        | 'number'
+        | 'textarea'
+        | 'select'
+        | 'radio'
+        | 'checkbox'
+        | 'file' = 'text',
+    ) => {
       const result = await customSwal.fire({
         title,
         text,

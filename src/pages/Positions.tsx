@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, supabaseEnabled } from '../utils/supabase';
-import { useAuth } from '../store/useAuth.js';
+import { useAuth } from '../store/useAuth';
 
 interface Position {
   id: string | number;

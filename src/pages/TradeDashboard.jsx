@@ -1,193 +1,91 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Col, Row, Spin } from 'antd';
-import { FundOutlined, StockOutlined, FileTextOutlined } from '@ant-design/icons';
-import { useAuth } from '../store/useAuth.js';
-import { useToast } from '../hooks/useToast';
+import { useAuth } from '../store/useAuth';
+import MarketDashboard from '../components/MarketDashboard';
+import RealTimeChart from '../components/RealTimeChart';
 
-export const TradeDashboard = () => {
+const TradeDashboard = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
-  const { showToast } = useToast();
 
-  // 权限检查函数
-  const checkPermission = (type) => {
-    if (!user?.permissions) return false;
-
-    switch (type) {
-      case 'fund':
-        return user.permissions.fund || false;
-      case 'option':
-        return user.permissions.option || false;
-      case 'contract':
-        return user.permissions.shContract || user.permissions.hkContract || false;
-      default:
-        return false;
-    }
+  const handleNavigation = (path) => {
+    navigate(path);
   };
 
-  // 处理交易卡片点击
-  const handleTradeClick = (path, type) => {
-    if (isLoading) return;
-
-    if (checkPermission(type)) {
-      navigate(path);
-    } else {
-      showToast(
-        `您还未开通${type === 'fund' ? '基金投资' : type === 'option' ? '二元期权' : '合约交易'}权限`,
-        'warning',
-      );
-    }
-  };
-
-  // 加载状态
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Spin size="large" />
-      </div>
-    );
+  if (!user) {
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 主要内容区域 */}
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">交易中心</h1>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-4">交易仪表板</h1>
 
-          <Row gutter={[24, 24]}>
-            {/* 基金交易 */}
-            <Col xs={24} sm={12} lg={8}>
-              <Card
-                hoverable={checkPermission('fund')}
-                className={`shadow-lg rounded-lg text-center transition-all ${
-                  !checkPermission('fund') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
-                onClick={() => handleTradeClick('/trade/funds', 'fund')}
-              >
-                <FundOutlined
-                  style={{
-                    fontSize: '48px',
-                    color: checkPermission('fund') ? '#1890ff' : '#d9d9d9',
-                  }}
-                />
-                <Card.Meta title="基金交易" description="申购、赎回各类基金产品" className="mt-4" />
-                <div className="mt-3">
-                  <span
-                    className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                      checkPermission('fund')
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {checkPermission('fund') ? '已开通' : '未开通'}
-                  </span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 左侧 - 市场概览 */}
+          <div className="lg:col-span-1">
+            <MarketDashboard />
+          </div>
+
+          {/* 中间 - 快捷交易入口 */}
+          <div className="lg:col-span-2 space-y-6">
+            <MarketDashboard />
+
+            {/* 快捷交易入口 */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">快捷交易</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button
+                  onClick={() => handleNavigation('/funds')}
+                  className="bg-indigo-600 hover:bg-indigo-700 py-3 px-4 rounded-lg transition-colors"
+                >
+                  基金交易
+                </button>
+                <button
+                  onClick={() => handleNavigation('/contracts')}
+                  className="bg-green-600 hover:bg-green-700 py-3 px-4 rounded-lg transition-colors"
+                >
+                  合约交易
+                </button>
+                <button
+                  onClick={() => handleNavigation('/options')}
+                  className="bg-yellow-600 hover:bg-yellow-700 py-3 px-4 rounded-lg transition-colors"
+                >
+                  期权交易
+                </button>
+                <button
+                  onClick={() => handleNavigation('/block-trading')}
+                  className="bg-purple-600 hover:bg-purple-700 py-3 px-4 rounded-lg transition-colors"
+                >
+                  大宗交易
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 右侧 - 实时行情 */}
+          <div className="space-y-6">
+            <RealTimeChart />
+
+            {/* 持仓信息 */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">我的持仓</h2>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                  <span>沪深300</span>
+                  <span className="text-green-400">+2.3%</span>
                 </div>
-              </Card>
-            </Col>
-
-            {/* 期权交易 */}
-            <Col xs={24} sm={12} lg={8}>
-              <Card
-                hoverable={checkPermission('option')}
-                className={`shadow-lg rounded-lg text-center transition-all ${
-                  !checkPermission('option') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
-                onClick={() => handleTradeClick('/trade/options', 'option')}
-              >
-                <StockOutlined
-                  style={{
-                    fontSize: '48px',
-                    color: checkPermission('option') ? '#52c41a' : '#d9d9d9',
-                  }}
-                />
-                <Card.Meta title="期权交易" description="买卖期权合约，管理风险" className="mt-4" />
-                <div className="mt-3">
-                  <span
-                    className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                      checkPermission('option')
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {checkPermission('option') ? '已开通' : '未开通'}
-                  </span>
+                <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                  <span>中证500</span>
+                  <span className="text-red-400">-0.8%</span>
                 </div>
-              </Card>
-            </Col>
-
-            {/* 合约交易 */}
-            <Col xs={24} sm={12} lg={8}>
-              <Card
-                hoverable={checkPermission('contract')}
-                className={`shadow-lg rounded-lg text-center transition-all ${
-                  !checkPermission('contract') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
-                onClick={() => handleTradeClick('/trade/contracts', 'contract')}
-              >
-                <FileTextOutlined
-                  style={{
-                    fontSize: '48px',
-                    color: checkPermission('contract') ? '#faad14' : '#d9d9d9',
-                  }}
-                />
-                <Card.Meta
-                  title="合约交易"
-                  description="进行杠杆交易，把握市场机会"
-                  className="mt-4"
-                />
-                <div className="mt-3 space-x-2">
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                      user?.permissions?.shContract
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    沪深 {user?.permissions?.shContract ? '✓' : '✗'}
-                  </span>
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                      user?.permissions?.hkContract
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    港股 {user?.permissions?.hkContract ? '✓' : '✗'}
-                  </span>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* 权限提示 */}
-          {!checkPermission('fund') &&
-            !checkPermission('option') &&
-            !checkPermission('contract') && (
-              <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-yellow-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-yellow-700">
-                      您当前未开通任何交易权限，请联系管理员开通权限后再进行交易。
-                    </p>
-                  </div>
+                <div className="flex justify-between items-center py-2">
+                  <span>创业板指</span>
+                  <span className="text-green-400">+1.2%</span>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

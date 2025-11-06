@@ -8,19 +8,19 @@ const AnimatedComponentsExample: React.FC = () => {
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 }
+    exit: { opacity: 0, y: -20 },
   };
 
   // 卡片动画变体
   const cardVariants = {
     hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1 }
+    visible: { opacity: 1, scale: 1 },
   };
 
   // 按钮悬停变体
   const buttonVariants = {
-    hover: { scale: 1.05, boxShadow: "0px 0px 8px rgba(99, 102, 241, 0.5)" },
-    tap: { scale: 0.95 }
+    hover: { scale: 1.05, boxShadow: '0px 0px 8px rgba(99, 102, 241, 0.5)' },
+    tap: { scale: 0.95 },
   };
 
   return (
@@ -32,7 +32,7 @@ const AnimatedComponentsExample: React.FC = () => {
       variants={pageVariants}
       transition={{ duration: 0.3 }}
     >
-      <motion.h2 
+      <motion.h2
         className="text-xl font-bold text-white mb-4"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -40,8 +40,8 @@ const AnimatedComponentsExample: React.FC = () => {
       >
         动画效果示例
       </motion.h2>
-      
-      <motion.p 
+
+      <motion.p
         className="text-gray-300 mb-6"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -49,7 +49,7 @@ const AnimatedComponentsExample: React.FC = () => {
       >
         以下是在交易平台中可能用到的动画效果示例：
       </motion.p>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 页面切换动画示例 */}
         <motion.div
@@ -77,7 +77,7 @@ const AnimatedComponentsExample: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
-        
+
         {/* 交互反馈动画示例 */}
         <motion.div
           variants={cardVariants}
@@ -91,9 +91,7 @@ const AnimatedComponentsExample: React.FC = () => {
               <CardDescription>按钮和元素的交互反馈效果</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-300">
-                按钮悬停、点击和加载状态的动画反馈。
-              </p>
+              <p className="text-gray-300">按钮悬停、点击和加载状态的动画反馈。</p>
               <div className="flex flex-wrap gap-2">
                 <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
                   <Button>悬停效果</Button>
@@ -109,7 +107,7 @@ const AnimatedComponentsExample: React.FC = () => {
           </Card>
         </motion.div>
       </div>
-      
+
       {/* 数据加载动画示例 */}
       <motion.div
         className="mt-6"
@@ -125,46 +123,44 @@ const AnimatedComponentsExample: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <p className="text-gray-300">
-                在数据加载过程中提供视觉反馈，提升用户体验。
-              </p>
+              <p className="text-gray-300">在数据加载过程中提供视觉反馈，提升用户体验。</p>
               <div className="flex items-center justify-center space-x-2">
                 <motion.div
                   className="w-3 h-3 bg-indigo-500 rounded-full"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.5, 1],
-                    opacity: [0.5, 1, 0.5]
+                    opacity: [0.5, 1, 0.5],
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 1,
                     repeat: Infinity,
-                    repeatType: "reverse"
+                    repeatType: 'reverse',
                   }}
                 />
                 <motion.div
                   className="w-3 h-3 bg-indigo-500 rounded-full"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.5, 1],
-                    opacity: [0.5, 1, 0.5]
+                    opacity: [0.5, 1, 0.5],
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 1,
                     repeat: Infinity,
-                    repeatType: "reverse",
-                    delay: 0.2
+                    repeatType: 'reverse',
+                    delay: 0.2,
                   }}
                 />
                 <motion.div
                   className="w-3 h-3 bg-indigo-500 rounded-full"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.5, 1],
-                    opacity: [0.5, 1, 0.5]
+                    opacity: [0.5, 1, 0.5],
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 1,
                     repeat: Infinity,
-                    repeatType: "reverse",
-                    delay: 0.4
+                    repeatType: 'reverse',
+                    delay: 0.4,
                   }}
                 />
               </div>
@@ -172,8 +168,8 @@ const AnimatedComponentsExample: React.FC = () => {
           </CardContent>
         </Card>
       </motion.div>
-      
-      <motion.div 
+
+      <motion.div
         className="mt-6 p-4 bg-gray-800 rounded-lg"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

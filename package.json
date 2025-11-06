@@ -41,6 +41,7 @@
     "framer-motion": "^12.23.24",
     "husky": "^9.1.7",
     "hypertune": "^2.10.0",
+    "jcf-sim-engine": "^3.0.3",
     "lucide-react": "^0.552.0",
     "pg": "^8.16.3",
     "postcss": "^8.5.6",

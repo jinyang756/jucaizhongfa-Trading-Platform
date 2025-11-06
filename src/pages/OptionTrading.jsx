@@ -1,407 +1,273 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../hooks/useToast'; // Import useToast
-import RealTimeChart from '../components/RealTimeChart';
-import { formatCurrency } from '../utils/helpers';
-import { mockOptionProducts } from '../utils/mockProducts';
 import { useAuth } from '../store/useAuth';
-import { supabase, supabaseEnabled } from '../utils/supabase';
-import { validateUserPermissions, validateTradeLimits } from '../utils/tradeValidation';
 
-export const OptionTrading = () => {
+const OptionTrading = () => {
   const { user } = useAuth();
-  const { showToast } = useToast();
-  const [options, setOptions] = useState([]);
-  const [selected, setSelected] = useState('');
-  const [msg, setMsg] = useState('');
-  const [orderPrice, setOrderPrice] = useState(0);
-  const [orderAmount, setOrderAmount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState([]);
-  const [showHistory, setShowHistory] = useState(false);
+  const navigate = useNavigate();
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [tradeAmount, setTradeAmount] = useState('');
+  const [tradeType, setTradeType] = useState('buy'); // buy or sell
 
-  const loadOptions = async () => {
-    setLoading(true);
-    setMsg('');
-    try {
-      if (!supabaseEnabled) {
-        setOptions(mockOptionProducts);
-      } else {
-        const { data, error } = await supabase
-          .from('options')
-          .select(
-            'id, option_code, option_name, underlying_asset, option_type, strike_price, expiry_date, min_amount',
-          )
-          .order('id');
-        if (error) throw error;
-        setOptions(data || []);
-      }
-    } catch (e) {
-      console.error(e);
-      setMsg('加载期权失败');
-    } finally {
-      setLoading(false);
-    }
+  // 模拟期权数据
+  const options = [
+    {
+      id: 1,
+      name: '50ETF购6月3.5',
+      code: '10003503',
+      price: 0.125,
+      change: 1.2,
+      changePercent: 5.2,
+      type: 'call',
+      strike: 3.5,
+      expiry: '2024-06-21',
+    },
+    {
+      id: 2,
+      name: '50ETF沽6月3.5',
+      code: '10003504',
+      price: 0.085,
+      change: -0.5,
+      changePercent: -3.3,
+      type: 'put',
+      strike: 3.5,
+      expiry: '2024-06-21',
+    },
+    {
+      id: 3,
+      name: '沪深300购6月4.0',
+      code: '10003505',
+      price: 0.225,
+      change: 2.1,
+      changePercent: 8.5,
+      type: 'call',
+      strike: 4.0,
+      expiry: '2024-06-21',
+    },
+    {
+      id: 4,
+      name: '沪深300沽6月4.0',
+      code: '10003506',
+      price: 0.065,
+      change: 0.8,
+      changePercent: 4.4,
+      type: 'put',
+      strike: 4.0,
+      expiry: '2024-06-21',
+    },
+  ];
+
+  const handleOptionSelect = (option) => {
+    setSelectedOption(option);
   };
 
-  // 加载订单历史
-  const loadOrders = async () => {
-    if (!user) return;
-
-    try {
-      if (!supabaseEnabled) {
-        // 演示数据
-        setOrders([
-          {
-            id: 1,
-            order_no: 'OPT20241201001',
-            user_id: user.id,
-            option_id: 1,
-            option_code: 'OP0001',
-            order_price: 150,
-            order_amount: 10,
-            premium: 1500,
-            order_status: 'holding',
-            order_type: 'buy',
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            profit_amount: 250,
-          },
-          {
-            id: 2,
-            order_no: 'OPT20241201002',
-            user_id: user.id,
-            option_id: 2,
-            option_code: 'OP0002',
-            order_price: 80,
-            order_amount: 5,
-            premium: 400,
-            order_status: 'expired',
-            order_type: 'buy',
-            created_at: new Date(Date.now() - 172800000).toISOString(),
-            profit_amount: -400,
-          },
-        ]);
-      } else {
-        const { data, error } = await supabase
-          .from('option_orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
-        if (error) throw error;
-        setOrders(data || []);
-      }
-    } catch (e) {
-      console.error(e);
-      setMsg('加载订单历史失败');
-    }
-  };
-
-  useEffect(() => {
-    loadOptions();
-    loadOrders();
-  }, [user]);
-
-  // 验证交易权限
-  const validatePermissions = () => {
-    const result = validateUserPermissions(user, 'option');
-    if (!result.isValid) {
-      showToast(result.message, 'error');
-    }
-    return result.isValid;
-  };
-
-  // 验证交易限额
-  const validateTradeLimit = () => {
-    const premium = orderPrice * orderAmount;
-    const todayOptionOrders = orders.filter((order) => {
-      const orderDate = new Date(order.created_at).toDateString();
-      const today = new Date().toDateString();
-      return orderDate === today && order.order_type === 'buy';
-    });
-    const result = validateTradeLimits(user, premium, todayOptionOrders, 'option');
-    if (!result.isValid) {
-      setMsg(result.message);
-    }
-    return result.isValid;
-  };
-
-  // 下单
-  const placeOrder = async () => {
-    if (!user || user.userType !== 'user') {
-      setMsg('仅会员可下单');
+  const handleTrade = () => {
+    if (!selectedOption || !tradeAmount) {
+      alert('请选择期权并输入交易手数');
       return;
     }
 
-    if (!validatePermissions()) return;
-
-    if (!selected) {
-      setMsg('请选择期权');
-      return;
-    }
-    if (!orderPrice || orderPrice <= 0) {
-      setMsg('请输入有效价格');
-      return;
-    }
-    if (!orderAmount || orderAmount <= 0) {
-      setMsg('请输入有效数量');
+    const amount = parseInt(tradeAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('请输入有效的交易手数');
       return;
     }
 
-    // 验证最低交易数量
-    const selectedOption = options.find((o) => o.option_code === selected);
-    if (selectedOption?.min_amount && orderAmount < selectedOption.min_amount) {
-      setMsg(`交易数量不能低于最低数量 ${selectedOption.min_amount}`);
+    const totalCost = selectedOption.price * 10000 * amount;
+    if (tradeType === 'buy' && totalCost > user.currentBalance) {
+      alert('余额不足');
       return;
     }
 
-    // 验证交易限额
-    if (!validateTradeLimit()) return;
-
-    setLoading(true);
-    setMsg('');
-    try {
-      const orderNo = `OPT${Date.now()}`;
-      const currentTime = new Date().toISOString();
-      const premium = orderPrice * orderAmount;
-
-      if (!supabaseEnabled) {
-        setMsg('下单成功（本地演示）');
-        // 添加到本地订单列表
-        const newOrder = {
-          id: Date.now(),
-          order_no: orderNo,
-          user_id: user.id,
-          option_id: selectedOption?.id || 1,
-          option_code: selected,
-          order_price: orderPrice,
-          order_amount: orderAmount,
-          premium: premium,
-          order_status: 'holding',
-          order_type: 'buy',
-          created_at: currentTime,
-        };
-        setOrders([newOrder, ...orders]);
-      } else {
-        const { data, error } = await supabase.from('option_orders').insert({
-          order_no: orderNo,
-          user_id: user.id,
-          option_id: selectedOption?.id || 1,
-          order_price: orderPrice,
-          order_amount: orderAmount,
-          premium: premium,
-          order_status: 'holding',
-          order_type: 'buy',
-        });
-
-        if (error) throw error;
-        setMsg('下单成功');
-        loadOrders(); // 重新加载订单
-      }
-    } catch (e) {
-      console.error(e);
-      setMsg('下单失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 计算权利金
-  const calculatePremium = () => {
-    return orderPrice * orderAmount;
+    alert(`${tradeType === 'buy' ? '买入' : '卖出'} ${selectedOption.name} ${amount}手成功！`);
+    setTradeAmount('');
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">期权交易</h1>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-4">期权交易</h1>
 
-      {msg && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{msg}</div>}
-
-      {/* 期权选择和下单表单 */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">期权下单</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">选择期权</label>
-            <select
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">请选择期权</option>
-              {options.map((option) => (
-                <option key={option.id} value={option.option_code}>
-                  {option.option_name} ({option.option_code})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">价格</label>
-            <input
-              type="number"
-              value={orderPrice}
-              onChange={(e) => setOrderPrice(parseFloat(e.target.value))}
-              placeholder="期权价格"
-              step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">数量</label>
-            <input
-              type="number"
-              value={orderAmount}
-              onChange={(e) => setOrderAmount(parseInt(e.target.value))}
-              placeholder="期权数量"
-              step="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex items-end">
-            <button
-              onClick={placeOrder}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {loading ? '下单中...' : '买入期权'}
-            </button>
-          </div>
-        </div>
-
-        {selected && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-md">
-            <div className="text-sm text-gray-600">
-              <p>权利金: {formatCurrency(calculatePremium())}</p>
-              <p>期权详情: {options.find((o) => o.option_code === selected)?.option_name}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 左侧 - 期权列表 */}
+          <div className="lg:col-span-2">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">可交易期权</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-2">期权名称</th>
+                      <th className="text-left py-2">期权代码</th>
+                      <th className="text-left py-2">最新价</th>
+                      <th className="text-left py-2">涨跌</th>
+                      <th className="text-left py-2">行权价</th>
+                      <th className="text-left py-2">到期日</th>
+                      <th className="text-left py-2">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {options.map((option) => (
+                      <tr key={option.id} className="border-b border-gray-700 hover:bg-gray-750">
+                        <td className="py-3">
+                          <div className="flex items-center">
+                            <span
+                              className={`mr-2 px-2 py-1 rounded text-xs ${
+                                option.type === 'call' ? 'bg-green-600' : 'bg-red-600'
+                              }`}
+                            >
+                              {option.type === 'call' ? '认购' : '认沽'}
+                            </span>
+                            <span>{option.name}</span>
+                          </div>
+                        </td>
+                        <td className="py-3">{option.code}</td>
+                        <td className="py-3">{option.price.toFixed(3)}</td>
+                        <td
+                          className={`py-3 ${option.change >= 0 ? 'text-green-400' : 'text-red-400'}`}
+                        >
+                          {option.change >= 0 ? '+' : ''}
+                          {option.change.toFixed(2)} ({option.change >= 0 ? '+' : ''}
+                          {option.changePercent.toFixed(2)}%)
+                        </td>
+                        <td className="py-3">{option.strike.toFixed(1)}</td>
+                        <td className="py-3">{option.expiry}</td>
+                        <td className="py-3">
+                          <button
+                            onClick={() => handleOptionSelect(option)}
+                            className="bg-indigo-600 hover:bg-indigo-700 py-1 px-3 rounded text-sm transition-colors"
+                          >
+                            交易
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* 实时行情图表 */}
-      {selected && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">实时行情</h2>
-          <RealTimeChart symbol={selected} />
-        </div>
-      )}
+          {/* 右侧 - 交易面板 */}
+          <div>
+            <div className="bg-gray-800 rounded-lg p-6 sticky top-4">
+              <h2 className="text-xl font-semibold mb-4">交易面板</h2>
 
-      {/* AI 决策助理 */}
-      <div className="bg-gradient-to-r from-indigo-900/70 to-purple-900/70 p-3 rounded-lg border border-indigo-500/50 mb-6 shadow-xl">
-        <div className="flex items-center justify-between">
-          <h4 className="text-md font-bold text-yellow-300 flex items-center">
-            <i className="fas fa-robot mr-2 pulse"></i> AI 决策助理
-          </h4>
-          <span className="text-xs text-green-400">信号准确率: 76.2%</span>
-        </div>
-        <p className="mt-1 text-sm text-gray-200">
-          【上证50看涨期权 OP0001】 → **技术形态良好，建议买入**。请关注下方AI风控止盈线。
-        </p>
-      </div>
-
-      {/* 订单历史 */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">订单历史</h2>
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="text-sm text-blue-500 hover:text-blue-700"
-          >
-            {showHistory ? '隐藏' : '显示'}
-          </button>
-        </div>
-
-        {showHistory && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    订单号
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    期权
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    价格
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    数量
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    权利金
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    状态
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    收益
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.order_no}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.option_code}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(order.order_price)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.order_amount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(order.premium)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+              {selectedOption ? (
+                <div className="space-y-4">
+                  <div className="bg-gray-750 p-4 rounded-lg">
+                    <div className="flex items-center mb-2">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          order.order_status === 'holding'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : order.order_status === 'completed'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                        className={`mr-2 px-2 py-1 rounded text-xs ${
+                          selectedOption.type === 'call' ? 'bg-green-600' : 'bg-red-600'
                         }`}
                       >
-                        {order.order_status === 'holding'
-                          ? '持仓'
-                          : order.order_status === 'completed'
-                            ? '已完成'
-                            : '已过期'}
+                        {selectedOption.type === 'call' ? '认购' : '认沽'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span
-                        className={order.profit_amount >= 0 ? 'text-green-600' : 'text-red-600'}
-                      >
-                        {order.profit_amount >= 0 ? '+' : ''}
-                        {formatCurrency(order.profit_amount)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <h3 className="font-semibold">{selectedOption.name}</h3>
+                    </div>
+                    <p className="text-gray-400 text-sm">期权代码: {selectedOption.code}</p>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <p className="text-gray-400 text-sm">最新价</p>
+                        <p className="text-lg">{selectedOption.price.toFixed(3)}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">涨跌幅</p>
+                        <p
+                          className={`text-lg ${selectedOption.change >= 0 ? 'text-green-400' : 'text-red-400'}`}
+                        >
+                          {selectedOption.change >= 0 ? '+' : ''}
+                          {selectedOption.changePercent.toFixed(2)}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">行权价</p>
+                        <p className="text-lg">{selectedOption.strike.toFixed(1)}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">到期日</p>
+                        <p className="text-lg">{selectedOption.expiry}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block mb-2">交易方向</label>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setTradeType('buy')}
+                          className={`flex-1 py-2 rounded ${tradeType === 'buy' ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                        >
+                          买入
+                        </button>
+                        <button
+                          onClick={() => setTradeType('sell')}
+                          className={`flex-1 py-2 rounded ${tradeType === 'sell' ? 'bg-red-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                        >
+                          卖出
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block mb-2">交易手数</label>
+                      <input
+                        type="number"
+                        value={tradeAmount}
+                        onChange={(e) => setTradeAmount(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="请输入交易手数"
+                      />
+                    </div>
+
+                    <div className="bg-gray-750 p-3 rounded">
+                      <div className="flex justify-between">
+                        <span>交易金额:</span>
+                        <span>
+                          ¥{(selectedOption?.price * 10000 * (tradeAmount || 0)).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span>权利金:</span>
+                        <span>
+                          ¥{(selectedOption?.price * 10000 * (tradeAmount || 0)).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleTrade}
+                      className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                        tradeType === 'buy'
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      {tradeType === 'buy' ? '买入开仓' : '卖出开仓'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>请选择要交易的期权</p>
+                </div>
+              )}
+
+              <div className="mt-6 pt-4 border-t border-gray-700">
+                <h3 className="font-semibold mb-2">账户信息</h3>
+                <p>可用余额: ¥{user.currentBalance.toFixed(2)}</p>
+                <button
+                  onClick={() => navigate('/positions')}
+                  className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm"
+                >
+                  查看持仓 →
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-
-        {!showHistory && (
-          <div className="text-center py-4 text-gray-500">点击"显示"查看订单历史</div>
-        )}
-      </div>
-
-      <div className="mt-4 text-sm text-gray-500">
-        <p>• 期权交易具有高风险，请充分了解期权特性后再进行交易</p>
-        <p>• 期权价格会根据标的资产价格波动而变化</p>
-        <p>• 期权到期日为最后交易日，请及时平仓或行权</p>
+        </div>
       </div>
     </div>
   );

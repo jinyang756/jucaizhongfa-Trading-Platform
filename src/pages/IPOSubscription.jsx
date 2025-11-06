@@ -1,449 +1,201 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../hooks/useToast'; // Import useToast
-import { formatCurrency } from '../utils/helpers';
-import { mockIPOProducts } from '../utils/mockProducts';
+import { useAuth } from '../store/useAuth';
+import { useSimEngineStore } from '../utils/simEngine';
 
-export const IPOSubscription = () => {
+const IPOSubscription = () => {
   const { user } = useAuth();
-  const { showToast } = useToast();
-  const [ipos, setIpos] = useState([]);
-  const [selected, setSelected] = useState('');
-  const [msg, setMsg] = useState('');
-  const [subscriptionAmount, setSubscriptionAmount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState([]);
-  const [showHistory, setShowHistory] = useState(false);
-
-  const loadIPOs = async () => {
-    setLoading(true);
-    setMsg('');
-    try {
-      if (!supabaseEnabled) {
-        setIpos(mockIPOProducts);
-      } else {
-        const { data, error } = await supabase
-          .from('ipos')
-          .select(
-            'id, ipo_code, company_name, market, issue_price, min_subscription, max_subscription, subscription_start, subscription_end, listing_date',
-          )
-          .order('id');
-        if (error) throw error;
-        setIpos(data || []);
-      }
-    } catch (e) {
-      console.error(e);
-      setMsg('加载新股信息失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 加载申购历史
-  const loadOrders = async () => {
-    if (!user) return;
-
-    try {
-      if (!supabaseEnabled) {
-        // 演示数据
-        setOrders([
-          {
-            id: 1,
-            order_no: 'IPO20241201001',
-            user_id: user.id,
-            ipo_id: 1,
-            ipo_code: 'IPO001',
-            subscription_amount: 50000,
-            shares_allocated: 3165,
-            order_status: 'allocated',
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-          },
-          {
-            id: 2,
-            order_no: 'IPO20241201002',
-            user_id: user.id,
-            ipo_id: 2,
-            ipo_code: 'IPO002',
-            subscription_amount: 25000,
-            shares_allocated: 0,
-            order_status: 'pending',
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-          },
-        ]);
-      } else {
-        const { data, error } = await supabase
-          .from('ipo_orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
-        if (error) throw error;
-        setOrders(data || []);
-      }
-    } catch (e) {
-      console.error(e);
-      setMsg('加载申购历史失败');
-    }
-  };
+  const { ipoStocks, fetchIpoStocks, subscribeToIpo } = useSimEngineStore();
+  const navigate = useNavigate();
+  const [selectedStock, setSelectedStock] = useState(null);
+  const [shares, setShares] = useState('');
 
   useEffect(() => {
-    loadIPOs();
-    loadOrders();
-  }, [user]);
+    // 获取新股数据
+    fetchIpoStocks();
 
-  // 验证交易权限
-  const validatePermissions = () => {
-    const result = validateUserPermissions(user, 'ipo');
-    if (!result.isValid) {
-      showToast(result.message, 'error');
-    }
-    return result.isValid;
+    // 设置定时器定期更新数据
+    const interval = setInterval(() => {
+      fetchIpoStocks();
+    }, 10000); // 每10秒更新一次
+
+    return () => clearInterval(interval);
+  }, [fetchIpoStocks]);
+
+  const handleStockSelect = (stock) => {
+    setSelectedStock(stock);
   };
 
-  // 验证申购限额
-  const validateSubscriptionLimit = () => {
-    const selectedIPO = ipos.find((i) => i.ipo_code === selected);
-    if (!selectedIPO) return true;
-
-    // 验证最小申购金额
-    if (subscriptionAmount < selectedIPO.min_subscription) {
-      setMsg(`申购金额不能低于最低申购金额 ¥${selectedIPO.min_subscription.toLocaleString()}`);
-      return false;
-    }
-
-    // 验证最大申购金额
-    if (subscriptionAmount > selectedIPO.max_subscription) {
-      setMsg(`申购金额不能超过最大申购金额 ¥${selectedIPO.max_subscription.toLocaleString()}`);
-      return false;
-    }
-
-    // 验证申购时间
-    const now = new Date();
-    const subscriptionStart = new Date(selectedIPO.subscription_start);
-    const subscriptionEnd = new Date(selectedIPO.subscription_end);
-    if (now < subscriptionStart) {
-      setMsg('申购尚未开始');
-      return false;
-    }
-    if (now > subscriptionEnd) {
-      setMsg('申购已结束');
-      return false;
-    }
-
-    return true;
-  };
-
-  // 申购
-  const subscribe = async () => {
-    if (!user || user.userType !== 'user') {
-      setMsg('仅会员可申购');
+  const handleSubscribe = async () => {
+    if (!selectedStock || !shares) {
+      alert('请选择股票并输入申购股数');
       return;
     }
 
-    if (!validatePermissions()) return;
-
-    if (!selected) {
-      setMsg('请选择新股');
-      return;
-    }
-    if (!subscriptionAmount || subscriptionAmount <= 0) {
-      setMsg('请输入有效申购金额');
+    const shareCount = parseInt(shares);
+    if (isNaN(shareCount) || shareCount <= 0) {
+      alert('请输入有效的股数');
       return;
     }
 
-    // 验证申购限额
-    if (!validateSubscriptionLimit()) return;
+    if (shareCount > selectedStock.subscription_quota) {
+      alert('申购股数超过配售额度');
+      return;
+    }
 
-    setLoading(true);
-    setMsg('');
+    // 使用 jcf-sim-engine 执行申购
     try {
-      const orderNo = `IPO${Date.now()}`;
-      const currentTime = new Date().toISOString();
+      const result = await subscribeToIpo(selectedStock.stock_id, shareCount);
 
-      if (!supabaseEnabled) {
-        setMsg('申购成功（本地演示）');
-        // 添加到本地订单列表
-        const newOrder = {
-          id: Date.now(),
-          order_no: orderNo,
-          user_id: user.id,
-          ipo_id: selectedIPO?.id || 1,
-          ipo_code: selected,
-          subscription_amount: subscriptionAmount,
-          shares_allocated: 0,
-          order_status: 'pending',
-          created_at: currentTime,
-        };
-        setOrders((prev) => [newOrder, ...prev]);
+      if (result) {
+        alert(`申购 ${selectedStock.stock_name} ${shareCount}股成功！`);
+        setShares('');
       } else {
-        const { error } = await supabase.from('ipo_orders').insert({
-          order_no: orderNo,
-          user_id: user.id,
-          ipo_id: selectedIPO?.id,
-          ipo_code: selected,
-          subscription_amount: subscriptionAmount,
-          shares_allocated: 0,
-          order_status: 'pending',
-          created_at: currentTime,
-        });
-        if (error) throw error;
-        showToast('申购成功', 'success');
-        loadOrders(); // 重新加载申购历史
+        alert('申购失败');
       }
-
-      // 重置表单
-      setSubscriptionAmount(0);
-      setSelected('');
-    } catch (e) {
-      console.error(e);
-      showToast('申购失败', 'error');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      alert(`申购失败: ${error.message}`);
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('zh-CN');
+  const getStatusText = (status) => {
+    const statusMap = {
+      upcoming: '即将发行',
+      subscription: '申购中',
+      allocated: '已配售',
+      trading: '交易中',
+    };
+    return statusMap[status] || status;
   };
 
-  const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString('zh-CN');
-  };
-
-  const getOrderStatusText = (status) => {
-    switch (status) {
-      case 'pending':
-        return '待配售';
-      case 'allocated':
-        return '已配售';
-      case 'listed':
-        return '已上市';
-      case 'cancelled':
-        return '已取消';
-      default:
-        return status;
-    }
-  };
-
-  const getOrderStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'text-yellow-600';
-      case 'allocated':
-        return 'text-blue-600';
-      case 'listed':
-        return 'text-green-600';
-      case 'cancelled':
-        return 'text-red-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
-
-  // 检查IPO是否在申购期内
-  const isSubscriptionPeriod = (ipo) => {
-    const now = new Date();
-    const subscriptionStart = new Date(ipo.subscription_start);
-    const subscriptionEnd = new Date(ipo.subscription_end);
-    return now >= subscriptionStart && now <= subscriptionEnd;
+  const getStatusColor = (status) => {
+    const colorMap = {
+      upcoming: 'blue',
+      subscription: 'green',
+      allocated: 'orange',
+      trading: 'purple',
+    };
+    return colorMap[status] || 'gray';
   };
 
   return (
-    <div className="p-6 pt-20">
-      <TopNavigationBar title="新购申购" />
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-4">新股申购</h1>
 
-      <div className="flex justify-between items-center mb-4">
-        <button
-          onClick={() => setShowHistory(!showHistory)}
-          className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-        >
-          {showHistory ? '隐藏历史' : '查看历史'}
-        </button>
-      </div>
-
-      {msg && <div className="mb-3 text-sm text-gray-700">{msg}</div>}
-
-      {/* 申购权限信息 */}
-      {user?.permissions && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">申购权限</h3>
-          <div className="text-sm">
-            <span>新股申购权限：</span>
-            <span className={user.permissions.ipo ? 'text-green-600' : 'text-red-600'}>
-              {user.permissions.ipo ? '已开通' : '未开通'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* 申购表单 */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 className="text-lg font-medium mb-4">新股申购</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">选择新股</label>
-            <select
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">请选择新股</option>
-              {ipos.map((ipo) => (
-                <option key={ipo.id} value={ipo.ipo_code} disabled={!isSubscriptionPeriod(ipo)}>
-                  {ipo.ipo_code} - {ipo.company_name} ({ipo.market})
-                  {!isSubscriptionPeriod(ipo) && ' (申购期已过)'}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">申购金额</label>
-            <input
-              type="number"
-              value={subscriptionAmount || ''}
-              onChange={(e) => setSubscriptionAmount(parseFloat(e.target.value))}
-              placeholder="申购金额"
-              step="1000"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* 显示选中新股的详细信息 */}
-        {selected && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            {(() => {
-              const selectedIPO = ipos.find((i) => i.ipo_code === selected);
-              return selectedIPO ? (
-                <div className="text-sm text-gray-600">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div>
-                      <span className="font-medium">发行价格：</span>¥{selectedIPO.issue_price}
-                    </div>
-                    <div>
-                      <span className="font-medium">最低申购：</span>
-                      {formatCurrency(selectedIPO.min_subscription)}
-                    </div>
-                    <div>
-                      <span className="font-medium">最高申购：</span>
-                      {formatCurrency(selectedIPO.max_subscription)}
-                    </div>
-                    <div>
-                      <span className="font-medium">申购时间：</span>
-                      {formatDate(selectedIPO.subscription_start)} 至{' '}
-                      {formatDate(selectedIPO.subscription_end)}
-                    </div>
-                    <div>
-                      <span className="font-medium">上市日期：</span>
-                      {formatDate(selectedIPO.listing_date)}
-                    </div>
-                    <div>
-                      <span className="font-medium">市场：</span>
-                      {selectedIPO.market}
-                    </div>
-                  </div>
-                </div>
-              ) : null;
-            })()}
-          </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-500">新股申购需满足最低申购金额要求</div>
-          <button
-            disabled={loading || !subscriptionAmount || !selected}
-            onClick={subscribe}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
-          >
-            {loading ? '申购中...' : '申购'}
-          </button>
-        </div>
-      </div>
-
-      {/* 申购历史 */}
-      {showHistory && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-medium">申购历史</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    申购单号
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    新股代码
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    公司名称
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    申购金额
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    配售股数
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    状态
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    申购时间
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                      暂无申购记录
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map((order) => {
-                    const ipo = ipos.find((i) => i.ipo_code === order.ipo_code);
-                    return (
-                      <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 hidden md:table-cell">
-                          {order.order_no}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {order.ipo_code}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {ipo?.company_name || '--'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatCurrency(order.subscription_amount)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {order.shares_allocated || '--'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={getOrderStatusColor(order.order_status)}>
-                            {getOrderStatusText(order.order_status)}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 左侧 - 新股列表 */}
+          <div className="lg:col-span-2">
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">可申购新股</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-2">股票代码</th>
+                      <th className="text-left py-2">股票名称</th>
+                      <th className="text-left py-2">发行价</th>
+                      <th className="text-left py-2">市场价</th>
+                      <th className="text-left py-2">状态</th>
+                      <th className="text-left py-2">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ipoStocks.map((stock) => (
+                      <tr
+                        key={stock.stock_id}
+                        className="border-b border-gray-700 hover:bg-gray-750"
+                      >
+                        <td className="py-3">{stock.stock_code}</td>
+                        <td className="py-3">{stock.stock_name}</td>
+                        <td className="py-3">¥{stock.issue_price.toFixed(2)}</td>
+                        <td className="py-3">¥{stock.market_price.toFixed(2)}</td>
+                        <td className="py-3">
+                          <span style={{ color: getStatusColor(stock.status) }}>
+                            {getStatusText(stock.status)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDateTime(order.created_at)}
+                        <td className="py-3">
+                          <button
+                            onClick={() => handleStockSelect(stock)}
+                            className="bg-indigo-600 hover:bg-indigo-700 py-1 px-3 rounded text-sm transition-colors"
+                            disabled={stock.status !== 'subscription'}
+                          >
+                            申购
+                          </button>
                         </td>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* 右侧 - 申购面板 */}
+          <div>
+            <div className="bg-gray-800 rounded-lg p-6 sticky top-4">
+              <h2 className="text-xl font-semibold mb-4">申购面板</h2>
+
+              {selectedStock ? (
+                <div className="space-y-4">
+                  <div className="bg-gray-750 p-4 rounded-lg">
+                    <h3 className="font-semibold">{selectedStock.stock_name}</h3>
+                    <p className="text-gray-400 text-sm">股票代码: {selectedStock.stock_code}</p>
+                    <p className="text-lg mt-2">发行价: ¥{selectedStock.issue_price.toFixed(2)}</p>
+                    <p className="mt-1">市场价: ¥{selectedStock.market_price.toFixed(2)}</p>
+                    <p className="mt-1">中签率: {selectedStock.win_rate.toFixed(2)}%</p>
+                    <p className="mt-1">
+                      <span style={{ color: getStatusColor(selectedStock.status) }}>
+                        状态: {getStatusText(selectedStock.status)}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block mb-2">申购股数</label>
+                      <input
+                        type="number"
+                        value={shares}
+                        onChange={(e) => setShares(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="请输入申购股数"
+                        disabled={selectedStock.status !== 'subscription'}
+                      />
+                      <p className="text-sm text-gray-400 mt-1">
+                        配售额度: {selectedStock.subscription_quota}股
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleSubscribe}
+                      className="w-full py-3 rounded-lg font-semibold transition-colors bg-green-600 hover:bg-green-700 disabled:bg-gray-600"
+                      disabled={selectedStock.status !== 'subscription'}
+                    >
+                      申购
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>请选择要申购的股票</p>
+                </div>
+              )}
+
+              <div className="mt-6 pt-4 border-t border-gray-700">
+                <h3 className="font-semibold mb-2">账户信息</h3>
+                <p>可用余额: ¥{user.currentBalance.toFixed(2)}</p>
+                <button
+                  onClick={() => navigate('/fund-logs/1')}
+                  className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm"
+                >
+                  查看申购记录 →
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      )}
-
-      <div className="mt-4 text-sm text-gray-500">
-        <p>• 新股申购需在规定时间内进行，过期不可申购</p>
-        <p>• 申购结果将在配售完成后公布</p>
-        <p>• 未中签资金将在规定时间内退回</p>
       </div>
     </div>
   );

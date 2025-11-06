@@ -1,308 +1,201 @@
-import React from 'react';
-import { useCallback, useState, useEffect } from 'react';
-export type ContractRow = {
-  id?: number;
-  contract_code: string;
-  contract_name: string;
-  market: string;
-};
+import { useState } from 'react';
 
-// ... existing code ...
+const AdminContracts = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-import { useContractsApi } from '../api/contracts';
-import { validateForm, required, maxLength, type ValidationRule } from '../utils/validation';
-import { exportToExcel } from '../utils/exportExcel';
-import { useToast } from '../hooks/useToast';
+  // 模拟合约数据
+  const contracts = [
+    {
+      id: 1,
+      name: '沪深300期货',
+      code: 'IF2406',
+      type: '股指期货',
+      status: 'active',
+      price: 3850.2,
+      change: 1.2,
+      expiry: '2024-06-21',
+      createTime: '2024-01-15',
+    },
+    {
+      id: 2,
+      name: '上证50期货',
+      code: 'IH2406',
+      type: '股指期货',
+      status: 'active',
+      price: 2750.5,
+      change: -0.5,
+      expiry: '2024-06-21',
+      createTime: '2024-02-20',
+    },
+    {
+      id: 3,
+      name: '中证1000期货',
+      code: 'IM2406',
+      type: '股指期货',
+      status: 'inactive',
+      price: 6250.8,
+      change: 2.1,
+      expiry: '2024-06-21',
+      createTime: '2024-03-10',
+    },
+    {
+      id: 4,
+      name: '黄金期货',
+      code: 'AU2406',
+      type: '商品期货',
+      status: 'active',
+      price: 425.6,
+      change: 0.8,
+      expiry: '2024-06-21',
+      createTime: '2024-04-05',
+    },
+  ];
 
-export const AdminContracts: React.FC = () => {
-  const [form, setForm] = useState<ContractRow>({
-    contract_code: '',
-    contract_name: '',
-    market: 'SH',
+  const filteredContracts = contracts.filter((c) => {
+    const matchesSearch =
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
-  const { showToast } = useToast();
-  const {
-    data: contracts,
-    loading,
-    error,
-    getAllContracts,
-    createContract,
-    updateContract,
-    deleteContract,
-  } = useContractsApi();
 
-  const load = useCallback(async () => {
-    await getAllContracts();
-    if (error) {
-      showToast(
-        typeof error === 'string' ? error : (error as { message?: string })?.message || '加载失败',
-        'error',
-      );
-    }
-  }, [getAllContracts, error, showToast]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const create = async () => {
-    // 表单校验
-    const validationRules: Record<string, { rules: ValidationRule[]; label?: string }> = {
-      contract_code: {
-        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
-        label: '合约代码',
-      },
-      contract_name: {
-        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
-        label: '合约名称',
-      },
-      market: { rules: [required as ValidationRule], label: '市场' },
-    };
-    const { isValid, errors } = validateForm(form, validationRules);
-    setFormErrors(errors);
-    if (!isValid) {
-      showToast(Object.values(errors)[0], 'error');
-      return;
-    }
-    const newContract = await createContract(form);
-    if (newContract) {
-      showToast('创建成功', 'success');
-      setForm({ contract_code: '', contract_name: '', market: 'SH' });
-      await load();
-    } else if (error) {
-      showToast(
-        typeof error === 'string' ? error : (error as { message?: string })?.message || '创建失败',
-        'error',
-      );
-    }
-  };
-
-  const update = async (id: number, updatedData: Partial<ContractRow>) => {
-    // 局部字段校验
-    const dataToValidate: Record<string, unknown> = {};
-    const rules: Record<string, { rules: ValidationRule[]; label?: string }> = {};
-    if (updatedData.contract_code !== undefined) {
-      dataToValidate.contract_code = updatedData.contract_code ?? '';
-      rules.contract_code = {
-        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
-        label: '合约代码',
-      };
-    }
-    if (updatedData.contract_name !== undefined) {
-      dataToValidate.contract_name = updatedData.contract_name ?? '';
-      rules.contract_name = {
-        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
-        label: '合约名称',
-      };
-    }
-    if (updatedData.market !== undefined) {
-      dataToValidate.market = updatedData.market ?? '';
-      rules.market = { rules: [required as ValidationRule], label: '市场' };
-    }
-    if (Object.keys(rules).length > 0) {
-      const { isValid, errors } = validateForm(dataToValidate, rules);
-      if (!isValid) {
-        showToast(Object.values(errors)[0], 'error');
-        return;
-      }
-    }
-    const updated = await updateContract(id, updatedData);
-    if (updated) {
-      showToast('更新成功', 'success');
-      setEditingId(null);
-      await load();
-    } else if (error) {
-      showToast(
-        typeof error === 'string' ? error : (error as { message?: string })?.message || '更新失败',
-        'error',
-      );
-    }
-  };
-
-  const deleteContractHandler = async (id: number) => {
-    const deleted = await deleteContract(id);
-    if (deleted === null) {
-      showToast('删除成功', 'success');
-      setShowDeleteConfirm(null);
-      await load();
-    } else if (error) {
-      showToast(
-        typeof error === 'string' ? error : (error as { message?: string })?.message || '删除失败',
-        'error',
-      );
-    }
-  };
-
-  const handleExport = async () => {
-    await exportToExcel<ContractRow>(
-      contracts || [],
-      [
-        { key: 'id', header: 'ID' },
-        { key: 'contract_code', header: '合约代码' },
-        { key: 'contract_name', header: '合约名称' },
-        { key: 'market', header: '市场' },
-      ],
-      { filename: '合约列表.xlsx', sheetName: 'Contracts' },
-    );
+  const handleContractAction = (contractId: number, action: string) => {
+    console.log(`Performing ${action} on contract ${contractId}`);
+    alert(`执行操作: ${action} 合约ID: ${contractId}`);
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">合约管理</h1>
-        <button
-          onClick={handleExport}
-          className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-        >
-          导出Excel
-        </button>
-      </div>
-      {/* 统一使用Toast，移除旧消息展示 */}
-      <div className="flex gap-2 mb-4">
-        <input
-          value={form.contract_code}
-          onChange={(e) => setForm((f) => ({ ...f, contract_code: e.target.value }))}
-          placeholder="合约代码"
-          className={`px-3 py-2 border rounded ${formErrors.contract_code ? 'border-red-500' : ''}`}
-        />
-        <input
-          value={form.contract_name}
-          onChange={(e) => setForm((f) => ({ ...f, contract_name: e.target.value }))}
-          placeholder="合约名称"
-          className={`px-3 py-2 border rounded ${formErrors.contract_name ? 'border-red-500' : ''}`}
-        />
-        <select
-          value={form.market}
-          onChange={(e) => setForm((f) => ({ ...f, market: e.target.value }))}
-          className={`px-3 py-2 border rounded ${formErrors.market ? 'border-red-500' : ''}`}
-        >
-          <option value="SH">SH</option>
-          <option value="HK">HK</option>
-        </select>
-        <button
-          disabled={loading}
-          onClick={create}
-          className="px-4 py-2 rounded bg-primary-600 text-white"
-        >
-          创建
-        </button>
-      </div>
-      <div className="bg-white rounded shadow">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="p-3 hidden md:table-cell">ID</th>
-              <th className="p-3">代码</th>
-              <th className="p-3">名称</th>
-              <th className="p-3 hidden md:table-cell">市场</th>
-              <th className="p-3">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td className="p-3" colSpan={5}>
-                  加载中...
-                </td>
-              </tr>
-            ) : (
-              contracts?.map((c) => (
-                <tr key={c.id} className="border-t">
-                  <td className="p-3 hidden md:table-cell">{c.id}</td>
-                  <td className="p-3">
-                    {editingId === c.id ? (
-                      <input
-                        defaultValue={c.contract_code}
-                        onBlur={(e) => update(c.id!, { contract_code: e.target.value })}
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                    ) : (
-                      c.contract_code
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {editingId === c.id ? (
-                      <input
-                        defaultValue={c.contract_name}
-                        onBlur={(e) => update(c.id!, { contract_name: e.target.value })}
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                    ) : (
-                      c.contract_name
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {editingId === c.id ? (
-                      <select
-                        defaultValue={c.market}
-                        onChange={(e) => update(c.id!, { market: e.target.value })}
-                        className="px-2 py-1 border rounded text-sm"
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-6">合约管理</h1>
+
+        {/* 搜索和筛选 */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block mb-2 text-gray-300">搜索合约</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="合约名称或代码"
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block mb-2 text-gray-300">状态</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="all">全部状态</option>
+                <option value="active">活跃</option>
+                <option value="inactive">非活跃</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button className="bg-indigo-600 hover:bg-indigo-700 py-2 px-4 rounded transition-colors">
+                搜索
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 合约列表 */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">合约列表</h2>
+            <button className="bg-green-600 hover:bg-green-700 py-2 px-4 rounded transition-colors">
+              添加合约
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-2">合约代码</th>
+                  <th className="text-left py-2">合约名称</th>
+                  <th className="text-left py-2">类型</th>
+                  <th className="text-left py-2">最新价</th>
+                  <th className="text-left py-2">涨跌</th>
+                  <th className="text-left py-2">到期日</th>
+                  <th className="text-left py-2">状态</th>
+                  <th className="text-left py-2">创建时间</th>
+                  <th className="text-left py-2">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredContracts.map((contract) => (
+                  <tr key={contract.id} className="border-b border-gray-700 hover:bg-gray-750">
+                    <td className="py-3 font-mono">{contract.code}</td>
+                    <td className="py-3">{contract.name}</td>
+                    <td className="py-3">
+                      <span className="px-2 py-1 rounded text-xs bg-blue-600">{contract.type}</span>
+                    </td>
+                    <td className="py-3">{contract.price.toFixed(1)}</td>
+                    <td
+                      className={`py-3 ${contract.change >= 0 ? 'text-green-400' : 'text-red-400'}`}
+                    >
+                      {contract.change >= 0 ? '+' : ''}
+                      {contract.change.toFixed(2)}%
+                    </td>
+                    <td className="py-3">{contract.expiry}</td>
+                    <td className="py-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          contract.status === 'active' ? 'bg-green-600' : 'bg-gray-600'
+                        }`}
                       >
-                        <option value="SH">SH</option>
-                        <option value="HK">HK</option>
-                        <option value="US">US</option>
-                      </select>
-                    ) : (
-                      c.market
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex gap-2">
-                      {editingId === c.id ? (
+                        {contract.status === 'active' ? '活跃' : '非活跃'}
+                      </span>
+                    </td>
+                    <td className="py-3 text-gray-400">{contract.createTime}</td>
+                    <td className="py-3">
+                      <div className="flex space-x-2">
                         <button
-                          onClick={() => setEditingId(null)}
-                          className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                        >
-                          取消
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setEditingId(c.id!)}
-                          className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                          onClick={() => handleContractAction(contract.id, '编辑')}
+                          className="text-indigo-400 hover:text-indigo-300 text-sm"
                         >
                           编辑
                         </button>
-                      )}
-                      {showDeleteConfirm === c.id ? (
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => deleteContractHandler(c.id!)}
-                            className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
-                          >
-                            确认
-                          </button>
-                          <button
-                            onClick={() => setShowDeleteConfirm(null)}
-                            className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                          >
-                            取消
-                          </button>
-                        </div>
-                      ) : (
                         <button
-                          onClick={() => setShowDeleteConfirm(c.id!)}
-                          className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                          onClick={() => handleContractAction(contract.id, '禁用')}
+                          className="text-yellow-400 hover:text-yellow-300 text-sm"
+                        >
+                          {contract.status === 'active' ? '禁用' : '启用'}
+                        </button>
+                        <button
+                          onClick={() => handleContractAction(contract.id, '删除')}
+                          className="text-red-400 hover:text-red-300 text-sm"
                         >
                           删除
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-            {contracts?.length === 0 && !loading && (
-              <tr>
-                <td className="p-3" colSpan={5}>
-                  无数据
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 分页 */}
+          <div className="flex justify-between items-center mt-6">
+            <p className="text-gray-400">
+              显示 1 到 {filteredContracts.length} 条，共 {contracts.length} 条记录
+            </p>
+            <div className="flex space-x-2">
+              <button className="bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded transition-colors">
+                上一页
+              </button>
+              <button className="bg-indigo-600 hover:bg-indigo-700 py-2 px-3 rounded transition-colors">
+                下一页
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

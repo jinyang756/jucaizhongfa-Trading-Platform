@@ -13,7 +13,7 @@ const TestComponents: React.FC = () => {
         <Switch checked={checked} onCheckedChange={setChecked} />
         <Label>开关测试</Label>
       </div>
-      
+
       <div className="space-y-2">
         <Label>滑块测试: {value[0]}</Label>
         <Slider value={value} onValueChange={setValue} max={100} step={1} />

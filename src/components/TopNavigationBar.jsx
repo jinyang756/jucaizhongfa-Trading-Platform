@@ -2,7 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftOutlined, HomeOutlined, BellOutlined } from '@ant-design/icons';
 
-const TopNavigationBar = ({ title, showBackButton = true, showHomeButton = true, showNotificationButton = true }) => {
+const TopNavigationBar = ({
+  title,
+  showBackButton = true,
+  showHomeButton = true,
+  showNotificationButton = true,
+}) => {
   const navigate = useNavigate();
 
   return (
@@ -33,7 +38,7 @@ const TopNavigationBar = ({ title, showBackButton = true, showHomeButton = true,
             <HomeOutlined className="text-xl text-gray-600" />
           </button>
         )}
-        
+
         {showNotificationButton && (
           <button
             onClick={() => navigate('/notifications')}

@@ -16,14 +16,14 @@ const SoundExample: React.FC = () => {
     playDelete,
     playConfirm,
     playWarning,
-    playInfo
+    playInfo,
   } = useAppSound();
 
   return (
     <div className="p-6 bg-gray-900 rounded-lg">
       <h2 className="text-xl font-bold text-white mb-4">音效示例</h2>
       <p className="text-gray-300 mb-6">以下是在交易平台中可能用到的音效示例：</p>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -39,7 +39,7 @@ const SoundExample: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>通知音效</CardTitle>
@@ -54,7 +54,7 @@ const SoundExample: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>交互音效</CardTitle>
@@ -75,7 +75,7 @@ const SoundExample: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>系统音效</CardTitle>
@@ -97,7 +97,7 @@ const SoundExample: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="mt-6 p-4 bg-gray-800 rounded-lg">
         <h3 className="text-lg font-semibold text-white mb-2">使用说明</h3>
         <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">

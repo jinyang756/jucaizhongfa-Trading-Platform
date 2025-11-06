@@ -1,6 +1,19 @@
 import React from 'react';
-import { TradeCard, TradeCardHeader, TradeCardTitle, TradeCardDescription, TradeCardContent, TradeCardFooter } from './ui/trade-card';
-import { AccountOverview, AccountOverviewHeader, AccountOverviewTitle, AccountOverviewDescription, AccountOverviewContent } from './ui/account-overview';
+import {
+  TradeCard,
+  TradeCardHeader,
+  TradeCardTitle,
+  TradeCardDescription,
+  TradeCardContent,
+  TradeCardFooter,
+} from './ui/trade-card';
+import {
+  AccountOverview,
+  AccountOverviewHeader,
+  AccountOverviewTitle,
+  AccountOverviewDescription,
+  AccountOverviewContent,
+} from './ui/account-overview';
 import { Button } from './ui/button';
 
 const CompositeComponentsExample: React.FC = () => {
@@ -8,7 +21,7 @@ const CompositeComponentsExample: React.FC = () => {
     <div className="p-6 bg-gray-900 rounded-lg">
       <h2 className="text-xl font-bold text-white mb-4">复合组件示例</h2>
       <p className="text-gray-300 mb-6">以下是在交易平台中可能用到的复合业务组件示例：</p>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 交易卡片示例 */}
         <TradeCard>
@@ -28,7 +41,9 @@ const CompositeComponentsExample: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">风险等级</span>
-                <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">中等</span>
+                <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">
+                  中等
+                </span>
               </div>
             </div>
           </TradeCardContent>
@@ -37,7 +52,7 @@ const CompositeComponentsExample: React.FC = () => {
             <Button>立即购买</Button>
           </TradeCardFooter>
         </TradeCard>
-        
+
         {/* 账户概览面板示例 */}
         <AccountOverview>
           <AccountOverviewHeader>
@@ -66,7 +81,7 @@ const CompositeComponentsExample: React.FC = () => {
           </AccountOverviewContent>
         </AccountOverview>
       </div>
-      
+
       <div className="mt-6 p-4 bg-gray-800 rounded-lg">
         <h3 className="text-lg font-semibold text-white mb-2">使用说明</h3>
         <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">

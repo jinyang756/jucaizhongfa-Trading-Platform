@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../store/useAuth.js';
+import { useAuth } from '../store/useAuth';
 import { useNavigate } from 'react-router-dom';
 // import type { LoginCredentials } from '../types/auth';
 import { config } from '../utils/env';
 import { useSweetAlert } from '../hooks/useSweetAlert';
 import useAppSound from '../hooks/useSound';
-import { UserIcon, KeyIcon, EnvelopeIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import {
+  UserIcon,
+  KeyIcon,
+  EnvelopeIcon,
+  ArrowRightOnRectangleIcon,
+} from '@heroicons/react/24/outline';
 import { Input } from '../components/ui/input';
 import backgroundImage from '../assets/jucai.jpg';
 import LoginFooter from '../components/LoginFooter';
@@ -21,7 +26,8 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, sendVerificationCode } = useAuth();
   const { error, success, info } = useSweetAlert();
-  const { playLogin, playAlert, playNotification, playButtonClick, playPageTransition } = useAppSound();
+  const { playLogin, playAlert, playNotification, playButtonClick, playPageTransition } =
+    useAppSound();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState('user');
@@ -30,7 +36,6 @@ const Login = () => {
     username: '',
     password: '',
     verificationCode: '',
-    email: '',
   });
 
   const handleInputChange = (e) => {
@@ -41,37 +46,9 @@ const Login = () => {
     }));
   };
 
-  const handleSendVerificationCode = async () => {
-    if (!credentials.email) {
-      error('请输入邮箱地址', '邮箱不能为空');
-      return;
-    }
-
-    // 简单的邮箱格式验证
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(credentials.email)) {
-      error('请输入有效的邮箱地址', '邮箱格式不正确');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const result = await sendVerificationCode(credentials.email);
-      if (result.success) {
-        success('验证码已发送', '验证码已发送至您的邮箱，请查收');
-      } else {
-        error('发送验证码失败', result.message || '请稍后重试');
-      }
-    } catch (error) {
-      console.error('Send verification code error:', error);
-      error('发送验证码失败', `发送验证码时出现错误: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Login form submitted with credentials:', credentials);
 
     if (!credentials.username.trim() || !credentials.password.trim()) {
       error('请输入用户名和密码', '用户名和密码不能为空');
@@ -93,7 +70,10 @@ const Login = () => {
         verificationCode: credentials.verificationCode,
       };
 
+      console.log('Calling login function with:', loginCredentials, userType);
       const result = await login(loginCredentials, userType);
+      console.log('Login result:', result);
+      
       if (result.success) {
         playLogin();
         success('登录成功', `欢迎${userType === 'admin' ? '基金管理人' : '会员'}登录`);
@@ -121,23 +101,6 @@ const Login = () => {
     setCredentials((prev) => ({ ...prev, password: '' }));
   };
 
-  const handleBindEmail = async () => {
-    if (!credentials.email) {
-      error('请输入邮箱地址', '邮箱不能为空');
-      return;
-    }
-
-    // 简单的邮箱格式验证
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(credentials.email)) {
-      error('请输入有效的邮箱地址', '邮箱格式不正确');
-      return;
-    }
-
-    // 在实际应用中，这里应该调用API绑定邮箱
-    success('邮箱绑定成功', '邮箱绑定功能将在生产环境中实现');
-  };
-
   useEffect(() => {
     console.log('API URL:', config.apiUrl);
     console.log('App Name:', config.appName);
@@ -147,156 +110,58 @@ const Login = () => {
 
   return (
     <>
-      <div className="relative min-h-screen flex items-center justify-center flex-col">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url(${backgroundImage})`,
-            opacity: 30,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-
-        {/* 粒子渐变层 */}
-        <div className="absolute inset-0 animate-pulse-slow bg-[radial-gradient(circle_at_20%_30%,rgba(99,102,241,0.15),transparent_60%),radial-gradient(circle_at_80%_70%,rgba(236,72,153,0.15),transparent_70%)]"></div>
-
+      <div className="relative min-h-screen flex items-center justify-center flex-col bg-gray-100">
         {/* 登录卡片 */}
-        <div className="relative z-10 w-11/12 max-w-sm bg-[rgba(15,23,42,0.75)] rounded-2xl p-8 border border-indigo-500/30 backdrop-blur-xl shadow-2xl text-slate-200 animate-fade-in hover:-translate-y-1 hover:shadow-indigo-500/30 hover:shadow-lg transition-all">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
-              聚财众发量化平台
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">专业 · 安全 · 智能的一站式金融系统</p>
-          </div>
-
-          {/* 用户类型切换 - 基金管理人图标按钮 */}
-          <div className="flex justify-end mb-6">
-            {userType === 'user' ? (
-              <button
-                type="button"
-                onClick={() => {
-                  playButtonClick();
-                  handleUserTypeChange('admin');
-                  setRequiresEmailVerification(false);
-                }}
-                disabled={isSubmitting}
-                className="p-2 rounded-full bg-indigo-900/50 hover:bg-indigo-800/70 transition-all border border-indigo-500/30 shadow-lg"
-                title="切换到基金管理人登录"
-              >
-                <ArrowRightOnRectangleIcon className="h-6 w-6 text-indigo-400" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  playButtonClick();
-                  handleUserTypeChange('user');
-                  setRequiresEmailVerification(false);
-                }}
-                disabled={isSubmitting}
-                className="p-2 rounded-full bg-indigo-900/50 hover:bg-indigo-800/70 transition-all border border-indigo-500/30 shadow-lg"
-                title="切换到会员登录"
-              >
-                <UserIcon className="h-6 w-6 text-indigo-400" />
-              </button>
-            )}
+        <div className="form-container bg-white shadow-lg rounded-lg box-border p-6 w-11/12 max-w-sm">
+          <div className="title text-center font-sans mb-6 mt-2 text-2xl font-bold">
+            聚财众发量化平台
           </div>
 
           {/* 登录标题 */}
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-lg font-bold text-gray-800">
               {userType === 'admin' ? '基金管理人登录' : '会员登录'}
             </h2>
-            <p className="text-sm text-slate-400 mt-1">
-              {userType === 'admin' ? '基金管理人专属入口' : '会员账户登录'}
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="relative">
-              <div className="absolute left-3 top-3 text-slate-400">
-                <UserIcon className="h-5 w-5" />
-              </div>
-              <Input
-                type="text"
-                name="username"
-                placeholder="请输入用户名"
-                required
-                value={credentials.username}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-2.5 rounded-md bg-[rgba(15,23,42,0.6)] border border-indigo-500/30 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 transition-all"
-              />
-            </div>
-            <div className="relative">
-              <div className="absolute left-3 top-3 text-slate-400">
-                <KeyIcon className="h-5 w-5" />
-              </div>
-              <Input
-                type="password"
-                name="password"
-                placeholder="请输入密码"
-                required
-                value={credentials.password}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-2.5 rounded-md bg-[rgba(15,23,42,0.6)] border border-indigo-500/30 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 transition-all"
-              />
-            </div>
-
-            {/* 邮箱绑定输入框 */}
-            {userType === 'admin' && (
-              <div className="relative">
-                <div className="absolute left-3 top-3 text-slate-400">
-                  <EnvelopeIcon className="h-5 w-5" />
-                </div>
-                <Input
-                  type="email"
-                  name="email"
-                  placeholder="绑定邮箱（可选）"
-                  value={credentials.email}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-md bg-[rgba(15,23,42,0.6)] border border-indigo-500/30 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={handleBindEmail}
-                  disabled={isSubmitting}
-                  className="absolute right-2 top-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-2 rounded disabled:opacity-50"
-                >
-                  绑定
-                </button>
-              </div>
-            )}
+          <form onSubmit={handleSubmit} className="form w-full flex flex-col gap-4 mb-4">
+            <Input
+              type="text"
+              name="username"
+              placeholder="请输入用户名"
+              required
+              value={credentials.username}
+              onChange={handleInputChange}
+              className="input rounded-2xl border border-gray-300 outline-none box-sizing p-3 w-full"
+            />
+            <Input
+              type="password"
+              name="password"
+              placeholder="请输入密码"
+              required
+              value={credentials.password}
+              onChange={handleInputChange}
+              className="input rounded-2xl border border-gray-300 outline-none box-sizing p-3 w-full"
+            />
 
             {/* 邮箱验证码输入框 */}
             {requiresEmailVerification && (
               <div className="relative">
-                <div className="absolute left-3 top-3 text-slate-400">
-                  <KeyIcon className="h-5 w-5" />
-                </div>
                 <Input
                   type="text"
                   name="verificationCode"
                   placeholder="请输入邮箱验证码"
                   value={credentials.verificationCode}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-24 py-2.5 rounded-md bg-[rgba(15,23,42,0.6)] border border-indigo-500/30 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 transition-all"
+                  className="input rounded-2xl border border-gray-300 outline-none box-sizing p-3 w-full"
                 />
-                <button
-                  type="button"
-                  onClick={handleSendVerificationCode}
-                  disabled={isSubmitting}
-                  className="absolute right-2 top-2 text-xs bg-amber-600 hover:bg-amber-700 text-white py-1 px-2 rounded disabled:opacity-50"
-                >
-                  获取验证码
-                </button>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 mt-1 rounded-md text-white font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-indigo-900/40 transform transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="form-btn rounded-2xl border-0 outline-none bg-teal-500 text-white cursor-pointer shadow-md p-2.5 font-sans"
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
@@ -312,35 +177,65 @@ const Login = () => {
           </form>
 
           {/* 合规与信任信息 */}
-          <div className="border-t border-indigo-500/20 mt-6 pt-4 text-xs text-slate-400 space-y-2">
-            <p className="flex items-center justify-center text-amber-300 font-semibold">
-              <i className="far fa-shield-alt text-amber-400 mr-2"></i> 资金由
-              <span className="mx-1 text-amber-300 font-semibold">中国银行</span>存管，安全可靠
+          <div className="border-t border-gray-300 mt-6 pt-4 text-xs text-gray-500 space-y-2">
+            <p className="flex items-center justify-center text-teal-600 font-semibold">
+              <i className="far fa-shield-alt text-teal-500 mr-2"></i> 资金由
+              <span className="mx-1 text-teal-600 font-semibold">中国银行</span>存管，安全可靠
             </p>
             <p className="flex items-center justify-center">
-              <i className="far fa-certificate text-amber-400 mr-2"></i>{' '}
-              证券投资咨询资质编号：ZX20240018
+              <i className="far fa-lock text-teal-500 mr-2"></i> 多重加密技术保障数据安全
             </p>
             <p className="flex items-center justify-center">
-              <i className="far fa-lock text-amber-400 mr-2"></i> 多重加密技术保障数据安全
-            </p>
-            <p className="flex items-center justify-center">
-              <i className="far fa-check-circle text-amber-400 mr-2"></i> 严格遵守金融监管政策
+              <i className="far fa-check-circle text-teal-500 mr-2"></i> 严格遵守金融监管政策
             </p>
           </div>
 
           {/* ✅ Vite 开发环境测试账号提示 */}
           {config.isDev && (
-            <div className="mt-4 p-3 bg-slate-800 border border-indigo-500/30 rounded-lg">
-              <p className="text-xs text-slate-300 font-medium mb-1">🔧 开发环境测试账号：</p>
-              <p className="text-xs text-slate-400 font-mono">
-                {userType === 'admin' ? 'admin001-003 / 123456' : 'testuser01 / 8a3k7z9x'}
+            <div className="mt-4 p-3 bg-gray-100 border border-gray-300 rounded-lg">
+              <p className="text-xs text-gray-600 font-medium mb-1">🔧 开发环境测试账号：</p>
+              <p className="text-xs text-gray-500 font-mono">
+                {userType === 'admin' ? 'admin001-003 / 12345' : 'testuser01 / 8a3k7z9x'}
               </p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 {userType === 'admin' ? '基金管理人账号' : '会员账号'}
               </p>
             </div>
           )}
+          {/* 用户类型切换 */}
+          <div className="text-center mt-4">
+            <p className="text-xs text-gray-500">
+              {userType === 'admin' ? (
+                <span>
+                  基金管理人登录？
+                  <span
+                    className="sign-up-link ml-1 text-xs underline text-teal-600 cursor-pointer font-bold font-sans"
+                    onClick={() => {
+                      playButtonClick();
+                      handleUserTypeChange('user');
+                      setRequiresEmailVerification(false);
+                    }}
+                  >
+                    切换到会员登录
+                  </span>
+                </span>
+              ) : (
+                <span>
+                  会员登录？
+                  <span
+                    className="sign-up-link ml-1 text-xs underline text-teal-600 cursor-pointer font-bold font-sans"
+                    onClick={() => {
+                      playButtonClick();
+                      handleUserTypeChange('admin');
+                      setRequiresEmailVerification(false);
+                    }}
+                  >
+                    切换到基金管理人登录
+                  </span>
+                </span>
+              )}
+            </p>
+          </div>
         </div>
       </div>
       <LoginFooter />

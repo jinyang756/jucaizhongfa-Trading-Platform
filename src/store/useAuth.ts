@@ -97,13 +97,13 @@ export const useAuth = create<AuthState>()(
       // 登录逻辑
       login: (credentials, userType) => {
         console.log('Attempting login with credentials:', credentials, 'and userType:', userType);
-        const { username, password, verificationCode } = credentials;
+        const { username, password } = credentials;
 
         // 基金管理人账号
         const adminUsers = [
-          { username: 'admin001', password: '123456', id: 1 },
-          { username: 'admin002', password: '123456', id: 2 },
-          { username: 'admin003', password: '123456', id: 3 },
+          { username: 'admin001', password: '12345', id: 1 },
+          { username: 'admin002', password: '12345', id: 2 },
+          { username: 'admin003', password: '12345', id: 3 },
         ];
 
         // 检查是否为基金管理人
@@ -113,25 +113,7 @@ export const useAuth = create<AuthState>()(
           );
 
           if (adminUser) {
-            // 检查是否需要邮箱验证
-            const userWithEmail = get().user;
-            if (userWithEmail?.email && !userWithEmail.isEmailVerified) {
-              // 如果用户已绑定邮箱但未验证，需要验证码
-              if (!verificationCode) {
-                return {
-                  success: false,
-                  message: '此账户已绑定邮箱，请输入验证码进行验证',
-                  requiresEmailVerification: true,
-                };
-              }
-
-              // 验证验证码
-              const verifyResult = get().verifyEmail(verificationCode);
-              if (!verifyResult.success) {
-                return { success: false, message: verifyResult.message };
-              }
-            }
-
+            // 对于新登录的用户，暂时不需要邮箱验证
             // 登录成功
             set({
               user: {
@@ -139,8 +121,6 @@ export const useAuth = create<AuthState>()(
                 username: adminUser.username,
                 userType: 'admin',
                 currentBalance: 100000.0,
-                email: userWithEmail?.email, // 保留已绑定的邮箱
-                isEmailVerified: userWithEmail?.isEmailVerified, // 保留验证状态
                 permissions: {
                   fund: true,
                   option: true,
@@ -160,33 +140,48 @@ export const useAuth = create<AuthState>()(
             });
             return { success: true };
           }
-        } else if (userType === 'user' && username === 'testuser01' && password === '8a3k7z9x') {
-          set({
-            user: {
-              id: 2,
-              username: 'testuser01',
-              userType: 'user',
-              currentBalance: 50000.0,
-              permissions: {
-                fund: true,
-                option: false,
-                contract: true,
-                shContract: false,
-                hkContract: true,
-                block: true, // 大宗交易权限
-                ipo: true, // 新股申购权限
+        } else if (userType === 'user') {
+          // 会员账号 - 支持多个测试账号
+          const userAccounts = [
+            { username: 'testuser01', password: '8a3k7z9x', id: 2 },
+            // 可以添加更多测试账号
+          ];
+
+          const validUser = userAccounts.find(
+            (account) => account.username === username && account.password === password,
+          );
+
+          if (validUser) {
+            set({
+              user: {
+                id: validUser.id,
+                username: validUser.username,
+                userType: 'user',
+                currentBalance: 50000.0,
+                permissions: {
+                  fund: true,
+                  option: false,
+                  contract: true,
+                  shContract: false,
+                  hkContract: true,
+                  block: true, // 大宗交易权限
+                  ipo: true, // 新股申购权限
+                },
+                limits: {
+                  singleTradeMax: 10000,
+                  dailyTradeMax: 50000,
+                  minTradeAmount: 50,
+                },
               },
-              limits: {
-                singleTradeMax: 10000,
-                dailyTradeMax: 50000,
-                minTradeAmount: 50,
-              },
-            },
-            isLoggedIn: true,
-          });
-          return { success: true };
+              isLoggedIn: true,
+            });
+            return { success: true };
+          } else {
+            console.log('会员登录失败 - 用户名或密码错误:', { username, password });
+            return { success: false, message: '用户名或密码错误' };
+          }
         }
-        return { success: false, message: '用户名或密码错误' };
+        return { success: false, message: '不支持的用户类型' };
       },
 
       logout: () => set({ user: null, isLoggedIn: false }),

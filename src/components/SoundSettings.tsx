@@ -6,48 +6,48 @@ import { Switch } from './ui';
 
 const SoundSettings: React.FC = () => {
   const { playTradeSuccess, playTradeFailed, playNotification, playAlert } = useAppSound();
-  
+
   // 音效设置状态
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState(80);
   const [theme, setTheme] = useState('default');
-  
+
   // 从localStorage加载设置
   useEffect(() => {
     const savedSoundEnabled = localStorage.getItem('soundEnabled');
     const savedVolume = localStorage.getItem('soundVolume');
     const savedTheme = localStorage.getItem('soundTheme');
-    
+
     if (savedSoundEnabled !== null) {
       setSoundEnabled(savedSoundEnabled === 'true');
     }
-    
+
     if (savedVolume !== null) {
       setVolume(parseInt(savedVolume, 10));
     }
-    
+
     if (savedTheme !== null) {
       setTheme(savedTheme);
     }
   }, []);
-  
+
   // 保存设置到localStorage
   useEffect(() => {
     localStorage.setItem('soundEnabled', soundEnabled.toString());
   }, [soundEnabled]);
-  
+
   useEffect(() => {
     localStorage.setItem('soundVolume', volume.toString());
   }, [volume]);
-  
+
   useEffect(() => {
     localStorage.setItem('soundTheme', theme);
   }, [theme]);
-  
+
   // 播放测试音效
   const playTestSound = (soundType: string) => {
     if (!soundEnabled) return;
-    
+
     switch (soundType) {
       case 'success':
         playTradeSuccess();
@@ -65,31 +65,26 @@ const SoundSettings: React.FC = () => {
         break;
     }
   };
-  
+
   return (
     <Card className="bg-gray-900 border-gray-700">
       <CardHeader>
         <CardTitle className="text-white">音效设置</CardTitle>
-        <CardDescription className="text-gray-400">
-          自定义您的音效体验
-        </CardDescription>
+        <CardDescription className="text-gray-400">自定义您的音效体验</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* 音效开关 */}
         <div className="flex items-center justify-between">
           <span className="text-gray-200">音效开关</span>
-          <Switch
-            checked={soundEnabled}
-            onCheckedChange={setSoundEnabled}
-          />
+          <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
         </div>
-        
+
         {/* 音量控制 */}
         <div className="space-y-2">
           <span className="text-gray-200">音量: {volume}%</span>
           {/* 这里应该使用Slider组件，但为了简化示例暂时省略 */}
         </div>
-        
+
         {/* 音效主题 */}
         <div className="space-y-2">
           <span className="text-gray-200">音效主题</span>
@@ -124,7 +119,7 @@ const SoundSettings: React.FC = () => {
             </Button>
           </div>
         </div>
-        
+
         {/* 音效测试 */}
         <div className="space-y-2">
           <span className="text-gray-200">测试音效</span>

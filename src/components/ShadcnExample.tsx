@@ -8,7 +8,7 @@ const ShadcnExample: React.FC = () => {
     <div className="p-6 bg-gray-900 rounded-lg">
       <h2 className="text-xl font-bold text-white mb-4">Shadcn/ui 使用示例</h2>
       <p className="text-gray-300 mb-6">以下是一些在交易平台中可能用到的Shadcn/ui组件示例：</p>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 按钮示例 */}
         <Card>
@@ -32,7 +32,7 @@ const ShadcnExample: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* 输入框示例 */}
         <Card>
           <CardHeader>
@@ -55,7 +55,7 @@ const ShadcnExample: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* 卡片示例 */}
       <Card className="mt-6">
         <CardHeader>
@@ -72,7 +72,7 @@ const ShadcnExample: React.FC = () => {
           <Button>操作按钮</Button>
         </CardFooter>
       </Card>
-      
+
       <div className="mt-6 p-4 bg-gray-800 rounded-lg">
         <h3 className="text-lg font-semibold text-white mb-2">使用说明</h3>
         <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
@@ -80,8 +80,11 @@ const ShadcnExample: React.FC = () => {
           <li>所有组件都具有无障碍访问支持</li>
           <li>可以通过 variant 和 size 属性轻松定制组件样式</li>
           <li>组件完全可组合，可以嵌套使用</li>
-          <li>在项目中可以通过以下方式导入：import {'{'} ComponentName {'}'} from './ui/component-name'</li>
+          <li>在项目中可以通过以下方式导入：</li>
         </ul>
+        <pre className="text-gray-300 text-sm bg-gray-900 p-2 rounded mt-2">
+          import {'{'} Button {'}'} from './ui/button'
+        </pre>
       </div>
     </div>
   );

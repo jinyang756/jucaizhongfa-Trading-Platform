@@ -24,7 +24,7 @@ const initialState: NotificationContextType = {
   notifications: [],
   addNotification: () => {},
   removeNotification: () => {},
-  clearNotifications: () => {}
+  clearNotifications: () => {},
 };
 
 // 创建上下文
@@ -41,7 +41,7 @@ const notificationReducer = (state: Notification[], action: Action): Notificatio
     case 'ADD_NOTIFICATION':
       return [action.payload, ...state];
     case 'REMOVE_NOTIFICATION':
-      return state.filter(notification => notification.id !== action.payload);
+      return state.filter((notification) => notification.id !== action.payload);
     case 'CLEAR_NOTIFICATIONS':
       return [];
     default:
@@ -58,11 +58,11 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const newNotification: Notification = {
       id: Math.random().toString(36).substr(2, 9),
       timestamp: Date.now(),
-      ...notification
+      ...notification,
     };
-    
+
     dispatch({ type: 'ADD_NOTIFICATION', payload: newNotification });
-    
+
     // 自动移除通知
     if (notification.duration !== 0) {
       const timeout = notification.duration || 5000;
@@ -89,8 +89,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       try {
         const parsed = JSON.parse(savedNotifications);
         // 只保留最近24小时的通知
-        const recent = parsed.filter((n: Notification) => 
-          Date.now() - n.timestamp < 24 * 60 * 60 * 1000
+        const recent = parsed.filter(
+          (n: Notification) => Date.now() - n.timestamp < 24 * 60 * 60 * 1000,
         );
         if (recent.length > 0) {
           recent.forEach((n: Notification) => {
@@ -114,7 +114,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         notifications,
         addNotification,
         removeNotification,
-        clearNotifications
+        clearNotifications,
       }}
     >
       {children}

@@ -8,7 +8,7 @@ export class AuthService {
     try {
       // 本地开发环境无Supabase时的临时登录（仅用于演示）
       if (!supabaseEnabled) {
-        if (credentials.username === 'admin001' && credentials.password === 'jczf@2025') {
+        if (credentials.username === 'admin001' && credentials.password === '12345') {
           const authUser: AuthUser = {
             id: 1,
             username: 'admin001',

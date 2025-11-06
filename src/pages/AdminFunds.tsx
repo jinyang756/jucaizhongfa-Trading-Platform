@@ -1,352 +1,199 @@
-import { useState, useEffect } from 'react';
-
-export interface FundRow {
-  id?: number;
-  fund_name: string;
-  fund_code: string;
-  fund_type: string;
-  initial_value: number;
-  current_value: number;
-  created_at?: string;
-}
-
-import { validateForm, required, maxLength, type ValidationRule } from '../utils/validation';
-import { exportToExcel } from '../utils/exportExcel';
-import { useToast } from '../hooks/useToast';
-import { useFundsApi } from '../api/funds';
+import { useState } from 'react';
 
 const AdminFunds = () => {
-  const {
-    data: funds,
-    loading,
-    error,
-    getAllFunds,
-    createFund,
-    updateFund,
-    deleteFund: deleteFundApi,
-  } = useFundsApi();
-  const [form, setForm] = useState<FundRow>({
-    fund_code: '',
-    fund_name: '',
-    fund_type: '股票型',
-    initial_value: 0,
-    current_value: 0,
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // 模拟基金数据
+  const funds = [
+    {
+      id: 1,
+      name: '沪深300指数基金',
+      code: '160130',
+      type: '指数型',
+      status: 'active',
+      nav: 4.25,
+      change: 1.2,
+      manager: '张三',
+      createTime: '2024-01-15',
+    },
+    {
+      id: 2,
+      name: '中证500指数基金',
+      code: '160131',
+      type: '指数型',
+      status: 'active',
+      nav: 3.85,
+      change: -0.5,
+      manager: '李四',
+      createTime: '2024-02-20',
+    },
+    {
+      id: 3,
+      name: '创业板指数基金',
+      code: '160132',
+      type: '指数型',
+      status: 'inactive',
+      nav: 2.95,
+      change: 2.1,
+      manager: '王五',
+      createTime: '2024-03-10',
+    },
+    {
+      id: 4,
+      name: '黄金ETF',
+      code: '160133',
+      type: '商品型',
+      status: 'active',
+      nav: 3.65,
+      change: 0.8,
+      manager: '赵六',
+      createTime: '2024-04-05',
+    },
+  ];
+
+  const filteredFunds = funds.filter((f) => {
+    const matchesSearch =
+      f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || f.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FundRow, string>>>({});
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
-  const { showToast } = useToast();
 
-  useEffect(() => {
-    getAllFunds();
-  }, [getAllFunds]);
-
-  const create = async () => {
-    const validationRules: Record<string, { rules: ValidationRule[]; label?: string }> = {
-      fund_code: {
-        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
-        label: '基金代码',
-      },
-      fund_name: {
-        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
-        label: '基金名称',
-      },
-      fund_type: { rules: [required as ValidationRule], label: '基金类型' },
-      initial_value: { rules: [required as ValidationRule], label: '初始价值' },
-    };
-
-    const { isValid, errors } = validateForm(
-      form as unknown as Record<string, unknown>,
-      validationRules,
-    );
-    setFormErrors(errors);
-
-    if (!isValid) {
-      showToast(Object.values(errors)[0], 'error');
-      return;
-    }
-
-    try {
-      await createFund(form);
-      showToast('创建成功', 'success');
-      setForm({
-        fund_code: '',
-        fund_name: '',
-        fund_type: '股票型',
-        initial_value: 0,
-        current_value: 0,
-      });
-      getAllFunds(); // Refresh the list
-    } catch (e: unknown) {
-      console.error(e);
-      showToast('创建失败', 'error');
-    }
-  };
-
-  const update = async (id: number, updatedData: Partial<FundRow>) => {
-    const dataToValidate = {
-      fund_code: updatedData.fund_code || '',
-      fund_name: updatedData.fund_name || '',
-      fund_type: updatedData.fund_type || '',
-      initial_value: updatedData.initial_value || 0,
-    };
-
-    const validationRules: Partial<
-      Record<keyof FundRow, { rules: ValidationRule[]; label?: string }>
-    > = {};
-    if (updatedData.fund_code) {
-      validationRules.fund_code = {
-        rules: [required as ValidationRule, maxLength(10) as ValidationRule],
-        label: '基金代码',
-      };
-    }
-    if (updatedData.fund_name) {
-      validationRules.fund_name = {
-        rules: [required as ValidationRule, maxLength(50) as ValidationRule],
-        label: '基金名称',
-      };
-    }
-    if (updatedData.fund_type) {
-      validationRules.fund_type = { rules: [required as ValidationRule], label: '基金类型' };
-    }
-    if (updatedData.initial_value) {
-      validationRules.initial_value = { rules: [required as ValidationRule], label: '初始价值' };
-    }
-
-    const { isValid, errors } = validateForm(dataToValidate, validationRules);
-    if (!isValid) {
-      showToast(Object.values(errors)[0], 'error');
-      return;
-    }
-
-    try {
-      await updateFund(id, updatedData);
-      showToast('更新成功', 'success');
-      setEditingId(null);
-      getAllFunds(); // Refresh the list
-    } catch (e: unknown) {
-      console.error(e);
-      showToast('更新失败', 'error');
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteFundApi(id);
-      showToast('删除成功', 'success');
-      getAllFunds(); // Refresh the list
-    } catch (e: unknown) {
-      console.error(e);
-      showToast('删除失败', 'error');
-    }
-  };
-
-  const handleExport = async () => {
-    await exportToExcel(
-      funds || [],
-      [
-        { key: 'id', header: 'ID' },
-        { key: 'fund_code', header: '基金代码' },
-        { key: 'fund_name', header: '基金名称' },
-        { key: 'fund_type', header: '基金类型' },
-        { key: 'initial_value', header: '初始价值' },
-        { key: 'current_value', header: '当前价值' },
-        { key: 'created_at', header: '创建时间' },
-      ],
-      { filename: '基金列表.xlsx', sheetName: 'Funds' },
-    );
+  const handleFundAction = (fundId: number, action: string) => {
+    console.log(`Performing ${action} on fund ${fundId}`);
+    alert(`执行操作: ${action} 基金ID: ${fundId}`);
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">基金管理</h1>
-        <button
-          onClick={handleExport}
-          className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-        >
-          导出Excel
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-6">基金管理</h1>
 
-      <div className="flex gap-2 mb-4">
-        <input
-          value={form.fund_code}
-          onChange={(e) => setForm((f: FundRow) => ({ ...f, fund_code: e.target.value }))}
-          placeholder="基金代码"
-          className={`px-3 py-2 border rounded ${formErrors.fund_code ? 'border-red-500' : ''}`}
-        />
-        <input
-          value={form.fund_name}
-          onChange={(e) => setForm((f: FundRow) => ({ ...f, fund_name: e.target.value }))}
-          placeholder="基金名称"
-          className={`px-3 py-2 border rounded ${formErrors.fund_name ? 'border-red-500' : ''}`}
-        />
-        <input
-          value={form.fund_type}
-          onChange={(e) => setForm((f: FundRow) => ({ ...f, fund_type: e.target.value }))}
-          placeholder="基金类型"
-          className={`px-3 py-2 border rounded ${formErrors.fund_type ? 'border-red-500' : ''}`}
-        />
-        <input
-          type="number"
-          value={form.initial_value}
-          onChange={(e) =>
-            setForm((f: FundRow) => ({ ...f, initial_value: parseFloat(e.target.value) }))
-          }
-          placeholder="初始价值"
-          className={`px-3 py-2 border rounded ${formErrors.initial_value ? 'border-red-500' : ''}`}
-        />
-        <button
-          disabled={loading}
-          onClick={create}
-          className="px-4 py-2 rounded bg-primary-600 text-white"
-        >
-          创建
-        </button>
-      </div>
-      {error && (
-        <div className="text-red-500 mb-4">
-          加载基金失败:{' '}
-          {typeof error === 'string' ? error : (error as { message?: string }).message}
+        {/* 搜索和筛选 */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block mb-2 text-gray-300">搜索基金</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="基金名称或代码"
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block mb-2 text-gray-300">状态</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="all">全部状态</option>
+                <option value="active">活跃</option>
+                <option value="inactive">非活跃</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button className="bg-indigo-600 hover:bg-indigo-700 py-2 px-4 rounded transition-colors">
+                搜索
+              </button>
+            </div>
+          </div>
         </div>
-      )}
-      <div className="bg-white rounded shadow">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="p-3 hidden md:table-cell">ID</th>
-              <th className="p-3">代码</th>
-              <th className="p-3">名称</th>
-              <th className="p-3">类型</th>
-              <th className="p-3">初始价值</th>
-              <th className="p-3">当前价值</th>
-              <th className="p-3">创建时间</th>
-              <th className="p-3">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td className="p-3 text-center" colSpan={8}>
-                  加载中...
-                </td>
-              </tr>
-            ) : funds && funds.length === 0 ? (
-              <tr>
-                <td className="p-3 text-center" colSpan={8}>
-                  无数据
-                </td>
-              </tr>
-            ) : (
-              (funds || []).map((f) => (
-                <tr key={f.id} className="border-t">
-                  <td className="p-3 hidden md:table-cell">{f.id}</td>
-                  <td className="p-3">
-                    {editingId === f.id ? (
-                      <input
-                        defaultValue={f.fund_code}
-                        onBlur={(e) => update(f.id!, { fund_code: e.target.value })}
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                    ) : (
-                      f.fund_code
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {editingId === f.id ? (
-                      <input
-                        defaultValue={f.fund_name}
-                        onBlur={(e) => update(f.id!, { fund_name: e.target.value })}
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                    ) : (
-                      f.fund_name
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {editingId === f.id ? (
-                      <input
-                        defaultValue={f.fund_type}
-                        onBlur={(e) => update(f.id!, { fund_type: e.target.value })}
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                    ) : (
-                      f.fund_type
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {editingId === f.id ? (
-                      <input
-                        type="number"
-                        defaultValue={f.initial_value}
-                        onBlur={(e) => update(f.id!, { initial_value: parseFloat(e.target.value) })}
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                    ) : (
-                      f.initial_value
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {editingId === f.id ? (
-                      <input
-                        type="number"
-                        defaultValue={f.current_value}
-                        onBlur={(e) => update(f.id!, { current_value: parseFloat(e.target.value) })}
-                        className="px-2 py-1 border rounded text-sm"
-                      />
-                    ) : (
-                      f.current_value
-                    )}
-                  </td>
-                  <td className="p-3">{f.created_at}</td>
-                  <td className="p-3">
-                    <div className="flex gap-2">
-                      {editingId === f.id ? (
+
+        {/* 基金列表 */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">基金列表</h2>
+            <button className="bg-green-600 hover:bg-green-700 py-2 px-4 rounded transition-colors">
+              添加基金
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-2">基金代码</th>
+                  <th className="text-left py-2">基金名称</th>
+                  <th className="text-left py-2">类型</th>
+                  <th className="text-left py-2">净值</th>
+                  <th className="text-left py-2">涨跌</th>
+                  <th className="text-left py-2">基金经理</th>
+                  <th className="text-left py-2">状态</th>
+                  <th className="text-left py-2">创建时间</th>
+                  <th className="text-left py-2">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFunds.map((fund) => (
+                  <tr key={fund.id} className="border-b border-gray-700 hover:bg-gray-750">
+                    <td className="py-3 font-mono">{fund.code}</td>
+                    <td className="py-3">{fund.name}</td>
+                    <td className="py-3">
+                      <span className="px-2 py-1 rounded text-xs bg-blue-600">{fund.type}</span>
+                    </td>
+                    <td className="py-3">¥{fund.nav.toFixed(4)}</td>
+                    <td className={`py-3 ${fund.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {fund.change >= 0 ? '+' : ''}
+                      {fund.change.toFixed(2)}%
+                    </td>
+                    <td className="py-3">{fund.manager}</td>
+                    <td className="py-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          fund.status === 'active' ? 'bg-green-600' : 'bg-gray-600'
+                        }`}
+                      >
+                        {fund.status === 'active' ? '活跃' : '非活跃'}
+                      </span>
+                    </td>
+                    <td className="py-3 text-gray-400">{fund.createTime}</td>
+                    <td className="py-3">
+                      <div className="flex space-x-2">
                         <button
-                          onClick={() => setEditingId(null)}
-                          className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                        >
-                          取消
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setEditingId(f.id!)}
-                          className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                          onClick={() => handleFundAction(fund.id, '编辑')}
+                          className="text-indigo-400 hover:text-indigo-300 text-sm"
                         >
                           编辑
                         </button>
-                      )}
-                      {showDeleteConfirm === f.id ? (
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleDelete(f.id!)}
-                            className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
-                          >
-                            确认
-                          </button>
-                          <button
-                            onClick={() => setShowDeleteConfirm(null)}
-                            className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                          >
-                            取消
-                          </button>
-                        </div>
-                      ) : (
                         <button
-                          onClick={() => setShowDeleteConfirm(f.id!)}
-                          className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                          onClick={() => handleFundAction(fund.id, '禁用')}
+                          className="text-yellow-400 hover:text-yellow-300 text-sm"
+                        >
+                          {fund.status === 'active' ? '禁用' : '启用'}
+                        </button>
+                        <button
+                          onClick={() => handleFundAction(fund.id, '删除')}
+                          className="text-red-400 hover:text-red-300 text-sm"
                         >
                           删除
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 分页 */}
+          <div className="flex justify-between items-center mt-6">
+            <p className="text-gray-400">
+              显示 1 到 {filteredFunds.length} 条，共 {funds.length} 条记录
+            </p>
+            <div className="flex space-x-2">
+              <button className="bg-gray-700 hover:bg-gray-600 py-2 px-3 rounded transition-colors">
+                上一页
+              </button>
+              <button className="bg-indigo-600 hover:bg-indigo-700 py-2 px-3 rounded transition-colors">
+                下一页
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

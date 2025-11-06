@@ -1,675 +1,359 @@
-import React, { useState, useMemo } from 'react';
-import TopNavigationBar from '../components/TopNavigationBar';
-import ManagerNavigationBar from '../components/ManagerNavigationBar';
-import {
-  LockOutlined,
-  SettingOutlined,
-  FileSearchOutlined,
-  DownloadOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
-import {
-  Card,
-  Row,
-  Col,
-  Form,
-  Input,
-  InputNumber,
-  Switch,
-  Button,
-  Tabs,
-  Select,
-  DatePicker,
-  Table,
-  Space,
-  Tag,
-  Modal,
-  message,
-  Collapse,
-} from 'antd';
+import { useState } from 'react';
 
-const { TabPane } = Tabs;
-const { Panel } = Collapse;
-const { Option } = Select;
-const { RangePicker } = DatePicker;
+const SystemSettings = () => {
+  const [activeTab, setActiveTab] = useState('general');
+  const [settings, setSettings] = useState({
+    siteName: '聚财众发量化交易平台',
+    siteDescription: '专业的量化交易和金融产品平台',
+    maintenanceMode: false,
+    timezone: 'Asia/Shanghai',
+    language: 'zh-CN',
+    theme: 'dark',
+    emailNotifications: true,
+    smsNotifications: true,
+    tradeNotifications: true,
+    systemNotifications: true,
+  });
 
-interface LogEntry {
-  id: string;
-  timestamp: string;
-  user: string;
-  action: string;
-  target: string;
-  result: string;
-  ip: string;
-}
-
-const SystemSettings: React.FC = () => {
-  // 移除未使用的变量
-  // const navigate = useNavigate();
-  // const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('1');
-  const [passwordForm] = Form.useForm();
-  const [ipForm] = Form.useForm();
-  const [tradeForm] = Form.useForm();
-  const [notificationForm] = Form.useForm();
-  const [logSearchForm] = Form.useForm();
-  const [operationLogs, setOperationLogs] = useState<LogEntry[]>([]);
-  const [systemLogs, setSystemLogs] = useState<LogEntry[]>([]);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState('');
-
-  // 模拟日志数据
-  const mockOperationLogs = useMemo(
-    () => [
-      {
-        id: '1',
-        timestamp: '2023-05-15 14:30:22',
-        user: 'admin001',
-        action: '密码策略调整',
-        target: '系统参数',
-        result: '成功',
-        ip: '192.168.1.100',
-      },
-      {
-        id: '2',
-        timestamp: '2023-05-14 09:15:47',
-        user: 'admin001',
-        action: 'IP访问限制设置',
-        target: '安全设置',
-        result: '成功',
-        ip: '192.168.1.100',
-      },
-      {
-        id: '3',
-        timestamp: '2023-05-13 16:22:18',
-        user: 'admin001',
-        action: '交易参数调整',
-        target: '基金交易模块',
-        result: '成功',
-        ip: '192.168.1.100',
-      },
-    ],
-    [],
-  );
-
-  const mockSystemLogs = useMemo(
-    () => [
-      {
-        id: '1',
-        timestamp: '2023-05-15 14:30:25',
-        user: '系统',
-        action: '参数更新',
-        target: '交易模块',
-        result: '成功',
-        ip: '127.0.0.1',
-      },
-      {
-        id: '2',
-        timestamp: '2023-05-15 14:30:20',
-        user: '系统',
-        action: '配置保存',
-        target: '安全模块',
-        result: '成功',
-        ip: '127.0.0.1',
-      },
-      {
-        id: '3',
-        timestamp: '2023-05-14 09:15:50',
-        user: '系统',
-        action: '权限更新',
-        target: '访问控制',
-        result: '成功',
-        ip: '127.0.0.1',
-      },
-    ],
-    [],
-  );
-
-  // 初始化日志数据
-  React.useEffect(() => {
-    setOperationLogs(mockOperationLogs);
-    setSystemLogs(mockSystemLogs);
-  }, [mockOperationLogs, mockSystemLogs]);
-
-  // 安全设置 - 密码策略表单提交
-  const onFinishPassword = (values: Record<string, unknown>) => {
-    console.log('密码策略设置:', values);
-    message.success('密码策略设置已保存');
+  const handleSaveSettings = () => {
+    console.log('Saving settings:', settings);
+    alert('系统设置已保存');
   };
 
-  // 安全设置 - IP访问限制表单提交
-  const onFinishIP = (values: Record<string, unknown>) => {
-    console.log('IP访问限制设置:', values);
-    message.success('IP访问限制设置已保存');
+  const handleTestEmail = () => {
+    alert('邮件通知测试已发送');
   };
 
-  // 系统参数配置 - 交易参数表单提交
-  const onFinishTrade = (values: Record<string, unknown>) => {
-    console.log('交易参数设置:', values);
-    message.success('交易参数设置已保存');
+  const handleTestSMS = () => {
+    alert('短信通知测试已发送');
   };
-
-  // 系统参数配置 - 通知参数表单提交
-  const onFinishNotification = (values: Record<string, unknown>) => {
-    console.log('通知参数设置:', values);
-    message.success('通知参数设置已保存');
-  };
-
-  // 日志管理 - 搜索操作日志
-  const onSearchOperationLogs = (values: Record<string, unknown>) => {
-    console.log('搜索操作日志:', values);
-    message.success('日志搜索完成');
-  };
-
-  // 日志管理 - 搜索系统日志
-  const onSearchSystemLogs = (values: Record<string, unknown>) => {
-    console.log('搜索系统日志:', values);
-    message.success('日志搜索完成');
-  };
-
-  // 导出日志
-  const exportLogs = (type: string) => {
-    message.success(`正在导出${type}日志...`);
-    // 模拟导出操作
-    setTimeout(() => {
-      message.success(`${type}日志导出成功`);
-    }, 1000);
-  };
-
-  // 查看日志详情
-  const viewLogDetail = (record: LogEntry) => {
-    setModalContent(`日志详情：
-ID: ${record.id}
-时间: ${record.timestamp}
-操作人: ${record.user}
-操作: ${record.action}
-对象: ${record.target}
-结果: ${record.result}
-IP地址: ${record.ip}`);
-    setIsModalVisible(true);
-  };
-
-  // 操作日志列定义
-  const operationLogColumns = [
-    {
-      title: '时间',
-      dataIndex: 'timestamp',
-      key: 'timestamp',
-      width: 180,
-    },
-    {
-      title: '操作人',
-      dataIndex: 'user',
-      key: 'user',
-      width: 120,
-    },
-    {
-      title: '操作',
-      dataIndex: 'action',
-      key: 'action',
-      width: 150,
-    },
-    {
-      title: '对象',
-      dataIndex: 'target',
-      key: 'target',
-      width: 150,
-    },
-    {
-      title: '结果',
-      dataIndex: 'result',
-      key: 'result',
-      width: 100,
-      render: (text: string) => <Tag color={text === '成功' ? 'green' : 'red'}>{text}</Tag>,
-    },
-    {
-      title: 'IP地址',
-      dataIndex: 'ip',
-      key: 'ip',
-      width: 150,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 100,
-      render: (_: unknown, record: LogEntry) => (
-        <Space size="middle">
-          <a onClick={() => viewLogDetail(record)}>详情</a>
-        </Space>
-      ),
-    },
-  ];
-
-  // 系统日志列定义
-  const systemLogColumns = [
-    {
-      title: '时间',
-      dataIndex: 'timestamp',
-      key: 'timestamp',
-      width: 180,
-    },
-    {
-      title: '模块',
-      dataIndex: 'user',
-      key: 'user',
-      width: 120,
-    },
-    {
-      title: '操作',
-      dataIndex: 'action',
-      key: 'action',
-      width: 150,
-    },
-    {
-      title: '对象',
-      dataIndex: 'target',
-      key: 'target',
-      width: 150,
-    },
-    {
-      title: '结果',
-      dataIndex: 'result',
-      key: 'result',
-      width: 100,
-      render: (text: string) => <Tag color={text === '成功' ? 'green' : 'red'}>{text}</Tag>,
-    },
-    {
-      title: 'IP地址',
-      dataIndex: 'ip',
-      key: 'ip',
-      width: 150,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 100,
-      render: (_: unknown, record: LogEntry) => (
-        <Space size="middle">
-          <a onClick={() => viewLogDetail(record)}>详情</a>
-        </Space>
-      ),
-    },
-  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* 顶部导航栏 */}
-      <TopNavigationBar title="系统设置" showBackButton={true} showHomeButton={true} />
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-6">系统设置</h1>
 
-      <div className="pt-16 px-4">
-        <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
-          {/* 安全设置 */}
-          <TabPane
-            tab={
-              <span>
-                <LockOutlined />
-                安全设置
-              </span>
-            }
-            key="1"
+        {/* 标签页 */}
+        <div className="flex border-b border-gray-700 mb-6">
+          <button
+            onClick={() => setActiveTab('general')}
+            className={`py-2 px-4 font-medium ${activeTab === 'general' ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-gray-400 hover:text-white'}`}
           >
-            <Row gutter={[16, 16]}>
-              <Col span={24}>
-                <Card title="密码策略设置" className="shadow-sm">
-                  <Form
-                    form={passwordForm}
-                    layout="vertical"
-                    onFinish={onFinishPassword}
-                    initialValues={{
-                      minLength: 8,
-                      requireNumbers: true,
-                      requireLetters: true,
-                      requireSpecialChars: true,
-                      updateInterval: 90,
-                      maxFailedAttempts: 5,
-                      lockoutDuration: 30,
-                    }}
-                  >
-                    <Form.Item
-                      name="minLength"
-                      label="最小密码长度"
-                      rules={[{ required: true, message: '请输入最小密码长度' }]}
-                    >
-                      <InputNumber min={6} max={20} addonAfter="位" />
-                    </Form.Item>
-
-                    <Form.Item name="requireNumbers" valuePropName="checked">
-                      <Switch /> 必须包含数字
-                    </Form.Item>
-
-                    <Form.Item name="requireLetters" valuePropName="checked">
-                      <Switch /> 必须包含字母
-                    </Form.Item>
-
-                    <Form.Item name="requireSpecialChars" valuePropName="checked">
-                      <Switch /> 必须包含特殊字符
-                    </Form.Item>
-
-                    <Form.Item
-                      name="updateInterval"
-                      label="密码更新间隔"
-                      rules={[{ required: true, message: '请输入密码更新间隔' }]}
-                    >
-                      <InputNumber min={30} max={365} addonAfter="天" />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="maxFailedAttempts"
-                      label="最大密码错误次数"
-                      rules={[{ required: true, message: '请输入最大密码错误次数' }]}
-                    >
-                      <InputNumber min={1} max={10} addonAfter="次" />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="lockoutDuration"
-                      label="账号锁定时长"
-                      rules={[{ required: true, message: '请输入账号锁定时长' }]}
-                    >
-                      <InputNumber min={1} max={1440} addonAfter="分钟" />
-                    </Form.Item>
-
-                    <Form.Item>
-                      <Button type="primary" htmlType="submit">
-                        保存设置
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Card>
-              </Col>
-
-              <Col span={24}>
-                <Card title="IP访问限制" className="shadow-sm">
-                  <Form
-                    form={ipForm}
-                    layout="vertical"
-                    onFinish={onFinishIP}
-                    initialValues={{
-                      enableIPRestriction: true,
-                      allowedIPs: ['192.168.1.0/24', '10.0.0.0/8'],
-                    }}
-                  >
-                    <Form.Item name="enableIPRestriction" valuePropName="checked">
-                      <Switch /> 启用IP访问限制
-                    </Form.Item>
-
-                    <Form.Item
-                      name="allowedIPs"
-                      label="允许访问的IP地址段"
-                      rules={[{ required: true, message: '请输入允许访问的IP地址段' }]}
-                    >
-                      <Select mode="tags" placeholder="请输入IP地址段，如192.168.1.0/24">
-                        <Option value="192.168.1.0/24">192.168.1.0/24</Option>
-                        <Option value="10.0.0.0/8">10.0.0.0/8</Option>
-                      </Select>
-                    </Form.Item>
-
-                    <Form.Item>
-                      <Button type="primary" htmlType="submit">
-                        保存设置
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-
-          {/* 系统参数配置 */}
-          <TabPane
-            tab={
-              <span>
-                <SettingOutlined />
-                系统参数配置
-              </span>
-            }
-            key="2"
+            基本设置
+          </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`py-2 px-4 font-medium ${activeTab === 'notifications' ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-gray-400 hover:text-white'}`}
           >
-            <Row gutter={[16, 16]}>
-              <Col span={24}>
-                <Card title="交易参数调整" className="shadow-sm">
-                  <Form
-                    form={tradeForm}
-                    layout="vertical"
-                    onFinish={onFinishTrade}
-                    initialValues={{
-                      fundCalculationMethod: 'method1',
-                      optionPricingModel: 'model1',
-                      ipoAllocationAlgorithm: 'algorithm1',
-                    }}
-                  >
-                    <Form.Item
-                      name="fundCalculationMethod"
-                      label="基金收益计算方法"
-                      rules={[{ required: true, message: '请选择基金收益计算方法' }]}
-                    >
-                      <Select>
-                        <Option value="method1">标准收益率计算法</Option>
-                        <Option value="method2">年化复合收益率法</Option>
-                        <Option value="method3">风险调整收益率法</Option>
-                      </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                      name="optionPricingModel"
-                      label="期权定价模型"
-                      rules={[{ required: true, message: '请选择期权定价模型' }]}
-                    >
-                      <Select>
-                        <Option value="model1">Black-Scholes模型</Option>
-                        <Option value="model2">二叉树模型</Option>
-                        <Option value="model3">蒙特卡洛模拟</Option>
-                      </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                      name="ipoAllocationAlgorithm"
-                      label="新股申购中签算法"
-                      rules={[{ required: true, message: '请选择新股申购中签算法' }]}
-                    >
-                      <Select>
-                        <Option value="algorithm1">抽签算法</Option>
-                        <Option value="algorithm2">按资金比例分配</Option>
-                        <Option value="algorithm3">综合评分算法</Option>
-                      </Select>
-                    </Form.Item>
-
-                    <Form.Item>
-                      <Button type="primary" htmlType="submit">
-                        保存设置
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Card>
-              </Col>
-
-              <Col span={24}>
-                <Card title="通知参数设置" className="shadow-sm">
-                  <Form
-                    form={notificationForm}
-                    layout="vertical"
-                    onFinish={onFinishNotification}
-                    initialValues={{
-                      notificationChannels: ['sms', 'email'],
-                      dailyLimit: 10,
-                      priorityChannel: 'sms',
-                    }}
-                  >
-                    <Form.Item
-                      name="notificationChannels"
-                      label="通知渠道"
-                      rules={[{ required: true, message: '请选择通知渠道' }]}
-                    >
-                      <Select mode="multiple" placeholder="请选择通知渠道">
-                        <Option value="sms">短信</Option>
-                        <Option value="email">邮件</Option>
-                        <Option value="inapp">站内信</Option>
-                      </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                      name="dailyLimit"
-                      label="每日通知次数上限"
-                      rules={[{ required: true, message: '请输入每日通知次数上限' }]}
-                    >
-                      <InputNumber min={1} max={100} addonAfter="次" />
-                    </Form.Item>
-
-                    <Form.Item
-                      name="priorityChannel"
-                      label="重要通知优先渠道"
-                      rules={[{ required: true, message: '请选择重要通知优先渠道' }]}
-                    >
-                      <Select>
-                        <Option value="sms">短信</Option>
-                        <Option value="email">邮件</Option>
-                        <Option value="inapp">站内信</Option>
-                      </Select>
-                    </Form.Item>
-
-                    <Form.Item>
-                      <Button type="primary" htmlType="submit">
-                        保存设置
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-
-          {/* 日志管理 */}
-          <TabPane
-            tab={
-              <span>
-                <FileSearchOutlined />
-                日志管理
-              </span>
-            }
-            key="3"
+            通知设置
+          </button>
+          <button
+            onClick={() => setActiveTab('security')}
+            className={`py-2 px-4 font-medium ${activeTab === 'security' ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-gray-400 hover:text-white'}`}
           >
-            <Collapse defaultActiveKey={['1', '2']} expandIconPosition="end">
-              <Panel header="操作日志查看" key="1">
-                <Form
-                  form={logSearchForm}
-                  layout="inline"
-                  onFinish={onSearchOperationLogs}
-                  className="mb-4"
+            安全设置
+          </button>
+        </div>
+
+        {activeTab === 'general' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">基本设置</h2>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block mb-2 text-gray-300">网站名称</label>
+                  <input
+                    type="text"
+                    value={settings.siteName}
+                    onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 text-gray-300">网站描述</label>
+                  <input
+                    type="text"
+                    value={settings.siteDescription}
+                    onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 text-gray-300">时区</label>
+                  <select
+                    value={settings.timezone}
+                    onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="Asia/Shanghai">亚洲/上海</option>
+                    <option value="Asia/Tokyo">亚洲/东京</option>
+                    <option value="Europe/London">欧洲/伦敦</option>
+                    <option value="America/New_York">美洲/纽约</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-2 text-gray-300">语言</label>
+                  <select
+                    value={settings.language}
+                    onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="zh-CN">简体中文</option>
+                    <option value="en-US">English</option>
+                    <option value="ja-JP">日本語</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-750 rounded-lg">
+                <div>
+                  <h3 className="font-medium">维护模式</h3>
+                  <p className="text-gray-400 text-sm">启用后网站将显示维护页面</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.maintenanceMode}
+                    onChange={(e) =>
+                      setSettings({ ...settings, maintenanceMode: e.target.checked })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-750 rounded-lg">
+                <div>
+                  <h3 className="font-medium">主题</h3>
+                  <p className="text-gray-400 text-sm">选择网站主题</p>
+                </div>
+                <select
+                  value={settings.theme}
+                  onChange={(e) => setSettings({ ...settings, theme: e.target.value })}
+                  className="bg-gray-700 border border-gray-600 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  <Form.Item name="operationUser" label="操作人">
-                    <Input placeholder="请输入操作人" />
-                  </Form.Item>
+                  <option value="dark">深色主题</option>
+                  <option value="light">浅色主题</option>
+                </select>
+              </div>
 
-                  <Form.Item name="operationType" label="操作类型">
-                    <Select placeholder="请选择操作类型" style={{ width: 150 }}>
-                      <Option value="register">账号注册</Option>
-                      <Option value="password">密码重置</Option>
-                      <Option value="permission">权限调整</Option>
-                      <Option value="trade">交易设置</Option>
-                      <Option value="system">系统配置</Option>
-                    </Select>
-                  </Form.Item>
-
-                  <Form.Item name="operationTime" label="操作时间">
-                    <RangePicker />
-                  </Form.Item>
-
-                  <Form.Item>
-                    <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                      搜索
-                    </Button>
-                    <Button
-                      className="ml-2"
-                      onClick={() => exportLogs('操作')}
-                      icon={<DownloadOutlined />}
-                    >
-                      导出日志
-                    </Button>
-                  </Form.Item>
-                </Form>
-
-                <Table
-                  dataSource={operationLogs}
-                  columns={operationLogColumns}
-                  pagination={{ pageSize: 5 }}
-                  scroll={{ x: 900 }}
-                  rowKey="id"
-                />
-              </Panel>
-
-              <Panel header="系统日志查看" key="2">
-                <Form
-                  form={logSearchForm}
-                  layout="inline"
-                  onFinish={onSearchSystemLogs}
-                  className="mb-4"
+              <div className="pt-4">
+                <button
+                  onClick={handleSaveSettings}
+                  className="bg-indigo-600 hover:bg-indigo-700 py-2 px-4 rounded transition-colors"
                 >
-                  <Form.Item name="systemModule" label="系统模块">
-                    <Select placeholder="请选择系统模块" style={{ width: 150 }}>
-                      <Option value="trade">交易模块</Option>
-                      <Option value="user">用户模块</Option>
-                      <Option value="security">安全模块</Option>
-                      <Option value="database">数据库模块</Option>
-                      <Option value="network">网络模块</Option>
-                    </Select>
-                  </Form.Item>
+                  保存设置
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-                  <Form.Item name="logLevel" label="日志级别">
-                    <Select placeholder="请选择日志级别" style={{ width: 120 }}>
-                      <Option value="info">信息</Option>
-                      <Option value="warning">警告</Option>
-                      <Option value="error">错误</Option>
-                    </Select>
-                  </Form.Item>
+        {activeTab === 'notifications' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">通知设置</h2>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-gray-750 rounded-lg">
+                <div>
+                  <h3 className="font-medium">邮件通知</h3>
+                  <p className="text-gray-400 text-sm">启用邮件通知功能</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.emailNotifications}
+                    onChange={(e) =>
+                      setSettings({ ...settings, emailNotifications: e.target.checked })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
 
-                  <Form.Item name="systemTime" label="时间范围">
-                    <RangePicker />
-                  </Form.Item>
+              <div className="flex items-center justify-between p-4 bg-gray-750 rounded-lg">
+                <div>
+                  <h3 className="font-medium">短信通知</h3>
+                  <p className="text-gray-400 text-sm">启用短信通知功能</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.smsNotifications}
+                    onChange={(e) =>
+                      setSettings({ ...settings, smsNotifications: e.target.checked })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
 
-                  <Form.Item>
-                    <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                      搜索
-                    </Button>
-                    <Button
-                      className="ml-2"
-                      onClick={() => exportLogs('系统')}
-                      icon={<DownloadOutlined />}
-                    >
-                      导出日志
-                    </Button>
-                  </Form.Item>
-                </Form>
+              <div className="space-y-4">
+                <h3 className="font-medium mb-3">通知类型</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-750 rounded-lg">
+                    <div>
+                      <p className="font-medium">交易通知</p>
+                      <p className="text-gray-400 text-sm">订单成交、撤单等交易相关通知</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.tradeNotifications}
+                        onChange={(e) =>
+                          setSettings({ ...settings, tradeNotifications: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
 
-                <Table
-                  dataSource={systemLogs}
-                  columns={systemLogColumns}
-                  pagination={{ pageSize: 5 }}
-                  scroll={{ x: 900 }}
-                  rowKey="id"
-                />
-              </Panel>
-            </Collapse>
-          </TabPane>
-        </Tabs>
+                  <div className="flex items-center justify-between p-3 bg-gray-750 rounded-lg">
+                    <div>
+                      <p className="font-medium">系统通知</p>
+                      <p className="text-gray-400 text-sm">系统维护、公告等通知</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.systemNotifications}
+                        onChange={(e) =>
+                          setSettings({ ...settings, systemNotifications: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <h3 className="font-medium mb-3">测试通知</h3>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleTestEmail}
+                    className="bg-indigo-600 hover:bg-indigo-700 py-2 px-4 rounded transition-colors"
+                  >
+                    测试邮件通知
+                  </button>
+                  <button
+                    onClick={handleTestSMS}
+                    className="bg-green-600 hover:bg-green-700 py-2 px-4 rounded transition-colors"
+                  >
+                    测试短信通知
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  onClick={handleSaveSettings}
+                  className="bg-indigo-600 hover:bg-indigo-700 py-2 px-4 rounded transition-colors"
+                >
+                  保存设置
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'security' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">安全设置</h2>
+            <div className="space-y-6">
+              <div className="p-4 bg-gray-750 rounded-lg">
+                <h3 className="font-medium mb-3">IP白名单</h3>
+                <div className="space-y-3">
+                  <div className="flex space-x-3">
+                    <input
+                      type="text"
+                      placeholder="输入IP地址"
+                      className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button className="bg-green-600 hover:bg-green-700 py-2 px-4 rounded transition-colors">
+                      添加
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    <p>当前白名单IP:</p>
+                    <ul className="list-disc list-inside mt-1">
+                      <li>192.168.1.100</li>
+                      <li>10.0.0.50</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-750 rounded-lg">
+                <h3 className="font-medium mb-3">登录安全</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">双因素认证</p>
+                      <p className="text-gray-400 text-sm">为管理员账户启用双因素认证</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">登录失败限制</p>
+                      <p className="text-gray-400 text-sm">连续失败5次后锁定账户30分钟</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-750 rounded-lg">
+                <h3 className="font-medium mb-3">数据安全</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">数据加密</p>
+                      <p className="text-gray-400 text-sm">启用数据库数据加密</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">自动备份</p>
+                      <p className="text-gray-400 text-sm">每日自动备份数据库</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  onClick={handleSaveSettings}
+                  className="bg-indigo-600 hover:bg-indigo-700 py-2 px-4 rounded transition-colors"
+                >
+                  保存设置
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* 底部导航栏 */}
-      <ManagerNavigationBar />
-
-      {/* 日志详情模态框 */}
-      <Modal
-        title="日志详情"
-        visible={isModalVisible}
-        onOk={() => setIsModalVisible(false)}
-        onCancel={() => setIsModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setIsModalVisible(false)}>
-            关闭
-          </Button>,
-        ]}
-      >
-        <pre>{modalContent}</pre>
-      </Modal>
     </div>
   );
 };

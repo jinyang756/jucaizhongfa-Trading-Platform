@@ -15,16 +15,19 @@ const useAppSound = () => {
   }, []);
 
   // 播放音效的函数
-  const playSound = useCallback(async (soundName: string) => {
-    try {
-      const sound = await loadSound(soundName);
-      if (sound && typeof sound.play === 'function') {
-        sound.play();
+  const playSound = useCallback(
+    async (soundName: string) => {
+      try {
+        const sound = await loadSound(soundName);
+        if (sound && typeof sound.play === 'function') {
+          sound.play();
+        }
+      } catch (error) {
+        console.warn(`Failed to play sound: ${String(soundName)}`, error);
       }
-    } catch (error) {
-      console.warn(`Failed to play sound: ${String(soundName)}`, error);
-    }
-  }, [loadSound]);
+    },
+    [loadSound],
+  );
 
   // 交易成功音效
   const playTradeSuccess = useCallback(() => playSound('success'), [playSound]);

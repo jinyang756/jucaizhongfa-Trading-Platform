@@ -17,7 +17,11 @@ export default defineConfig({
         manualChunks: (id) => {
           // 将大型依赖库分离到单独的chunk中
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            if (
+              id.includes('react') ||
+              id.includes('react-dom') ||
+              id.includes('react-router-dom')
+            ) {
               return 'react-vendor';
             }
             if (id.includes('antd') || id.includes('@ant-design/icons')) {
