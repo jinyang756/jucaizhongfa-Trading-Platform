@@ -274,9 +274,15 @@ npm run build
 
 2. **配置环境变量 | Configure Environment Variables**
    - 在 Vercel 项目设置中添加 `.env` 中的变量 | Add variables from `.env` in Vercel project settings (e.g., `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`)
+   - 确保所有必需的环境变量都已配置 | Ensure all required environment variables are configured
 
 3. **自动部署 | Automatic Deployment**
    - 每次 `git push` 到 `main` 分支，自动触发部署 | Every `git push` to the `main` branch automatically triggers deployment
+   - Vercel 会自动运行 `npm run build` 并部署生成的文件 | Vercel will automatically run `npm run build` and deploy the generated files
+
+4. **环境变量同步 | Environment Variable Synchronization**
+   - 确保本地 `.env` 文件中的变量与 Vercel 项目设置中的变量保持一致 | Ensure variables in the local `.env` file are consistent with those in Vercel project settings
+   - 本地开发环境使用 `.env` 文件，生产环境使用 Vercel 项目设置 | Local development environment uses `.env` file, production environment uses Vercel project settings
 
 ### 手动部署 | Manual Deployment
 
