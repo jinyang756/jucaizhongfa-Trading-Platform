@@ -186,7 +186,7 @@ jucaizhongfa-Trading-Platform/
 
 Create a `.env` file (refer to `.env.example`):
 
-```env
+``env
 # API 配置 | API Configuration
 VITE_API_BASE_URL=https://api.example.com
 VITE_TUSHARE_TOKEN=your_tushare_token_here
@@ -200,6 +200,14 @@ VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
 # 微信支付（模拟）| WeChat Pay (Mock)
 VITE_WECHAT_APP_ID=wx1234567890
 ```
+
+> ⚠️ **安全警告 | Security Warning**: 
+> - 请勿将包含真实敏感信息的 `.env` 文件提交到代码仓库
+> - 确保 `.env` 文件已在 `.gitignore` 中列出（本项目已配置）
+> - 生产环境应通过部署平台（如 Vercel）的环境变量配置功能进行设置
+> - Do not commit `.env` files containing real sensitive information to the code repository
+> - Ensure the `.env` file is listed in `.gitignore` (already configured in this project)
+> - Production environments should be configured through the deployment platform's (such as Vercel) environment variable configuration feature
 
 ## 📱 移动端适配说明 | Mobile Adaptation Instructions
 
