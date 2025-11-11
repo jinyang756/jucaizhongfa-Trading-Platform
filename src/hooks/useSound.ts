@@ -6,7 +6,7 @@ const useAppSound = () => {
   const loadSound = useCallback(async (soundName: string) => {
     try {
       const soundModule = await import('easy-sound');
-      // @ts-ignore - easy-sound的类型定义可能不完整
+      // @ts-expect-error - easy-sound的类型定义可能不完整
       return soundModule[soundName];
     } catch (error) {
       console.warn(`Failed to load sound: ${String(soundName)}`, error);

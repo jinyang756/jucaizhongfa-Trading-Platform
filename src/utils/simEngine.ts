@@ -7,17 +7,17 @@ import {
   SeatEngine,
   useSimulationStore,
   initSimulation,
+  Scheduler,
 } from 'jcf-sim-engine';
 
 // 检查是否启用了 Supabase
 const supabaseEnabled = config.supabase.url && config.supabase.anonKey;
 
 // 初始化模拟引擎
-import { Scheduler } from 'jcf-sim-engine';
 let scheduler: Scheduler | undefined;
 
 // IPO股票数据接口
-export interface IpoStockData {
+export interface IPOStock {
   stock_id: string;
   stock_code: string;
   stock_name: string;
@@ -31,7 +31,7 @@ export interface IpoStockData {
 }
 
 // 私募基金数据接口
-export interface FundProductData {
+export interface FundProduct {
   fund_code: string;
   fund_name: string;
   nav: number;
@@ -42,7 +42,7 @@ export interface FundProductData {
 }
 
 // 大宗交易数据接口
-export interface BlockTradeData {
+export interface BlockTrade {
   trade_id: string;
   stock_code: string;
   stock_name: string;
@@ -56,7 +56,7 @@ export interface BlockTradeData {
 }
 
 // 机构席位交易数据接口
-export interface SeatTradeData {
+export interface SeatTrade {
   trade_id: string;
   user_id: string;
   stock_code: string;
@@ -70,7 +70,7 @@ export interface SeatTradeData {
 }
 
 // 基金合约数据接口
-export interface FundContractData {
+export interface FundContract {
   contract_id: string;
   type: 'shanghai' | 'hongkong';
   strike_price: number;
@@ -84,6 +84,42 @@ export interface FundContractData {
   manual_result?: 'win' | 'loss' | null;
   profit?: number;
   cost: number;
+}
+
+// 用户账户数据接口
+export interface UserAccount {
+  user_id: string;
+  username: string;
+  balance: number;
+  risk_preference: 'low' | 'medium' | 'high';
+  created_at: string;
+}
+
+// 用户持仓数据接口
+export interface PortfolioItem {
+  user_id: string;
+  stock_id: string;
+  quantity: number;
+  purchase_price: number;
+  purchase_date: string;
+}
+
+// 市场行情数据接口
+export interface MarketData {
+  symbol: string;
+  price: number;
+  change: number;
+  change_percent: number;
+  volume: number;
+}
+
+// AI投资信号数据接口
+export interface AiSignal {
+  signal_id: string;
+  stock_id: string;
+  signal_type: 'buy' | 'sell' | 'hold';
+  confidence: number;
+  timestamp: string;
 }
 
 // 模拟引擎类
@@ -112,7 +148,7 @@ export class SimEngine {
   }
 
   // 获取新股申购数据
-  static getIpoStocks(): IpoStockData[] {
+  static getIpoStocks(): IPOStock[] {
     this.init();
     return this.ipoEngine.stocks;
   }
@@ -124,7 +160,7 @@ export class SimEngine {
   }
 
   // 获取私募基金产品
-  static getFundProducts(): FundProductData[] {
+  static getFundProducts(): FundProduct[] {
     this.init();
     return this.fundEngine.getFundProducts();
   }
@@ -142,7 +178,7 @@ export class SimEngine {
   }
 
   // 获取大宗交易数据
-  static getBlockTrades(): BlockTradeData[] {
+  static getBlockTrades(): BlockTrade[] {
     this.init();
     return this.blockEngine.getBlockTrades();
   }
@@ -183,9 +219,9 @@ export class SimEngine {
   }
 
   // 获取基金合约数据
-  static getFundContracts(): FundContractData[] {
+  static getFundContracts(): FundContract[] {
     this.init();
-    return useSimulationStore.getState().contracts as FundContractData[];
+    return useSimulationStore.getState().contracts as FundContract[];
   }
 
   // 设置基金合约结果
@@ -197,10 +233,14 @@ export class SimEngine {
 
 // Zustand 状态管理，用于存储模拟数据
 interface SimEngineState {
-  ipoStocks: IpoStockData[];
-  fundProducts: FundProductData[];
-  blockTrades: BlockTradeData[];
-  fundContracts: FundContractData[];
+  ipoStocks: IPOStock[];
+  fundProducts: FundProduct[];
+  blockTrades: BlockTrade[];
+  fundContracts: FundContract[];
+  userAccounts: UserAccount[];
+  portfolio: PortfolioItem[];
+  marketData: MarketData[];
+  aiSignals: AiSignal[];
   isLoading: boolean;
   error: string | null;
   fetchIpoStocks: () => Promise<void>;
@@ -228,6 +268,10 @@ interface SimEngineState {
     direction: 'buy' | 'sell',
   ) => Promise<string>;
   setContractResult: (contractId: string, result: 'win' | 'loss') => Promise<void>;
+  fetchUserAccounts: () => Promise<void>;
+  fetchPortfolio: (userId: string) => Promise<void>;
+  fetchMarketData: () => Promise<void>;
+  fetchAiSignals: () => Promise<void>;
 }
 
 export const useSimEngineStore = create<SimEngineState>((set) => ({
@@ -235,6 +279,10 @@ export const useSimEngineStore = create<SimEngineState>((set) => ({
   fundProducts: [],
   blockTrades: [],
   fundContracts: [],
+  userAccounts: [],
+  portfolio: [],
+  marketData: [],
+  aiSignals: [],
   isLoading: false,
   error: null,
 
@@ -374,5 +422,26 @@ export const useSimEngineStore = create<SimEngineState>((set) => ({
       console.error('设置合约结果失败:', err);
       set({ error: '设置合约结果失败' });
     }
+  },
+
+  // 新增的数据获取函数
+  fetchUserAccounts: async () => {
+    // TODO: 实现用户账户数据获取逻辑
+    console.log('获取用户账户数据');
+  },
+
+  fetchPortfolio: async (userId: string) => {
+    // TODO: 实现用户持仓数据获取逻辑
+    console.log(`获取用户 ${userId} 的持仓数据`);
+  },
+
+  fetchMarketData: async () => {
+    // TODO: 实现市场行情数据获取逻辑
+    console.log('获取市场行情数据');
+  },
+
+  fetchAiSignals: async () => {
+    // TODO: 实现AI信号数据获取逻辑
+    console.log('获取AI信号数据');
   },
 }));

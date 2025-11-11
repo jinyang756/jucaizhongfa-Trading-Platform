@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, supabaseEnabled } from '../utils/supabase';
+import { supabase } from '../supabase';
 import { useToast } from '../hooks/useToast';
 
 export function useSupabase() {
@@ -9,11 +9,6 @@ export function useSupabase() {
 
   // 检查连接状态
   const checkConnection = useCallback(async () => {
-    if (!supabaseEnabled) {
-      setIsConnected(false);
-      return false;
-    }
-
     try {
       setIsLoading(true);
       const { error } = await supabase.from('admins').select('id').limit(1);
@@ -83,6 +78,5 @@ export function useSupabase() {
     isLoading,
     checkConnection,
     handleError,
-    supabaseEnabled,
   };
 }

@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAuth } from '../store/useAuth';
 
 const FundLogs = () => {
   const { fundId } = useParams();
-  const { user } = useAuth();
   const [dateRange, setDateRange] = useState('30d'); // 7d, 30d, 90d
 
   // 模拟基金信息

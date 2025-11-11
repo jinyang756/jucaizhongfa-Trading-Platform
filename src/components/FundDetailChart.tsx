@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { supabase } from '../utils/supabase';
+import { supabase } from '../supabase';
 import { format, addMonths, subMonths } from 'date-fns';
 
 // 定义基金业绩数据接口
@@ -73,7 +73,7 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
         // 处理数据，按月聚合
         const monthlyData: Record<string, { price: number; count: number }> = {};
 
-        data.forEach((item) => {
+        data.forEach((item: { invest_time: string; yield_amount: number }) => {
           const month = format(new Date(item.invest_time), 'yyyy-MM');
           if (!monthlyData[month]) {
             monthlyData[month] = { price: 0, count: 0 };

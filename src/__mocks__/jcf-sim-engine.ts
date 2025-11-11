@@ -1,3 +1,16 @@
+interface IPOStock {
+  stock_id: string;
+  stock_code: string;
+  stock_name: string;
+  issue_price: number;
+  market_price: number;
+  subscription_quota: number;
+  subscribed_shares: number;
+  win_rate: number;
+  status: 'upcoming' | 'subscription' | 'allocated' | 'trading';
+  listing_date: string;
+}
+
 export const initSimulation = jest.fn(() => ({
   start: jest.fn(),
 }));
@@ -10,7 +23,7 @@ export const useSimulationStore = {
 };
 
 export class IpoEngine {
-  stocks: any[] = [
+  stocks: IPOStock[] = [
     {
       stock_id: '1',
       stock_code: '000001',

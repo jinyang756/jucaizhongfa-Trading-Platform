@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/useAuth';
 
@@ -42,17 +41,19 @@ const ProfilePage = () => {
 
             <div className="bg-gray-700 p-4 rounded-lg">
               <h3 className="font-semibold mb-2">权限信息</h3>
-              <ul className="text-sm space-y-1">
-                <li className={user.permissions.fund ? 'text-green-400' : 'text-red-400'}>
-                  基金交易: {user.permissions.fund ? '允许' : '禁止'}
-                </li>
-                <li className={user.permissions.option ? 'text-green-400' : 'text-red-400'}>
-                  期权交易: {user.permissions.option ? '允许' : '禁止'}
-                </li>
-                <li className={user.permissions.contract ? 'text-green-400' : 'text-red-400'}>
-                  合约交易: {user.permissions.contract ? '允许' : '禁止'}
-                </li>
-              </ul>
+              {user.permissions && (
+                <ul className="text-sm space-y-1">
+                  <li className={user.permissions.fund ? 'text-green-400' : 'text-red-400'}>
+                    基金交易: {user.permissions.fund ? '允许' : '禁止'}
+                  </li>
+                  <li className={user.permissions.option ? 'text-green-400' : 'text-red-400'}>
+                    期权交易: {user.permissions.option ? '允许' : '禁止'}
+                  </li>
+                  <li className={user.permissions.contract ? 'text-green-400' : 'text-red-400'}>
+                    合约交易: {user.permissions.contract ? '允许' : '禁止'}
+                  </li>
+                </ul>
+              )}
             </div>
           </div>
         </div>

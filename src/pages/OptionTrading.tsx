@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/useAuth';
+
+interface Option {
+  id: number;
+  name: string;
+  code: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  type: 'call' | 'put';
+  strike: number;
+  expiry: string;
+}
 
 const OptionTrading = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedOption, setSelectedOption] = useState<Option | null>(null);
   const [tradeAmount, setTradeAmount] = useState('');
   const [tradeType, setTradeType] = useState('buy'); // buy or sell
 
   // 模拟期权数据
-  const options = [
+  const options: Option[] = [
     {
       id: 1,
       name: '50ETF购6月3.5',
@@ -57,7 +69,7 @@ const OptionTrading = () => {
     },
   ];
 
-  const handleOptionSelect = (option) => {
+  const handleOptionSelect = (option: Option) => {
     setSelectedOption(option);
   };
 
@@ -74,7 +86,7 @@ const OptionTrading = () => {
     }
 
     const totalCost = selectedOption.price * 10000 * amount;
-    if (tradeType === 'buy' && totalCost > user.currentBalance) {
+    if (user && tradeType === 'buy' && totalCost > user.currentBalance) {
       alert('余额不足');
       return;
     }
@@ -226,13 +238,19 @@ const OptionTrading = () => {
                       <div className="flex justify-between">
                         <span>交易金额:</span>
                         <span>
-                          ¥{(selectedOption?.price * 10000 * (tradeAmount || 0)).toFixed(2)}
+                          ¥
+                          {(selectedOption?.price * 10000 * (parseInt(tradeAmount) || 0)).toFixed(
+                            2,
+                          )}
                         </span>
                       </div>
                       <div className="flex justify-between mt-1">
                         <span>权利金:</span>
                         <span>
-                          ¥{(selectedOption?.price * 10000 * (tradeAmount || 0)).toFixed(2)}
+                          ¥
+                          {(selectedOption?.price * 10000 * (parseInt(tradeAmount) || 0)).toFixed(
+                            2,
+                          )}
                         </span>
                       </div>
                     </div>
@@ -257,7 +275,7 @@ const OptionTrading = () => {
 
               <div className="mt-6 pt-4 border-t border-gray-700">
                 <h3 className="font-semibold mb-2">账户信息</h3>
-                <p>可用余额: ¥{user.currentBalance.toFixed(2)}</p>
+                {user && <p>可用余额: ¥{user.currentBalance.toFixed(2)}</p>}
                 <button
                   onClick={() => navigate('/positions')}
                   className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm"

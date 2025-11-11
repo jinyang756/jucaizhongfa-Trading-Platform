@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useAppSound from '../hooks/useSound';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Switch } from './ui';
+import { Switch, Slider } from './ui';
 
 const SoundSettings: React.FC = () => {
   const { playTradeSuccess, playTradeFailed, playNotification, playAlert } = useAppSound();
@@ -67,27 +67,40 @@ const SoundSettings: React.FC = () => {
   };
 
   return (
-    <Card className="bg-gray-900 border-gray-700">
+    <Card
+      style={{
+        backgroundColor: 'var(--glass-background)',
+        border: '1px solid var(--primary-color)',
+      }}
+    >
       <CardHeader>
-        <CardTitle className="text-white">音效设置</CardTitle>
-        <CardDescription className="text-gray-400">自定义您的音效体验</CardDescription>
+        <CardTitle style={{ color: 'var(--text-color-light)' }}>音效设置</CardTitle>
+        <CardDescription style={{ color: 'var(--text-color-dark)' }}>
+          自定义您的音效体验
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* 音效开关 */}
         <div className="flex items-center justify-between">
-          <span className="text-gray-200">音效开关</span>
+          <span style={{ color: 'var(--text-color-light)' }}>音效开关</span>
           <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
         </div>
 
         {/* 音量控制 */}
         <div className="space-y-2">
-          <span className="text-gray-200">音量: {volume}%</span>
-          {/* 这里应该使用Slider组件，但为了简化示例暂时省略 */}
+          <span style={{ color: 'var(--text-color-light)' }}>音量: {volume}%</span>
+          <Slider
+            value={[volume]}
+            onValueChange={(value) => setVolume(value[0])}
+            max={100}
+            step={1}
+            className="w-full"
+          />
         </div>
 
         {/* 音效主题 */}
         <div className="space-y-2">
-          <span className="text-gray-200">音效主题</span>
+          <span style={{ color: 'var(--text-color-light)' }}>音效主题</span>
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant={theme === 'default' ? 'default' : 'outline'}
@@ -122,7 +135,7 @@ const SoundSettings: React.FC = () => {
 
         {/* 音效测试 */}
         <div className="space-y-2">
-          <span className="text-gray-200">测试音效</span>
+          <span style={{ color: 'var(--text-color-light)' }}>测试音效</span>
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="secondary"

@@ -1,18 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useAuth } from '../store/useAuth';
 import { useNavigate } from 'react-router-dom';
-// import type { LoginCredentials } from '../types/auth';
-import { config } from '../utils/env';
+import type { LoginCredentials } from '../types';
 import { useSweetAlert } from '../hooks/useSweetAlert';
 import useAppSound from '../hooks/useSound';
-import {
-  UserIcon,
-  KeyIcon,
-  EnvelopeIcon,
-  ArrowRightOnRectangleIcon,
-} from '@heroicons/react/24/outline';
 import { Input } from '../components/ui/input';
-import backgroundImage from '../assets/jucai.jpg';
 import LoginFooter from '../components/LoginFooter';
 
 /**
@@ -24,13 +16,12 @@ import LoginFooter from '../components/LoginFooter';
  */
 const Login = () => {
   const navigate = useNavigate();
-  const { login, sendVerificationCode } = useAuth();
+  const { login } = useAuth();
   const { error, success, info } = useSweetAlert();
-  const { playLogin, playAlert, playNotification, playButtonClick, playPageTransition } =
-    useAppSound();
+  const { playAlert, playNotification, playButtonClick, playPageTransition } = useAppSound();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userType, setUserType] = useState('user');
+  const [userType, setUserType] = useState<'admin' | 'user'>('user');
   const [requiresEmailVerification, setRequiresEmailVerification] = useState(false);
   const [credentials, setCredentials] = useState({
     username: '',
@@ -38,7 +29,7 @@ const Login = () => {
     verificationCode: '',
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCredentials((prev) => ({
       ...prev,
@@ -46,7 +37,7 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log('Login form submitted with credentials:', credentials);
 
@@ -64,7 +55,7 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      const loginCredentials = {
+      const loginCredentials: LoginCredentials = {
         username: credentials.username,
         password: credentials.password,
         verificationCode: credentials.verificationCode,
@@ -75,7 +66,6 @@ const Login = () => {
       console.log('Login result:', result);
 
       if (result.success) {
-        playLogin();
         success('登录成功', `欢迎${userType === 'admin' ? '基金管理人' : '会员'}登录`);
         setTimeout(() => {
           navigate('/');
@@ -88,25 +78,26 @@ const Login = () => {
         playAlert();
         error('登录失败', result.message || '请检查用户名和密码');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      error('登录失败', `登录时出现错误: ${error.message}`);
+    } catch (err) {
+      console.error('Login error:', err);
+      if (err instanceof Error) {
+        error('登录失败', `登录时出现错误: ${err.message}`);
+      } else {
+        error('登录失败', '登录时出现未知错误');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleUserTypeChange = (type) => {
+  const handleUserTypeChange = (type: 'admin' | 'user') => {
     setUserType(type);
     setCredentials((prev) => ({ ...prev, password: '' }));
   };
 
   useEffect(() => {
-    console.log('API URL:', config.apiUrl);
-    console.log('App Name:', config.appName);
-    console.log('Is Dev:', config.isDev);
     playPageTransition();
-  }, []);
+  }, [playPageTransition]);
 
   return (
     <>
@@ -190,18 +181,16 @@ const Login = () => {
             </p>
           </div>
 
-          {/* ✅ Vite 开发环境测试账号提示 */}
-          {config.isDev && (
-            <div className="mt-4 p-3 bg-gray-100 border border-gray-300 rounded-lg">
-              <p className="text-xs text-gray-600 font-medium mb-1">🔧 开发环境测试账号：</p>
-              <p className="text-xs text-gray-500 font-mono">
-                {userType === 'admin' ? 'admin001-003 / 12345' : 'testuser01 / 8a3k7z9x'}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {userType === 'admin' ? '基金管理人账号' : '会员账号'}
-              </p>
-            </div>
-          )}
+          <div className="mt-4 p-3 bg-gray-100 border border-gray-300 rounded-lg">
+            <p className="text-xs text-gray-600 font-medium mb-1">🔧 开发环境测试账号：</p>
+            <p className="text-xs text-gray-500 font-mono">
+              {userType === 'admin' ? 'admin001-003 / 12345' : 'testuser01 / 8a3k7z9x'}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {userType === 'admin' ? '基金管理人账号' : '会员账号'}
+            </p>
+          </div>
+
           {/* 用户类型切换 */}
           <div className="text-center mt-4">
             <p className="text-xs text-gray-500">
@@ -213,7 +202,6 @@ const Login = () => {
                     onClick={() => {
                       playButtonClick();
                       handleUserTypeChange('user');
-                      setRequiresEmailVerification(false);
                     }}
                   >
                     切换到会员登录

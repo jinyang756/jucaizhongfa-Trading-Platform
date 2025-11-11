@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { supabase, supabaseEnabled } from '../utils/supabase';
+import * as React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '../supabase';
 import { exportToExcel } from '../utils/exportExcel';
 import { useToast } from '../hooks/useToast';
 import { validateForm, required, maxLength, type ValidationRule } from '../utils/validation';
@@ -56,15 +57,10 @@ export const AdminOptions: React.FC = () => {
     }
     setLoading(true);
     try {
-      if (!supabaseEnabled) {
-        setOptions((prev) => prev.map((o) => (o.id === id ? { ...o, ...partialData } : o)));
-        showToast('更新成功（本地演示）', 'success');
-      } else {
-        const { error } = await supabase.from('options').update(partialData).eq('id', id);
-        if (error) throw error;
-        showToast('更新成功', 'success');
-        await load();
-      }
+      const { error } = await supabase.from('options').update(partialData).eq('id', id);
+      if (error) throw error;
+      showToast('更新成功', 'success');
+      await load();
       setEditingId(null);
     } catch (e: unknown) {
       console.error(e);
@@ -77,13 +73,9 @@ export const AdminOptions: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      if (!supabaseEnabled) {
-        setOptions([{ id: 1, option_code: 'OPT001', option_name: '演示期权' }]);
-      } else {
-        const { data, error } = await supabase.from('options').select('*').order('id');
-        if (error) throw error;
-        setOptions(data || []);
-      }
+      const { data, error } = await supabase.from('options').select('*').order('id');
+      if (error) throw error;
+      setOptions(data || []);
     } catch (e: unknown) {
       console.error(e);
       showToast('加载失败', 'error');
@@ -119,17 +111,12 @@ export const AdminOptions: React.FC = () => {
     }
     setLoading(true);
     try {
-      if (!supabaseEnabled) {
-        setOptions((prev) => [{ id: Date.now(), ...form }, ...prev]);
-        showToast('创建成功（本地演示）', 'success');
-      } else {
-        const { error } = await supabase
-          .from('options')
-          .insert({ option_code: form.option_code, option_name: form.option_name });
-        if (error) throw error;
-        showToast('创建成功', 'success');
-        await load();
-      }
+      const { error } = await supabase
+        .from('options')
+        .insert({ option_code: form.option_code, option_name: form.option_name });
+      if (error) throw error;
+      showToast('创建成功', 'success');
+      await load();
       setForm({ option_code: '', option_name: '' });
     } catch (e: unknown) {
       console.error(e);
@@ -142,15 +129,10 @@ export const AdminOptions: React.FC = () => {
   const deleteOption = async (id: number) => {
     setLoading(true);
     try {
-      if (!supabaseEnabled) {
-        setOptions((prev) => prev.filter((o) => o.id !== id));
-        showToast('删除成功（本地演示）', 'success');
-      } else {
-        const { error } = await supabase.from('options').delete().eq('id', id);
-        if (error) throw error;
-        showToast('删除成功', 'success');
-        await load();
-      }
+      const { error } = await supabase.from('options').delete().eq('id', id);
+      if (error) throw error;
+      showToast('删除成功', 'success');
+      await load();
       setShowDeleteConfirm(null);
     } catch (e: unknown) {
       console.error(e);

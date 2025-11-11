@@ -1,5 +1,5 @@
 import { useFetch } from './useFetch';
-import { supabase, supabaseEnabled } from '../utils/supabase';
+import { supabase } from '../supabase';
 
 export type ContractRow = {
   id?: number;
@@ -27,11 +27,6 @@ export const useContractsApi = () => {
 
   const getAllContracts = async (options?: ContractOptions) => {
     return fetchData(async () => {
-      if (!supabaseEnabled) {
-        // Mock data for contracts
-        return [{ id: 1, contract_code: 'SH0001', contract_name: '演示合约', market: 'SH' }];
-      }
-
       let query = supabase.from('contracts').select('*');
 
       if (options?.filters) {
@@ -62,10 +57,6 @@ export const useContractsApi = () => {
 
   const getContractById = async (id: number) => {
     return fetchData(async (): Promise<ContractRow[] | null> => {
-      if (!supabaseEnabled) {
-        // Mock data for single contract
-        return [{ id: 1, contract_code: 'SH0001', contract_name: '演示合约', market: 'SH' }];
-      }
       const { data, error } = await supabase.from('contracts').select('*').eq('id', id).single();
       if (error) throw error;
       return data ? [data] : null;
@@ -74,35 +65,26 @@ export const useContractsApi = () => {
 
   const createContract = async (contract: Partial<ContractRow>) => {
     return fetchData(async (): Promise<ContractRow[] | null> => {
-      if (!supabaseEnabled) {
-        return [{ id: Date.now(), ...contract }] as ContractRow[]; // Changed to return array
-      }
       const { data, error } = await supabase.from('contracts').insert(contract).select();
       if (error) throw error;
-      return data || null; // Changed to return array or null
+      return data || null;
     });
   };
 
   const updateContract = async (id: number, contract: Partial<ContractRow>) => {
     return fetchData(async (): Promise<ContractRow[] | null> => {
-      if (!supabaseEnabled) {
-        return [{ id, ...contract }] as ContractRow[]; // Changed to return array
-      }
       const { data, error } = await supabase
         .from('contracts')
         .update(contract)
         .eq('id', id)
         .select();
       if (error) throw error;
-      return data || null; // Changed to return array or null
+      return data || null;
     });
   };
 
   const deleteContract = async (id: number) => {
     return fetchData(async () => {
-      if (!supabaseEnabled) {
-        return null;
-      }
       const { error } = await supabase.from('contracts').delete().eq('id', id);
       if (error) throw error;
       return null;

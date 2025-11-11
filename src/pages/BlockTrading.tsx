@@ -1,12 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../store/useAuth';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import { useSimEngineStore } from '../utils/simEngine';
 
 const BlockTrading = () => {
-  const { user } = useAuth();
   const { blockTrades, fetchBlockTrades, executeBlockTrade } = useSimEngineStore();
-  const navigate = useNavigate();
   const [tradeData, setTradeData] = useState({
     stockCode: '',
     stockName: '',
@@ -18,23 +14,16 @@ const BlockTrading = () => {
   });
 
   useEffect(() => {
-    // 获取大宗交易数据
     fetchBlockTrades();
-
-    // 设置定时器定期更新数据
     const interval = setInterval(() => {
       fetchBlockTrades();
-    }, 10000); // 每10秒更新一次
-
+    }, 10000);
     return () => clearInterval(interval);
   }, [fetchBlockTrades]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setTradeData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setTradeData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleExecuteTrade = async () => {
@@ -51,7 +40,7 @@ const BlockTrading = () => {
     }
 
     const price = parseFloat(tradeData.price);
-    const quantity = parseInt(tradeData.quantity);
+    const quantity = parseInt(tradeData.quantity, 10);
     const discountRate = parseFloat(tradeData.discountRate) || 0;
 
     if (isNaN(price) || isNaN(quantity) || price <= 0 || quantity <= 0) {
@@ -59,7 +48,6 @@ const BlockTrading = () => {
       return;
     }
 
-    // 使用 jcf-sim-engine 执行大宗交易
     try {
       const result = await executeBlockTrade(
         tradeData.stockCode,
@@ -73,7 +61,6 @@ const BlockTrading = () => {
 
       if (result) {
         alert('大宗交易执行成功！');
-        // 清空表单
         setTradeData({
           stockCode: '',
           stockName: '',
@@ -87,12 +74,16 @@ const BlockTrading = () => {
         alert('大宗交易执行失败');
       }
     } catch (error) {
-      alert(`交易执行失败: ${error.message}`);
+      if (error instanceof Error) {
+        alert(`交易执行失败: ${error.message}`);
+      } else {
+        alert('发生未知错误');
+      }
     }
   };
 
-  const getStatusText = (status) => {
-    const statusMap = {
+  const getStatusText = (status: string) => {
+    const statusMap: { [key: string]: string } = {
       pending: '待处理',
       completed: '完成',
       cancelled: '取消',
@@ -100,8 +91,8 @@ const BlockTrading = () => {
     return statusMap[status] || status;
   };
 
-  const getStatusColor = (status) => {
-    const colorMap = {
+  const getStatusColor = (status: string) => {
+    const colorMap: { [key: string]: string } = {
       pending: 'orange',
       completed: 'green',
       cancelled: 'red',
@@ -113,108 +104,72 @@ const BlockTrading = () => {
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">大宗交易</h1>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 左侧 - 交易执行面板 */}
           <div className="lg:col-span-1">
             <div className="bg-gray-800 rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">执行大宗交易</h2>
               <div className="space-y-4">
-                <div>
-                  <label className="block mb-2">股票代码</label>
-                  <input
-                    type="text"
-                    name="stockCode"
-                    value={tradeData.stockCode}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="请输入股票代码"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2">股票名称</label>
-                  <input
-                    type="text"
-                    name="stockName"
-                    value={tradeData.stockName}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="请输入股票名称"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2">价格</label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={tradeData.price}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="请输入价格"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2">数量</label>
-                  <input
-                    type="number"
-                    name="quantity"
-                    value={tradeData.quantity}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="请输入数量"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2">买方</label>
-                  <input
-                    type="text"
-                    name="buyer"
-                    value={tradeData.buyer}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="请输入买方"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2">卖方</label>
-                  <input
-                    type="text"
-                    name="seller"
-                    value={tradeData.seller}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="请输入卖方"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2">折扣率 (%)</label>
-                  <input
-                    type="number"
-                    name="discountRate"
-                    value={tradeData.discountRate}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="请输入折扣率"
-                  />
-                </div>
-
+                <input
+                  name="stockCode"
+                  value={tradeData.stockCode}
+                  onChange={handleInputChange}
+                  placeholder="股票代码"
+                  className="w-full bg-gray-700 rounded px-3 py-2"
+                />
+                <input
+                  name="stockName"
+                  value={tradeData.stockName}
+                  onChange={handleInputChange}
+                  placeholder="股票名称"
+                  className="w-full bg-gray-700 rounded px-3 py-2"
+                />
+                <input
+                  name="price"
+                  value={tradeData.price}
+                  onChange={handleInputChange}
+                  placeholder="价格"
+                  type="number"
+                  className="w-full bg-gray-700 rounded px-3 py-2"
+                />
+                <input
+                  name="quantity"
+                  value={tradeData.quantity}
+                  onChange={handleInputChange}
+                  placeholder="数量"
+                  type="number"
+                  className="w-full bg-gray-700 rounded px-3 py-2"
+                />
+                <input
+                  name="buyer"
+                  value={tradeData.buyer}
+                  onChange={handleInputChange}
+                  placeholder="买方"
+                  className="w-full bg-gray-700 rounded px-3 py-2"
+                />
+                <input
+                  name="seller"
+                  value={tradeData.seller}
+                  onChange={handleInputChange}
+                  placeholder="卖方"
+                  className="w-full bg-gray-700 rounded px-3 py-2"
+                />
+                <input
+                  name="discountRate"
+                  value={tradeData.discountRate}
+                  onChange={handleInputChange}
+                  placeholder="折扣率 (%)"
+                  type="number"
+                  className="w-full bg-gray-700 rounded px-3 py-2"
+                />
                 <button
                   onClick={handleExecuteTrade}
-                  className="w-full py-3 rounded-lg font-semibold transition-colors bg-purple-600 hover:bg-purple-700"
+                  className="w-full py-3 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700"
                 >
                   执行交易
                 </button>
               </div>
             </div>
           </div>
-
-          {/* 右侧 - 大宗交易列表 */}
           <div className="lg:col-span-2">
             <div className="bg-gray-800 rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">大宗交易记录</h2>

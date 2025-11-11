@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Col, Row } from 'antd';
 import {
@@ -11,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import TopNavigationBar from '../components/TopNavigationBar';
 
-const Home: React.FC = () => {
+const Home = () => {
   const navigate = useNavigate();
 
   // 首页功能卡片数据
@@ -20,7 +19,7 @@ const Home: React.FC = () => {
       title: '新购申购',
       description: '新股认购服务',
       icon: <FundOutlined style={{ fontSize: '24px' }} />,
-      path: '/funds',
+      path: '/ipo',
     },
     {
       title: '机构席位',
@@ -32,7 +31,7 @@ const Home: React.FC = () => {
       title: '大宗交易',
       description: '大额撮合交易',
       icon: <FileTextOutlined style={{ fontSize: '24px' }} />,
-      path: '/contracts',
+      path: '/block-trading',
     },
     {
       title: '私募基金',

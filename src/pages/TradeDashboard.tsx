@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/useAuth';
 import MarketDashboard from '../components/MarketDashboard';
@@ -8,7 +7,7 @@ const TradeDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleNavigation = (path) => {
+  const handleNavigation = (path: string) => {
     navigate(path);
   };
 

@@ -1,32 +1,33 @@
-import React, { lazy } from 'react';
+import * as React from 'react';
+import { lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary'; // Error boundary for handling errors
-import LoginPage from './pages/Login.jsx'; // Login page
+import LoginPage from './pages/Login.tsx'; // Login page
 import { useAuth } from './store/useAuth'; // Authentication store
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // Protected route component
 import { BottomNavigationBar } from './components/BottomNavigationBar.tsx'; // Bottom navigation bar
 import SuspenseWrapper from './components/SuspenseWrapper'; // Suspense wrapper for lazy loading
 
 // 动态导入页面组件
-const TradeDashboard = lazy(() => import('./pages/TradeDashboard.jsx'));
-const FundTrading = lazy(() => import('./pages/FundTrading.jsx'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
-const AccountSettings = lazy(() => import('./pages/AccountSettings.jsx'));
+const TradeDashboard = lazy(() => import('./pages/TradeDashboard.tsx'));
+const FundTrading = lazy(() => import('./pages/FundTrading.tsx'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage.tsx'));
+const AccountSettings = lazy(() => import('./pages/AccountSettings.tsx'));
 const AdminContracts = lazy(() => import('./pages/AdminContracts.tsx'));
 const AdminFunds = lazy(() => import('./pages/AdminFunds.tsx'));
 const AdminOptions = lazy(() => import('./pages/AdminOptions.tsx'));
-const AdminUsers = lazy(() => import('./pages/AdminUsers.jsx'));
-const ContractTrading = lazy(() => import('./pages/ContractTrading.jsx'));
-const FundLogs = lazy(() => import('./pages/FundLogs.jsx'));
-const OptionTrading = lazy(() => import('./pages/OptionTrading.jsx'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers.tsx'));
+const ContractTrading = lazy(() => import('./pages/ContractTrading.tsx'));
+const FundLogs = lazy(() => import('./pages/FundLogs.tsx'));
+const OptionTrading = lazy(() => import('./pages/OptionTrading.tsx'));
 const Positions = lazy(() => import('./pages/Positions.tsx'));
 const TransactionHistory = lazy(() => import('./pages/TransactionHistory.tsx'));
 const Home = lazy(() => import('./pages/Home.tsx'));
 const Trade = lazy(() => import('./pages/Trade.tsx'));
 const Profile = lazy(() => import('./pages/Profile.tsx'));
-const BlockTrading = lazy(() => import('./pages/BlockTrading.jsx'));
-const IPOSubscription = lazy(() => import('./pages/IPOSubscription.jsx'));
-const FundContract = lazy(() => import('./pages/FundContract.jsx'));
+const BlockTrading = lazy(() => import('./pages/BlockTrading.tsx'));
+const IPOSubscription = lazy(() => import('./pages/IPOSubscription.tsx'));
+const FundContract = lazy(() => import('./pages/FundContract.tsx'));
 const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard.tsx'));
 const MemberManagement = lazy(() => import('./pages/MemberManagement.tsx'));
 const TradeManagement = lazy(() => import('./pages/TradeManagement.tsx'));

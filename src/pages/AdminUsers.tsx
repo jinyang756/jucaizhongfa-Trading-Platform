@@ -1,9 +1,6 @@
 import { useState } from 'react';
-import { useAuth } from '../store/useAuth';
-import { useNavigate } from 'react-router-dom';
 
 const AdminUsers = () => {
-  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [userTypeFilter, setUserTypeFilter] = useState('all');
 
@@ -64,7 +61,7 @@ const AdminUsers = () => {
     return matchesSearch && matchesType;
   });
 
-  const handleUserAction = (userId, action) => {
+  const handleUserAction = (userId: number, action: string) => {
     console.log(`Performing ${action} on user ${userId}`);
     alert(`执行操作: ${action} 用户ID: ${userId}`);
   };

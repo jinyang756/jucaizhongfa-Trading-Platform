@@ -14,8 +14,8 @@ const identify: Identify<Context> = dedupe(async (_context) => {
   void _context;
   return {
     environment:
-      process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test'
-        ? (process.env.NODE_ENV as 'production' | 'test')
+      import.meta.env.MODE === 'production' || import.meta.env.MODE === 'test'
+        ? (import.meta.env.MODE as 'production' | 'test')
         : 'development',
     user: {
       id: 'anonymous',

@@ -1,4 +1,4 @@
-import { supabase, supabaseEnabled } from '../utils/supabase';
+import { supabase } from '../supabase';
 import type { LoginCredentials, AuthUser, LoginResponse } from '../auth';
 import bcrypt from 'bcryptjs';
 
@@ -6,20 +6,6 @@ export class AuthService {
   // 管理员登录
   static async loginAdmin(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      // 本地开发环境无Supabase时的临时登录（仅用于演示）
-      if (!supabaseEnabled) {
-        if (credentials.username === 'admin001' && credentials.password === '12345') {
-          const authUser: AuthUser = {
-            id: 1,
-            username: 'admin001',
-            userType: 'admin',
-          };
-          localStorage.setItem('auth_user', JSON.stringify(authUser));
-          localStorage.setItem('auth_token', `admin_${authUser.id}_${Date.now()}`);
-          return { success: true, user: authUser };
-        }
-        return { success: false, message: '管理员账号不存在或密码错误（本地演示）' };
-      }
       const { data: admin, error } = await supabase
         .from('admins')
         .select('*')
@@ -56,34 +42,6 @@ export class AuthService {
   // 用户登录
   static async loginUser(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      // 本地开发环境无Supabase时的临时登录（仅用于演示）
-      if (!supabaseEnabled) {
-        if (credentials.username === 'testuser01' && credentials.password === '8a3k7z9x') {
-          const authUser: AuthUser = {
-            id: 1001,
-            username: 'testuser01',
-            userType: 'user',
-            relatedAdmin: 'admin001',
-            currentBalance: 10000,
-            permissions: {
-              fund: true,
-              option: true,
-              contract: true,
-              shContract: true,
-              hkContract: true,
-            },
-            limits: {
-              singleTradeMax: 10000,
-              dailyTradeMax: 50000,
-              minTradeAmount: 100,
-            },
-          };
-          localStorage.setItem('auth_user', JSON.stringify(authUser));
-          localStorage.setItem('auth_token', `user_${authUser.id}_${Date.now()}`);
-          return { success: true, user: authUser };
-        }
-        return { success: false, message: '用户账号不存在或密码错误（本地演示）' };
-      }
       const { data: user, error } = await supabase
         .from('users')
         .select('*')
@@ -179,11 +137,6 @@ export class AuthService {
   static async refreshUserInfo(): Promise<AuthUser | null> {
     const currentUser = this.getCurrentUser();
     if (!currentUser) return null;
-
-    // 当未启用 Supabase 时，直接返回当前用户信息，避免调用远程接口
-    if (!supabaseEnabled) {
-      return currentUser;
-    }
 
     try {
       if (currentUser.userType === 'admin') {

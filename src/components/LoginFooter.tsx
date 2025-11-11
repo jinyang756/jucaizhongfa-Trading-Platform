@@ -1,5 +1,3 @@
-import React from 'react';
-
 const LoginFooter = () => {
   return (
     <div className="mt-8 text-center text-xs text-gray-500">

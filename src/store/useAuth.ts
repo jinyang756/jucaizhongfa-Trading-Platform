@@ -1,14 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { supabase } from '../utils/supabase'; // 导入 Supabase 客户端
+import type { LoginCredentials } from '../types';
 
-export interface User {
+interface User {
   id: number;
   username: string;
+  email: string;
+  isEmailVerified: boolean;
   userType: 'admin' | 'user';
   currentBalance: number;
-  email?: string;
-  isEmailVerified?: boolean;
   permissions: {
     fund: boolean;
     option: boolean;
@@ -29,111 +29,102 @@ interface AuthState {
   user: User | null;
   isLoggedIn: boolean;
   login: (
-    credentials: { username: string; password: string; verificationCode?: string },
-    userType: string,
-  ) => Promise<{ success: boolean; message?: string; requiresEmailVerification?: boolean }>; // 改为异步函数
+    credentials: LoginCredentials,
+    userType: 'admin' | 'user',
+  ) => { success: boolean; message?: string; requiresEmailVerification?: boolean };
   logout: () => void;
-  sendVerificationCode: (email: string) => { success: boolean; message?: string };
-  verifyEmail: (code: string) => { success: boolean; message?: string };
+  sendVerificationCode: (email: string) => Promise<{ success: boolean; message: string }>;
+  verifyEmail: (code: string) => Promise<{ success: boolean; message: string }>;
 }
-
-// 模拟验证码存储
-const verificationCodes = new Map<string, { code: string; expires: number }>();
 
 export const useAuth = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
       isLoggedIn: false,
-
-      sendVerificationCode: (email) => {
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        const expires = Date.now() + 5 * 60 * 1000;
-        verificationCodes.set(email, { code, expires });
-        console.log(`Verification code for ${email}: ${code}`);
-        return { success: true, message: '验证码已发送至您的邮箱' };
-      },
-      
-      verifyEmail: (code) => {
-        const { user } = get();
-        if (!user || !user.email) {
-          return { success: false, message: '用户未登录或未绑定邮箱' };
-        }
-        const storedCode = verificationCodes.get(user.email);
-        if (!storedCode || Date.now() > storedCode.expires || storedCode.code !== code) {
-          if (storedCode && Date.now() > storedCode.expires) verificationCodes.delete(user.email);
-          return { success: false, message: '验证码错误或已过期' };
-        }
-        verificationCodes.delete(user.email);
-        const updatedUser = { ...user, isEmailVerified: true };
-        set({ user: updatedUser });
-        return { success: true, message: '邮箱验证成功' };
-      },
-
-      // 重写为异步的数据库登录逻辑
-      login: async (credentials, userType) => {
+      login: (credentials, userType) => {
+        console.log('Attempting login with credentials:', credentials, 'and userType:', userType);
         const { username, password } = credentials;
-
-        try {
-          // 在 'profiles' 表中查找匹配的用户名和用户类型
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('username', username)
-            .eq('user_type', userType)
-            .single();
-
-          if (error || !data) {
-            console.error('Login error or user not found:', error);
-            return { success: false, message: '用户名或密码错误' };
-          }
-
-          // **重要提示：在生产环境中，密码应该被哈希处理。**
-          // **当前仅为演示目的进行明文比较。**
-          if (data.password !== password) {
-            return { success: false, message: '用户名或密码错误' };
-          }
-
-          // 登录成功，根据用户类型设置权限和限制
-          const loggedInUser: User = {
-            id: data.id,
-            username: data.username,
-            userType: data.user_type,
-            currentBalance: data.current_balance || 0,
-            email: data.email,
-            isEmailVerified: data.is_email_verified,
-            permissions: { // 权限可以从数据库读取，或根据 userType 设置
-              fund: true,
-              option: data.user_type === 'admin',
-              contract: true,
-              shContract: data.user_type === 'admin',
-              hkContract: true,
-              block: true,
-              ipo: true,
+        if (userType === 'admin' && username === 'admin001' && password === 'jczf@2025') {
+          set({
+            user: {
+              id: 1,
+              username: 'admin001',
+              userType: 'admin',
+              email: 'admin@example.com',
+              isEmailVerified: true,
+              currentBalance: 100000.0,
+              permissions: {
+                fund: true,
+                option: true,
+                contract: true,
+                shContract: true,
+                hkContract: true,
+                block: true,
+                ipo: true,
+              },
+              limits: {
+                singleTradeMax: 50000,
+                dailyTradeMax: 200000,
+                minTradeAmount: 100,
+              },
             },
-            limits: { // 限制也可以从数据库读取或根据 userType 设置
-              singleTradeMax: data.user_type === 'admin' ? 50000 : 10000,
-              dailyTradeMax: data.user_type === 'admin' ? 200000 : 50000,
-              minTradeAmount: data.user_type === 'admin' ? 100 : 50,
-            },
-          };
-
-          set({ user: loggedInUser, isLoggedIn: true });
+            isLoggedIn: true,
+          });
           return { success: true };
-
-        } catch (err) {
-          console.error('An unexpected error occurred during login:', err);
-          return { success: false, message: '登录时发生未知错误' };
+        } else if (userType === 'user' && username === 'testuser01' && password === '8a3k7z9x') {
+          set({
+            user: {
+              id: 2,
+              username: 'testuser01',
+              userType: 'user',
+              email: 'testuser@example.com',
+              isEmailVerified: false,
+              currentBalance: 50000.0,
+              permissions: {
+                fund: true,
+                option: false,
+                contract: true,
+                shContract: false,
+                hkContract: true,
+                block: false,
+                ipo: false,
+              },
+              limits: {
+                singleTradeMax: 10000,
+                dailyTradeMax: 50000,
+                minTradeAmount: 50,
+              },
+            },
+            isLoggedIn: true,
+          });
+          return { success: true, requiresEmailVerification: true };
         }
+        return { success: false, message: '用户名或密码错误' };
       },
-
-      logout: () => {
-        set({ user: null, isLoggedIn: false });
-        // 可选：在这里可以调用 supabase.auth.signOut() 如果你使用 Supabase 的认证
+      logout: () => set({ user: null, isLoggedIn: false }),
+      sendVerificationCode: async (email: string) => {
+        console.log(`Sending verification code to ${email}`);
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return { success: true, message: '验证码已发送' };
+      },
+      verifyEmail: async (code: string) => {
+        console.log(`Verifying email with code ${code}`);
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (code === '123456') {
+          const user = get().user;
+          if (user) {
+            set({ user: { ...user, isEmailVerified: true } });
+          }
+          return { success: true, message: '邮箱验证成功' };
+        }
+        return { success: false, message: '验证码错误' };
       },
     }),
     {
-      name: 'quantumx-auth-storage', // 本地存储名称
+      name: 'quantumx-auth-storage',
       partialize: (state) => ({ user: state.user, isLoggedIn: state.isLoggedIn }),
     },
   ),

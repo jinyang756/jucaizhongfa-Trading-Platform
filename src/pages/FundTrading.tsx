@@ -1,74 +1,71 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/useAuth';
 import { useSimEngineStore } from '../utils/simEngine';
-import { useNotifications } from '../contexts/NotificationContext.tsx'; // Corrected import
+import { useSweetAlert } from '../hooks/useSweetAlert';
+
+interface Fund {
+  fund_code: string;
+  fund_name: string;
+  nav: number;
+}
 
 const FundTrading = () => {
   const { user } = useAuth();
   const { fundProducts, fetchFundProducts, subscribeFund, redeemFund } = useSimEngineStore();
-  const { addNotification } = useNotifications(); // Corrected hook name
+  const { success, error, info } = useSweetAlert();
   const navigate = useNavigate();
-  const [selectedFund, setSelectedFund] = useState(null);
+  const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
   const [tradeAmount, setTradeAmount] = useState('');
-  const [tradeType, setTradeType] = useState('buy'); // buy or sell
+  const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
 
   useEffect(() => {
-    // 获取基金产品数据
     fetchFundProducts();
-
-    // 设置定时器定期更新数据
-    const interval = setInterval(() => {
-      fetchFundProducts();
-    }, 10000); // 每10秒更新一次
-
+    const interval = setInterval(fetchFundProducts, 10000);
     return () => clearInterval(interval);
   }, [fetchFundProducts]);
 
-  const handleFundSelect = (fund) => {
+  const handleFundSelect = (fund: Fund) => {
     setSelectedFund(fund);
   };
 
   const handleTrade = async () => {
-    if (!selectedFund || !tradeAmount) {
-      addNotification({ message: '请选择基金并输入交易金额', type: 'warning', title: '操作提示' });
+    if (!user) {
+      error('认证失败', '用户未登录');
       return;
     }
-
+    if (!selectedFund || !tradeAmount) {
+      info('操作提示', '请选择基金并输入交易金额');
+      return;
+    }
     const amount = parseFloat(tradeAmount);
     if (isNaN(amount) || amount <= 0) {
-      addNotification({ message: '请输入有效的交易金额', type: 'warning', title: '输入错误' });
+      error('输入错误', '请输入有效的交易金额');
+      return;
+    }
+    if (tradeType === 'buy' && amount > (user.currentBalance ?? 0)) {
+      error('交易失败', '账户可用余额不足');
       return;
     }
 
-    if (tradeType === 'buy' && amount > user.currentBalance) {
-      addNotification({ message: '账户可用余额不足', type: 'error', title: '交易失败' });
-      return;
-    }
-
-    // 使用 jcf-sim-engine 执行交易
     try {
-      let result;
-      if (tradeType === 'buy') {
-        result = await subscribeFund(user.id.toString(), selectedFund.fund_code, amount);
-      } else {
-        // 对于卖出，我们需要份额而不是金额，这里简化处理
-        const shares = amount / selectedFund.nav;
-        result = await redeemFund(user.id.toString(), selectedFund.fund_code, shares);
-      }
+      const result =
+        tradeType === 'buy'
+          ? await subscribeFund(user.id.toString(), selectedFund.fund_code, amount)
+          : await redeemFund(user.id.toString(), selectedFund.fund_code, amount / selectedFund.nav);
 
       if (result) {
-        addNotification({
-          message: `${tradeType === 'buy' ? '买入' : '卖出'} ${selectedFund.fund_name} ${amount}元成功！`,
-          type: 'success',
-          title: '交易成功'
-        });
+        success(
+          '交易成功',
+          `${tradeType === 'buy' ? '买入' : '卖出'} ${selectedFund.fund_name} ${amount}元成功！`,
+        );
         setTradeAmount('');
       } else {
-        addNotification({ message: `${tradeType === 'buy' ? '买入' : '卖出'}失败`, type: 'error', title: '交易失败' });
+        error('交易失败', `${tradeType === 'buy' ? '买入' : '卖出'}失败`);
       }
-    } catch (error) {
-      addNotification({ message: `交易执行时发生错误: ${error.message}`, type: 'error', title: '系统错误' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '发生未知错误';
+      error('系统错误', `交易执行时发生错误: ${message}`);
     }
   };
 
@@ -76,9 +73,7 @@ const FundTrading = () => {
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">基金交易</h1>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 左侧 - 基金列表 */}
           <div className="lg:col-span-2">
             <div className="bg-gray-800 rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">可交易基金</h2>
@@ -93,7 +88,7 @@ const FundTrading = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {fundProducts.map((fund) => (
+                    {fundProducts.map((fund: Fund) => (
                       <tr
                         key={fund.fund_code}
                         className="border-b border-gray-700 hover:bg-gray-750"
@@ -104,7 +99,7 @@ const FundTrading = () => {
                         <td className="py-3">
                           <button
                             onClick={() => handleFundSelect(fund)}
-                            className="bg-indigo-600 hover:bg-indigo-700 py-1 px-3 rounded text-sm transition-colors"
+                            className="bg-indigo-600 hover:bg-indigo-700 py-1 px-3 rounded text-sm"
                           >
                             交易
                           </button>
@@ -116,12 +111,9 @@ const FundTrading = () => {
               </div>
             </div>
           </div>
-
-          {/* 右侧 - 交易面板 */}
           <div>
             <div className="bg-gray-800 rounded-lg p-6 sticky top-4">
               <h2 className="text-xl font-semibold mb-4">交易面板</h2>
-
               {selectedFund ? (
                 <div className="space-y-4">
                   <div className="bg-gray-750 p-4 rounded-lg">
@@ -129,7 +121,6 @@ const FundTrading = () => {
                     <p className="text-gray-400 text-sm">基金代码: {selectedFund.fund_code}</p>
                     <p className="text-lg mt-2">净值: ¥{selectedFund.nav.toFixed(4)}</p>
                   </div>
-
                   <div className="space-y-4">
                     <div>
                       <label className="block mb-2">交易类型</label>
@@ -148,25 +139,19 @@ const FundTrading = () => {
                         </button>
                       </div>
                     </div>
-
                     <div>
                       <label className="block mb-2">交易金额 (¥)</label>
                       <input
                         type="number"
                         value={tradeAmount}
                         onChange={(e) => setTradeAmount(e.target.value)}
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full bg-gray-700 rounded px-3 py-2"
                         placeholder="请输入交易金额"
                       />
                     </div>
-
                     <button
                       onClick={handleTrade}
-                      className={`w-full py-3 rounded-lg font-semibold transition-colors ${
-                        tradeType === 'buy'
-                          ? 'bg-green-600 hover:bg-green-700'
-                          : 'bg-red-600 hover:bg-red-700'
-                      }`}
+                      className={`w-full py-3 rounded-lg font-semibold ${tradeType === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
                     >
                       {tradeType === 'buy' ? '买入' : '卖出'}
                     </button>
@@ -177,10 +162,9 @@ const FundTrading = () => {
                   <p>请选择要交易的基金</p>
                 </div>
               )}
-
               <div className="mt-6 pt-4 border-t border-gray-700">
                 <h3 className="font-semibold mb-2">账户信息</h3>
-                <p>可用余额: ¥{user.currentBalance.toFixed(2)}</p>
+                <p>可用余额: ¥{user?.currentBalance?.toFixed(2) ?? '0.00'}</p>
                 <button
                   onClick={() => navigate('/fund-logs/1')}
                   className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm"

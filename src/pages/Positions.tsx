@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, supabaseEnabled } from '../utils/supabase';
+import { supabase } from '../supabase';
 import { useAuth } from '../store/useAuth';
 
 interface Position {
@@ -16,6 +16,41 @@ interface Position {
   purchase_date: string;
 }
 
+interface FundOrder {
+  id: number;
+  fund_code: string;
+  fund_name: string;
+  amount: number;
+  shares: number;
+  nav: number;
+  profit_amount: number;
+  created_at: string;
+}
+
+interface OptionOrder {
+  id: number;
+  option_code: string;
+  option_name: string;
+  amount: number;
+  shares: number;
+  nav: number;
+  profit_loss: number;
+  profit_loss_ratio: number;
+  created_at: string;
+}
+
+interface ContractOrder {
+  id: number;
+  contract_code: string;
+  contract_name: string;
+  amount: number;
+  shares: number;
+  nav: number;
+  profit_loss: number;
+  profit_loss_ratio: number;
+  created_at: string;
+}
+
 export const Positions = () => {
   const { user } = useAuth();
   const [positions, setPositions] = useState<Position[]>([]);
@@ -28,126 +63,85 @@ export const Positions = () => {
     setLoading(true);
     setError('');
     try {
-      if (!supabaseEnabled) {
-        // Mock data for demonstration
-        setPositions([
-          {
-            id: 1,
-            type: 'fund',
-            code: 'F0001',
-            name: '稳健增长基金',
-            amount: 10000,
-            shares: 8547.01,
-            nav: 1.1698,
-            current_value: 10500,
-            profit_loss: 500,
-            profit_loss_ratio: 0.05,
-            purchase_date: '2023-01-15T10:00:00Z',
-          },
-          {
-            id: 2,
-            type: 'option',
-            code: 'AAPL2406C150',
-            name: '苹果看涨期权',
-            amount: 500,
-            shares: 10,
-            nav: 50,
-            current_value: 600,
-            profit_loss: 100,
-            profit_loss_ratio: 0.2,
-            purchase_date: '2024-05-01T14:30:00Z',
-          },
-          {
-            id: 3,
-            type: 'contract',
-            code: 'BTCUSDT',
-            name: '比特币永续合约',
-            amount: 2000,
-            shares: 0.03,
-            nav: 65000,
-            current_value: 1950,
-            profit_loss: -50,
-            profit_loss_ratio: -0.025,
-            purchase_date: '2024-05-10T08:00:00Z',
-          },
-        ]);
-      } else {
-        const { data: fundOrders, error: fundError } = await supabase
-          .from('fund_orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('order_status', 'holding');
-        if (fundError) throw fundError;
+      const { data: fundOrders, error: fundError } = await supabase
+        .from('fund_orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('order_status', 'holding');
+      if (fundError) throw fundError;
 
-        const { data: optionOrders, error: optionError } = await supabase
-          .from('option_orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('order_status', 'holding');
-        if (optionError) throw optionError;
+      const { data: optionOrders, error: optionError } = await supabase
+        .from('option_orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('order_status', 'holding');
+      if (optionError) throw optionError;
 
-        const { data: contractOrders, error: contractError } = await supabase
-          .from('contract_orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('order_status', 'holding');
-        if (contractError) throw contractError;
+      const { data: contractOrders, error: contractError } = await supabase
+        .from('contract_orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('order_status', 'holding');
+      if (contractError) throw contractError;
 
-        const allPositions: Position[] = [];
+      const allPositions: Position[] = [];
 
-        fundOrders.forEach((order) => {
-          allPositions.push({
-            id: `fund-${order.id}`,
-            type: 'fund',
-            code: order.fund_code,
-            name: order.fund_name || order.fund_code,
-            amount: order.amount,
-            shares: order.shares,
-            nav: order.nav,
-            current_value: order.shares * order.nav, // Simplified for mock
-            profit_loss: order.profit_amount,
-            profit_loss_ratio: order.profit_amount / order.amount,
-            purchase_date: order.created_at,
-          });
+      fundOrders.forEach((order: FundOrder) => {
+        allPositions.push({
+          id: `fund-${order.id}`,
+          type: 'fund',
+          code: order.fund_code,
+          name: order.fund_name || order.fund_code,
+          amount: order.amount,
+          shares: order.shares,
+          nav: order.nav,
+          current_value: order.shares * order.nav, // Simplified for mock
+          profit_loss: order.profit_amount,
+          profit_loss_ratio: order.profit_amount / order.amount,
+          purchase_date: order.created_at,
         });
+      });
 
-        optionOrders.forEach((order) => {
-          allPositions.push({
-            id: `option-${order.id}`,
-            type: 'option',
-            code: order.option_code,
-            name: order.option_name || order.option_code,
-            amount: order.amount,
-            shares: order.shares,
-            nav: order.nav,
-            current_value: order.shares * order.nav, // Simplified for mock
-            profit_loss: order.profit_loss,
-            profit_loss_ratio: order.profit_loss_ratio,
-            purchase_date: order.created_at,
-          });
+      optionOrders.forEach((order: OptionOrder) => {
+        allPositions.push({
+          id: `option-${order.id}`,
+          type: 'option',
+          code: order.option_code,
+          name: order.option_name || order.option_code,
+          amount: order.amount,
+          shares: order.shares,
+          nav: order.nav,
+          current_value: order.shares * order.nav, // Simplified for mock
+          profit_loss: order.profit_loss,
+          profit_loss_ratio: order.profit_loss_ratio,
+          purchase_date: order.created_at,
         });
+      });
 
-        contractOrders.forEach((order) => {
-          allPositions.push({
-            id: `contract-${order.id}`,
-            type: 'contract',
-            code: order.contract_code,
-            name: order.contract_name || order.contract_code,
-            amount: order.amount,
-            shares: order.shares,
-            nav: order.nav,
-            current_value: order.shares * order.nav, // Simplified for mock
-            profit_loss: order.profit_loss,
-            profit_loss_ratio: order.profit_loss_ratio,
-            purchase_date: order.created_at,
-          });
+      contractOrders.forEach((order: ContractOrder) => {
+        allPositions.push({
+          id: `contract-${order.id}`,
+          type: 'contract',
+          code: order.contract_code,
+          name: order.contract_name || order.contract_code,
+          amount: order.amount,
+          shares: order.shares,
+          nav: order.nav,
+          current_value: order.shares * order.nav, // Simplified for mock
+          profit_loss: order.profit_loss,
+          profit_loss_ratio: order.profit_loss_ratio,
+          purchase_date: order.created_at,
         });
+      });
 
-        setPositions(allPositions);
-      }
+      setPositions(allPositions);
     } catch (e) {
       console.error('Error loading positions:', e);
-      setError('加载持仓失败');
+      if (e instanceof Error) {
+        setError('加载持仓失败');
+      } else {
+        setError('加载持仓失败: 发生未知错误');
+      }
     } finally {
       setLoading(false);
     }
@@ -155,7 +149,7 @@ export const Positions = () => {
 
   useEffect(() => {
     loadPositions();
-  }, [loadPositions, filter]);
+  }, [loadPositions]);
 
   const filteredPositions =
     filter === 'all' ? positions : positions.filter((p) => p.type === filter);

@@ -6,13 +6,13 @@ export interface Toast {
   type: 'info' | 'success' | 'error';
 }
 
-export interface ToastState {
+interface ToastStoreState {
   toasts: Toast[];
   showToast: (message: string, type?: 'info' | 'success' | 'error') => void;
   hideToast: (id: number) => void;
 }
 
-export const useToastStore = create<ToastState>((set) => ({
+export const useToastStore = create<ToastStoreState>((set) => ({
   toasts: [],
   showToast: (message, type = 'info') => {
     const id = Date.now();

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/useAuth';
-import { useSimEngineStore } from '../utils/simEngine';
+import { useSimEngineStore, type IPOStock } from '../utils/simEngine';
 
 const IPOSubscription = () => {
   const { user } = useAuth();
   const { ipoStocks, fetchIpoStocks, subscribeToIpo } = useSimEngineStore();
   const navigate = useNavigate();
-  const [selectedStock, setSelectedStock] = useState(null);
+  const [selectedStock, setSelectedStock] = useState<IPOStock | null>(null);
   const [shares, setShares] = useState('');
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const IPOSubscription = () => {
     return () => clearInterval(interval);
   }, [fetchIpoStocks]);
 
-  const handleStockSelect = (stock) => {
+  const handleStockSelect = (stock: IPOStock) => {
     setSelectedStock(stock);
   };
 
@@ -54,12 +54,16 @@ const IPOSubscription = () => {
         alert('申购失败');
       }
     } catch (error) {
-      alert(`申购失败: ${error.message}`);
+      if (error instanceof Error) {
+        alert(`申购失败: ${error.message}`);
+      } else {
+        alert('申购失败: 发生未知错误');
+      }
     }
   };
 
-  const getStatusText = (status) => {
-    const statusMap = {
+  const getStatusText = (status: string) => {
+    const statusMap: { [key: string]: string } = {
       upcoming: '即将发行',
       subscription: '申购中',
       allocated: '已配售',
@@ -68,8 +72,8 @@ const IPOSubscription = () => {
     return statusMap[status] || status;
   };
 
-  const getStatusColor = (status) => {
-    const colorMap = {
+  const getStatusColor = (status: string) => {
+    const colorMap: { [key: string]: string } = {
       upcoming: 'blue',
       subscription: 'green',
       allocated: 'orange',
@@ -185,7 +189,7 @@ const IPOSubscription = () => {
 
               <div className="mt-6 pt-4 border-t border-gray-700">
                 <h3 className="font-semibold mb-2">账户信息</h3>
-                <p>可用余额: ¥{user.currentBalance.toFixed(2)}</p>
+                {user && <p>可用余额: ¥{user.currentBalance.toFixed(2)}</p>}
                 <button
                   onClick={() => navigate('/fund-logs/1')}
                   className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm"

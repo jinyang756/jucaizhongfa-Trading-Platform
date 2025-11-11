@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../store/useAuth';
 
 const AccountSettings = () => {
@@ -19,13 +19,13 @@ const AccountSettings = () => {
     alert('个人信息已保存');
   };
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     if (!email) {
       alert('请输入邮箱地址');
       return;
     }
 
-    const result = sendVerificationCode(email);
+    const result = await sendVerificationCode(email);
     if (result.success) {
       alert(result.message);
     } else {
@@ -33,13 +33,13 @@ const AccountSettings = () => {
     }
   };
 
-  const handleVerifyEmail = () => {
+  const handleVerifyEmail = async () => {
     if (!verificationCode) {
       alert('请输入验证码');
       return;
     }
 
-    const result = verifyEmail(verificationCode);
+    const result = await verifyEmail(verificationCode);
     if (result.success) {
       alert(result.message);
       setVerificationCode('');

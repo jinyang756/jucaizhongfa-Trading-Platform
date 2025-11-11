@@ -1,5 +1,5 @@
 import { useFetch } from './useFetch';
-import { supabase, supabaseEnabled } from '../utils/supabase';
+import { supabase } from '../supabase';
 
 export type FundRow = {
   id?: number;
@@ -30,30 +30,6 @@ export const useFundsApi = () => {
 
   const getAllFunds = async (options?: FundOptions) => {
     return fetchData(async () => {
-      if (!supabaseEnabled) {
-        // Mock data for funds
-        return [
-          {
-            id: 1,
-            fund_name: '股票基金A',
-            fund_code: 'F001',
-            fund_type: '股票型',
-            initial_value: 10000,
-            current_value: 12000,
-            created_at: '2023-01-01',
-          },
-          {
-            id: 2,
-            fund_name: '债券基金B',
-            fund_code: 'F002',
-            fund_type: '债券型',
-            initial_value: 5000,
-            current_value: 5500,
-            created_at: '2023-02-01',
-          },
-        ];
-      }
-
       let query = supabase.from('funds').select('*');
 
       if (options?.filters) {
@@ -84,19 +60,6 @@ export const useFundsApi = () => {
 
   const getFundById = async (id: number) => {
     return fetchData(async () => {
-      if (!supabaseEnabled) {
-        // Mock data for single fund
-        const mockFund = {
-          id: 1,
-          fund_name: '股票基金A',
-          fund_code: 'F001',
-          fund_type: '股票型',
-          initial_value: 10000,
-          current_value: 12000,
-          created_at: '2023-01-01',
-        };
-        return [mockFund];
-      }
       const { data, error } = await supabase.from('funds').select('*').eq('id', id).single();
       if (error) throw error;
       return data ? [data] : null;
@@ -105,9 +68,6 @@ export const useFundsApi = () => {
 
   const createFund = async (fund: Partial<FundRow>) => {
     return fetchData(async () => {
-      if (!supabaseEnabled) {
-        return [{ id: Date.now(), ...fund } as FundRow];
-      }
       const { data, error } = await supabase.from('funds').insert(fund).select();
       if (error) throw error;
       return data || null;
@@ -116,9 +76,6 @@ export const useFundsApi = () => {
 
   const updateFund = async (id: number, fund: Partial<FundRow>) => {
     return fetchData(async () => {
-      if (!supabaseEnabled) {
-        return [{ id, ...fund } as FundRow];
-      }
       const { data, error } = await supabase.from('funds').update(fund).eq('id', id).select();
       if (error) throw error;
       return data || null;
@@ -127,9 +84,6 @@ export const useFundsApi = () => {
 
   const deleteFund = async (id: number) => {
     return fetchData(async () => {
-      if (!supabaseEnabled) {
-        return null;
-      }
       const { error } = await supabase.from('funds').delete().eq('id', id);
       if (error) throw error;
       return null;
