@@ -37,9 +37,7 @@ export async function exportToExcel<T = Record<string, unknown>>(
       columns.forEach((col) => {
         const key = col.key as keyof T;
         const value = row[key];
-        rowData[col.key as string] = col.transform
-          ? col.transform(value, row)
-          : value;
+        rowData[col.key as string] = col.transform ? col.transform(value, row) : value;
       });
       worksheet.addRow(rowData);
     });
