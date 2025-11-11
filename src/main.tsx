@@ -6,9 +6,6 @@ import App from './App.tsx';
 import { ToastProvider } from './components/Toast';
 import { BrowserRouter } from 'react-router-dom';
 
-// Clear localStorage for debugging purposes to ensure a clean authentication state
-localStorage.clear();
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
