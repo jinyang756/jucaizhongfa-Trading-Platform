@@ -35,7 +35,7 @@
 | 功能模块            | Feature Module            | 描述                                                     | Description                                                                                    |
 | ------------------- | ------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | 🎨 **赛博金融主题** | **Cyber Financial Theme** | 深色玻璃态设计，霓虹渐变交互，支持红涨绿跌配色           | Dark glassmorphism design, neon gradient interactions, supports red-up green-down color scheme |
-| 📱 **移动端优先**   | **Mobile-First**          | 完美适配手机浏览器，支持微信内置浏览器                   | Perfectly adapted for mobile browsers, supports WeChat's built-in browser                      |
+| 📱 **移动端优先**   | **Mobile-First**          | 完美适配手机浏览器，支持微信内置浏览器                   | Perfectly adapted for mobile browsers, supports WeChat'''s built-in browser                      |
 | 🤖 **AI 智能助理**  | **AI Smart Assistant**    | 实时行情解读、智能选股、一键跟单                         | Real-time market interpretation, intelligent stock selection, one-click follow trading         |
 | 📈 **专业级图表**   | **Professional Charts**   | 基于 ECharts / Recharts 的 K线图、多指标叠加、趋势线绘制 | K-line charts based on ECharts / Recharts, multiple indicator overlays, trend line drawing     |
 | 🔒 **安全可信**     | **Secure & Trustworthy**  | 模拟银行存管、证监会资质展示、SSL 加密                   | Simulated bank custody, display of CSRC qualifications, SSL encryption                         |
@@ -51,7 +51,7 @@
 - **样式处理 | Styling**: Tailwind CSS ^4.1.16, PostCSS ^8.5.6
 - **图表组件 | Charting**: ECharts ^6.0.0, Recharts ^3.3.0
 - **数据交互 | Data Interaction**: Supabase JS ^2.78.0
-- **工具库 | Utilities**: date-fns ^4.1.0, uuid ^13.0.0, xlsx ^0.18.5
+- **工具库 | Utilities**: date-fns ^4.1.0, uuid ^13.0.0, exceljs ^4.4.0
 - **弹窗库 | Modal Library**: SweetAlert2
 - **动画库 | Animation Library**: Framer Motion
 - **音效库 | Sound Library**: easy-sound

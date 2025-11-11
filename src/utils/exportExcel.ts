@@ -1,4 +1,5 @@
-import type { WorkBook } from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 export interface ExportColumn<T> {
   key: keyof T | string;
@@ -6,7 +7,6 @@ export interface ExportColumn<T> {
   transform?: (value: unknown, row: T) => unknown;
 }
 
-// 动态引入 xlsx，避免在未安装时导致构建失败
 export async function exportToExcel<T = Record<string, unknown>>(
   rows: T[],
   columns: ExportColumn<T>[],
@@ -21,22 +21,33 @@ export async function exportToExcel<T = Record<string, unknown>>(
   }
 
   try {
-    const XLSX = await import('xlsx');
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet(sheetName);
 
-    const data = rows.map((row) => {
-      const obj: Record<string, unknown> = {};
-      for (const col of columns) {
-        const val = typeof col.key === 'string' ? row[col.key as keyof T] : row[col.key];
-        obj[col.header] = col.transform ? col.transform(val, row) : val;
-      }
-      return obj;
+    // 设置表头
+    worksheet.columns = columns.map((col) => ({
+      header: col.header,
+      key: col.key as string,
+      width: 20, // 默认列宽
+    }));
+
+    // 填充数据
+    rows.forEach((row) => {
+      const rowData: Record<string, unknown> = {};
+      columns.forEach((col) => {
+        const key = col.key as keyof T;
+        const value = row[key];
+        rowData[col.key as string] = col.transform
+          ? col.transform(value, row)
+          : value;
+      });
+      worksheet.addRow(rowData);
     });
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb: WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    XLSX.writeFile(wb, filename);
+    // 生成 buffer 并使用 file-saver 保存
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), filename);
   } catch (e) {
-    console.error('导出失败，请确认已安装 xlsx 依赖', e);
+    console.error('导出失败', e);
   }
 }
