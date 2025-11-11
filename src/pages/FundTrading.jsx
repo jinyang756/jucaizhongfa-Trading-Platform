@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/useAuth';
 import { useSimEngineStore } from '../utils/simEngine';
+import { useNotification } from '../contexts/NotificationContext.tsx'; // Import the notification hook
 
 const FundTrading = () => {
   const { user } = useAuth();
   const { fundProducts, fetchFundProducts, subscribeFund, redeemFund } = useSimEngineStore();
+  const { addNotification } = useNotification(); // Get the notification function
   const navigate = useNavigate();
   const [selectedFund, setSelectedFund] = useState(null);
   const [tradeAmount, setTradeAmount] = useState('');
@@ -29,18 +31,18 @@ const FundTrading = () => {
 
   const handleTrade = async () => {
     if (!selectedFund || !tradeAmount) {
-      alert('请选择基金并输入交易金额');
+      addNotification({ message: '请选择基金并输入交易金额', type: 'warning' });
       return;
     }
 
     const amount = parseFloat(tradeAmount);
     if (isNaN(amount) || amount <= 0) {
-      alert('请输入有效的交易金额');
+      addNotification({ message: '请输入有效的交易金额', type: 'warning' });
       return;
     }
 
     if (tradeType === 'buy' && amount > user.currentBalance) {
-      alert('余额不足');
+      addNotification({ message: '余额不足', type: 'error' });
       return;
     }
 
@@ -56,15 +58,16 @@ const FundTrading = () => {
       }
 
       if (result) {
-        alert(
-          `${tradeType === 'buy' ? '买入' : '卖出'} ${selectedFund.fund_name} ${amount}元成功！`,
-        );
+        addNotification({
+          message: `${tradeType === 'buy' ? '买入' : '卖出'} ${selectedFund.fund_name} ${amount}元成功！`,
+          type: 'success',
+        });
         setTradeAmount('');
       } else {
-        alert(`${tradeType === 'buy' ? '买入' : '卖出'}失败`);
+        addNotification({ message: `${tradeType === 'buy' ? '买入' : '卖出'}失败`, type: 'error' });
       }
     } catch (error) {
-      alert(`交易失败: ${error.message}`);
+      addNotification({ message: `交易失败: ${error.message}`, type: 'error' });
     }
   };
 

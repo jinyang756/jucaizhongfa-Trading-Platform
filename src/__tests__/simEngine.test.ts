@@ -128,7 +128,15 @@ describe('SimEngine', () => {
 
   describe('executeBlockTrade', () => {
     it('should successfully execute block trade', () => {
-      const result = SimEngine.executeBlockTrade('000001', '测试股票', 12.0, 1000, '买家1', '卖家1', 0.05);
+      const result = SimEngine.executeBlockTrade(
+        '000001',
+        '测试股票',
+        12.0,
+        1000,
+        '买家1',
+        '卖家1',
+        0.05,
+      );
       expect(result).toBe('success');
     });
   });
@@ -228,29 +236,18 @@ describe('useSimEngineStore', () => {
 
   describe('executeBlockTrade', () => {
     it('should execute block trade and return result', async () => {
-      const result = await useSimEngineStore.getState().executeBlockTrade(
-        '000001',
-        '测试股票',
-        12.0,
-        1000,
-        '买家1',
-        '卖家1',
-        0.05
-      );
+      const result = await useSimEngineStore
+        .getState()
+        .executeBlockTrade('000001', '测试股票', 12.0, 1000, '买家1', '卖家1', 0.05);
       expect(result).toBe('success');
     });
   });
 
   describe('executeSeatTrade', () => {
     it('should execute seat trade and return result', async () => {
-      const result = await useSimEngineStore.getState().executeSeatTrade(
-        'user1',
-        '000001',
-        '测试股票',
-        12.0,
-        1000,
-        'buy'
-      );
+      const result = await useSimEngineStore
+        .getState()
+        .executeSeatTrade('user1', '000001', '测试股票', 12.0, 1000, 'buy');
       expect(result).toBe('success');
     });
   });
@@ -258,7 +255,7 @@ describe('useSimEngineStore', () => {
   describe('setContractResult', () => {
     it('should set contract result without error', async () => {
       await expect(
-        useSimEngineStore.getState().setContractResult('C001', 'win')
+        useSimEngineStore.getState().setContractResult('C001', 'win'),
       ).resolves.toBeUndefined();
     });
   });

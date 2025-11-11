@@ -24,7 +24,7 @@ export class IpoEngine {
       listing_date: '2025-12-01',
     },
   ];
-  
+
   subscribeToIpo = jest.fn().mockReturnValue(true);
 }
 
@@ -40,7 +40,7 @@ export class FundEngine {
       status: 'active',
     },
   ]);
-  
+
   subscribeFund = jest.fn().mockReturnValue('success');
   redeemFund = jest.fn().mockReturnValue('success');
 }
@@ -60,7 +60,7 @@ export class BlockEngine {
       status: 'completed',
     },
   ]);
-  
+
   executeBlockTrade = jest.fn().mockReturnValue('success');
 }
 

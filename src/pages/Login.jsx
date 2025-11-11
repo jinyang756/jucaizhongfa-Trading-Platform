@@ -73,7 +73,7 @@ const Login = () => {
       console.log('Calling login function with:', loginCredentials, userType);
       const result = await login(loginCredentials, userType);
       console.log('Login result:', result);
-      
+
       if (result.success) {
         playLogin();
         success('登录成功', `欢迎${userType === 'admin' ? '基金管理人' : '会员'}登录`);

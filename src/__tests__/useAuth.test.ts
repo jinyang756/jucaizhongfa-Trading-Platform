@@ -12,11 +12,8 @@ describe('useAuth', () => {
 
   describe('login', () => {
     it('should successfully login admin user', () => {
-      const result = useAuth.getState().login(
-        { username: 'admin001', password: '12345' },
-        'admin'
-      );
-      
+      const result = useAuth.getState().login({ username: 'admin001', password: '12345' }, 'admin');
+
       expect(result.success).toBe(true);
       const state = useAuth.getState();
       expect(state.isLoggedIn).toBe(true);
@@ -26,11 +23,10 @@ describe('useAuth', () => {
     });
 
     it('should successfully login regular user', () => {
-      const result = useAuth.getState().login(
-        { username: 'testuser01', password: '8a3k7z9x' },
-        'user'
-      );
-      
+      const result = useAuth
+        .getState()
+        .login({ username: 'testuser01', password: '8a3k7z9x' }, 'user');
+
       expect(result.success).toBe(true);
       const state = useAuth.getState();
       expect(state.isLoggedIn).toBe(true);
@@ -40,11 +36,10 @@ describe('useAuth', () => {
     });
 
     it('should fail login with incorrect credentials', () => {
-      const result = useAuth.getState().login(
-        { username: 'wronguser', password: 'wrongpass' },
-        'user'
-      );
-      
+      const result = useAuth
+        .getState()
+        .login({ username: 'wronguser', password: 'wrongpass' }, 'user');
+
       expect(result.success).toBe(false);
       expect(result.message).toBe('用户名或密码错误');
       const state = useAuth.getState();
@@ -53,11 +48,10 @@ describe('useAuth', () => {
     });
 
     it('should fail login with unsupported user type', () => {
-      const result = useAuth.getState().login(
-        { username: 'testuser01', password: '8a3k7z9x' },
-        'unsupported'
-      );
-      
+      const result = useAuth
+        .getState()
+        .login({ username: 'testuser01', password: '8a3k7z9x' }, 'unsupported');
+
       expect(result.success).toBe(false);
       expect(result.message).toBe('不支持的用户类型');
       const state = useAuth.getState();
@@ -69,14 +63,11 @@ describe('useAuth', () => {
   describe('logout', () => {
     it('should successfully logout user', () => {
       // First login
-      useAuth.getState().login(
-        { username: 'testuser01', password: '8a3k7z9x' },
-        'user'
-      );
-      
+      useAuth.getState().login({ username: 'testuser01', password: '8a3k7z9x' }, 'user');
+
       // Then logout
       useAuth.getState().logout();
-      
+
       const state = useAuth.getState();
       expect(state.isLoggedIn).toBe(false);
       expect(state.user).toBeNull();
@@ -110,7 +101,7 @@ describe('useAuth', () => {
         },
         isLoggedIn: true,
       });
-      
+
       const result = useAuth.getState().sendVerificationCode('test@example.com');
       expect(result.success).toBe(true);
       expect(result.message).toBe('验证码已发送至您的邮箱');
@@ -144,13 +135,13 @@ describe('useAuth', () => {
         },
         isLoggedIn: true,
       });
-      
+
       // Send verification code first
       useAuth.getState().sendVerificationCode('test@example.com');
-      
+
       // Get the generated code (this is a bit hacky but works for testing)
       const code = '123456'; // In real implementation, we would extract this from the mock
-      
+
       // For this test, we'll just check that the function exists and can be called
       expect(() => {
         useAuth.getState().verifyEmail(code);

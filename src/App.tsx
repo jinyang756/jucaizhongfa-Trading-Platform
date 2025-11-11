@@ -6,7 +6,6 @@ import { useAuth } from './store/useAuth'; // Authentication store
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'; // Protected route component
 import { BottomNavigationBar } from './components/BottomNavigationBar.tsx'; // Bottom navigation bar
 import SuspenseWrapper from './components/SuspenseWrapper'; // Suspense wrapper for lazy loading
-import ErrorTest from './pages/ErrorTest.jsx'; // Error test
 
 // 动态导入页面组件
 const TradeDashboard = lazy(() => import('./pages/TradeDashboard.jsx'));
@@ -209,7 +208,6 @@ function App() {
               </SuspenseWrapper>
             }
           />
-          <Route path="/error-test" element={<ErrorTest />} />
 
           {/* Admin Routes */}
           {userType === 'admin' && (

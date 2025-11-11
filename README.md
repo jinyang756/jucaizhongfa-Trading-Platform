@@ -32,14 +32,14 @@
 
 ### 🎯 核心特性 | Core Features
 
-| 功能模块 | Feature Module               | 描述 | Description                                                                                    |
-| ------------------- | ---------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| 🎨 **赛博金融主题** | **Cyber Financial Theme** | 深色玻璃态设计，霓虹渐变交互，支持红涨绿跌配色 | Dark glassmorphism design, neon gradient interactions, supports red-up green-down color scheme |
-| 📱 **移动端优先** | **Mobile-First**          | 完美适配手机浏览器，支持微信内置浏览器 | Perfectly adapted for mobile browsers, supports WeChat's built-in browser                      |
-| 🤖 **AI 智能助理** | **AI Smart Assistant**    | 实时行情解读、智能选股、一键跟单 | Real-time market interpretation, intelligent stock selection, one-click follow trading         |
-| 📈 **专业级图表** | **Professional Charts**   | 基于 ECharts / Recharts 的 K线图、多指标叠加、趋势线绘制 | K-line charts based on ECharts / Recharts, multiple indicator overlays, trend line drawing     |
-| 🔒 **安全可信** | **Secure & Trustworthy**  | 模拟银行存管、证监会资质展示、SSL 加密 | Simulated bank custody, display of CSRC qualifications, SSL encryption                         |
-| ⚡ **极致性能** | **Extreme Performance**   | Lighthouse 评分 90+，首屏加载 < 1.5s | Lighthouse score 90+, first screen load < 1.5s                                                 |
+| 功能模块            | Feature Module            | 描述                                                     | Description                                                                                    |
+| ------------------- | ------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 🎨 **赛博金融主题** | **Cyber Financial Theme** | 深色玻璃态设计，霓虹渐变交互，支持红涨绿跌配色           | Dark glassmorphism design, neon gradient interactions, supports red-up green-down color scheme |
+| 📱 **移动端优先**   | **Mobile-First**          | 完美适配手机浏览器，支持微信内置浏览器                   | Perfectly adapted for mobile browsers, supports WeChat's built-in browser                      |
+| 🤖 **AI 智能助理**  | **AI Smart Assistant**    | 实时行情解读、智能选股、一键跟单                         | Real-time market interpretation, intelligent stock selection, one-click follow trading         |
+| 📈 **专业级图表**   | **Professional Charts**   | 基于 ECharts / Recharts 的 K线图、多指标叠加、趋势线绘制 | K-line charts based on ECharts / Recharts, multiple indicator overlays, trend line drawing     |
+| 🔒 **安全可信**     | **Secure & Trustworthy**  | 模拟银行存管、证监会资质展示、SSL 加密                   | Simulated bank custody, display of CSRC qualifications, SSL encryption                         |
+| ⚡ **极致性能**     | **Extreme Performance**   | Lighthouse 评分 90+，首屏加载 < 1.5s                     | Lighthouse score 90+, first screen load < 1.5s                                                 |
 
 ## 🛠️ 技术栈 | Technology Stack
 
@@ -166,7 +166,7 @@ jucaizhongfa-Trading-Platform/
 
 ### 色彩规范（赛博金融主题） | Color Specification (Cyber Financial Theme)
 
-| 用途 | Purpose         | 颜色名称 | Color Name      | Hex       | CSS Variable   |
+| 用途   | Purpose         | 颜色名称 | Color Name      | Hex       | CSS Variable   |
 | ------ | --------------- | -------- | --------------- | --------- | -------------- |
 | 主背景 | Main Background | 深空蓝   | Deep Space Blue | `#0A0E27` | `--bg-dark`    |
 | 品牌色 | Brand Color     | 赛博紫   | Cyber Violet    | `#6366F1` | `--primary`    |
@@ -187,21 +187,26 @@ jucaizhongfa-Trading-Platform/
 Create a `.env` file (refer to `.env.example`):
 
 ``env
+
 # API 配置 | API Configuration
+
 VITE_API_BASE_URL=https://api.example.com
 VITE_TUSHARE_TOKEN=your_tushare_token_here
 VITE_SUPABASE_URL=your_supabase_url_here
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 
 # Firebase 配置（可选）| Firebase Configuration (Optional)
+
 VITE_FIREBASE_API_KEY=your_firebase_api_key
 VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
 
 # 微信支付（模拟）| WeChat Pay (Mock)
-VITE_WECHAT_APP_ID=wx1234567890
-```
 
-> ⚠️ **安全警告 | Security Warning**: 
+VITE_WECHAT_APP_ID=wx1234567890
+
+````
+
+> ⚠️ **安全警告 | Security Warning**:
 > - 请勿将包含真实敏感信息的 `.env` 文件提交到代码仓库
 > - 确保 `.env` 文件已在 `.gitignore` 中列出（本项目已配置）
 > - 生产环境应通过部署平台（如 Vercel）的环境变量配置功能进行设置
@@ -230,7 +235,7 @@ VITE_WECHAT_APP_ID=wx1234567890
 
 ```bash
 npm run test
-```
+````
 
 ### 运行 E2E 测试 | Run E2E Tests
 
@@ -324,7 +329,7 @@ We warmly welcome and appreciate your contributions to the **QuantumX Pro Tradin
     git clone https://github.com/您的用户名/jucaizhongfa-Trading-Platform.git
     cd jucaizhongfa-Trading-Platform
     ```
-    
+
     ```bash
     git clone https://github.com/your-username/jucaizhongfa-Trading-Platform.git
     cd jucaizhongfa-Trading-Platform
