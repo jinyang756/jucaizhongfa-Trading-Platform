@@ -3,7 +3,6 @@ import { useAuth } from '../store/useAuth';
 import { useNavigate } from 'react-router-dom';
 import type { LoginCredentials } from '../types';
 import { useSweetAlert } from '../hooks/useSweetAlert';
-import useAppSound from '../hooks/useSound';
 import { Input } from '../components/ui/input';
 import LoginFooter from '../components/LoginFooter';
 
@@ -18,7 +17,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { error, success, info } = useSweetAlert();
-  const { playAlert, playNotification, playButtonClick, playPageTransition } = useAppSound();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState<'admin' | 'user'>('user');
@@ -72,10 +70,8 @@ const Login = () => {
         }, 1500);
       } else if (result.requiresEmailVerification) {
         setRequiresEmailVerification(true);
-        playNotification();
         info('需要邮箱验证', result.message || '请输入验证码进行验证');
       } else {
-        playAlert();
         error('登录失败', result.message || '请检查用户名和密码');
       }
     } catch (err) {
@@ -96,8 +92,8 @@ const Login = () => {
   };
 
   useEffect(() => {
-    playPageTransition();
-  }, [playPageTransition]);
+    // playPageTransition();
+  }, []);
 
   return (
     <>
@@ -200,7 +196,6 @@ const Login = () => {
                   <span
                     className="sign-up-link ml-1 text-xs underline text-teal-600 cursor-pointer font-bold font-sans"
                     onClick={() => {
-                      playButtonClick();
                       handleUserTypeChange('user');
                     }}
                   >
@@ -213,7 +208,6 @@ const Login = () => {
                   <span
                     className="sign-up-link ml-1 text-xs underline text-teal-600 cursor-pointer font-bold font-sans"
                     onClick={() => {
-                      playButtonClick();
                       handleUserTypeChange('admin');
                       setRequiresEmailVerification(false);
                     }}
