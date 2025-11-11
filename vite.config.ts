@@ -14,9 +14,6 @@ export default defineConfig({
         manualChunks: (id) => {
           // 将大型依赖库分离到单独的chunk中
           if (id.includes('node_modules')) {
-            if (id.includes('easy-sound')) {
-              return 'easy-sound';
-            }
             if (
               id.includes('react') ||
               id.includes('react-dom') ||
