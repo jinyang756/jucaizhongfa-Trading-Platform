@@ -1,23 +1,3 @@
-/* 全局样式变量 */
-:root {
-  --background-base: #0a0e27;
-  --primary-color: #6366f1; /* 赛博紫/靛蓝 */
-  --primary-hover: #818cf8; /* 更亮的靛蓝 */
-  --success-color: #10b981; /* 活力绿 */
-  --error-color: #ef4444; /* 信号红 */
-  --warning-color: #ffd700; /* 霓虹金/琥珀 */
-  --text-color-light: rgba(255, 255, 255, 0.85);
-  --text-color-dark: rgba(255, 255, 255, 0.65);
-  --glass-background: rgba(15, 23, 42, 0.8);
-  --font-family:
-    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
-  --border-radius-md: 12px;
-  --border-radius-lg: 16px;
-  --box-shadow-glass: 0 0 15px rgba(99, 102, 241, 0.15), 0 10px 20px rgba(0, 0, 0, 0.4);
-  --transition-duration: 0.3s;
-}
-
 /* 全局基础样式 */
 body {
   font-family: var(--font-family);
@@ -41,7 +21,7 @@ body {
 }
 
 .btn-primary {
-  background-color: var(--primary-color);
+  background-color: var(--primary);
   color: white;
 }
 
@@ -51,17 +31,17 @@ body {
 }
 
 .btn-success {
-  background-color: var(--success-color);
+  background-color: var(--price-up);
   color: white;
 }
 
 .btn-warning {
-  background-color: var(--warning-color);
+  background-color: var(--warning);
   color: var(--background-base);
 }
 
 .btn-error {
-  background-color: var(--error-color);
+  background-color: var(--price-down);
   color: white;
 }
 
@@ -100,13 +80,13 @@ body {
 }
 
 .form-control:focus {
-  border-color: var(--primary-color);
+  border-color: var(--primary);
   outline: none;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
 
 .form-error {
-  color: var(--error-color);
+  color: var(--price-down);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -143,7 +123,7 @@ body {
 
 .loading-spinner {
   border: 2px solid #f3f3f3;
-  border-top: 2px solid var(--primary-color);
+  border-top: 2px solid var(--primary);
   border-radius: 50%;
   width: 24px;
   height: 24px;
@@ -185,12 +165,12 @@ body {
 }
 
 .price-up {
-  color: var(--success-color);
+  color: var(--price-up);
   animation: flicker 0.5s ease-in-out;
 }
 
 .price-down {
-  color: var(--error-color);
+  color: var(--price-down);
   animation: flicker 0.5s ease-in-out;
 }
 
@@ -213,16 +193,16 @@ body {
   text-align: right;
 }
 .text-primary {
-  color: var(--primary-color);
+  color: var(--primary);
 }
 .text-success {
-  color: var(--success-color);
+  color: var(--price-up);
 }
 .text-warning {
-  color: var(--warning-color);
+  color: var(--warning);
 }
 .text-error {
-  color: var(--error-color);
+  color: var(--price-down);
 }
 
 .financial-data {

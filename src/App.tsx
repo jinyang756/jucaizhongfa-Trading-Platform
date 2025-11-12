@@ -34,9 +34,7 @@ const TradeManagement = lazy(() => import('./pages/TradeManagement.tsx'));
 const DataIntegration = lazy(() => import('./pages/DataIntegration.tsx'));
 const SystemSettings = lazy(() => import('./pages/SystemSettings.tsx'));
 
-const LazyAdminDashboard = lazy(() =>
-  import('./pages/AdminDashboard.tsx').then((module) => ({ default: module.default })),
-);
+const LazyAdminDashboard = lazy(() => import('./pages/AdminDashboard.tsx'));
 
 // 包装主布局和导航的组件
 const MainLayout: React.FC = () => {

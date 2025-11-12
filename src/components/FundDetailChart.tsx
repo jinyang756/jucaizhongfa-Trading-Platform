@@ -78,7 +78,7 @@ export default function FundDetailChart({ fundId }: { fundId: number }) {
           if (!monthlyData[month]) {
             monthlyData[month] = { price: 0, count: 0 };
           }
-          monthlyData[month].price += item.yield_amount;
+          monthlyData[month].price += Number(item.yield_amount) || 0;
           monthlyData[month].count++;
         });
 
