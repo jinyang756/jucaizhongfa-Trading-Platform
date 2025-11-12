@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 @layer base {
-  html, 
+  html,
   :host {
     -webkit-text-size-adjust: 100%; /* 兼容旧版 WebKit 内核浏览器 */
     text-size-adjust: 100%; /* 标准属性，支持 Chrome 54+、Edge 79+ 等现代浏览器 */
